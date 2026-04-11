@@ -76,7 +76,7 @@ export function EditFriendModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="glass-strong w-[95vw] max-w-md border-white/10 p-4 sm:p-6 rounded-xl sm:rounded-2xl">
+      <DialogContent className="glass-modal w-[95vw] max-w-md border-white/10 p-4 sm:p-6 rounded-xl sm:rounded-2xl">
         <DialogHeader>
           <div className="flex items-center gap-2 sm:gap-3 mb-2">
             <FriendAvatar name={name || friend.name} color={color} size="sm" className="sm:hidden flex-shrink-0" />

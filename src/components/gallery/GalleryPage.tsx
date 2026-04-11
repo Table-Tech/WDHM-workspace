@@ -75,7 +75,7 @@ export function GalleryPage() {
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: 'rgb(var(--theme-primary))' }} />
+              <div className="animate-spin rounded-full h-12 w-12 border-2 border-[rgb(var(--theme-primary))] border-t-transparent mx-auto mb-4" />
               <p className="text-muted-foreground">Laden...</p>
             </div>
           </div>
@@ -218,7 +218,7 @@ function MilestoneCard({ reached, onOpen, formatDate }: MilestoneCardProps) {
         {/* Play button overlay for slideshows with media */}
         {hasMedia && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="p-3 rounded-full shadow-lg" style={{ backgroundColor: 'rgba(var(--theme-primary-dark), 0.9)' }}>
+            <div className="p-3 rounded-full shadow-lg bg-[rgba(var(--theme-primary-dark),0.9)]">
               <Play className="w-6 h-6 text-white fill-white" />
             </div>
           </div>
@@ -246,7 +246,7 @@ function MilestoneCard({ reached, onOpen, formatDate }: MilestoneCardProps) {
       {/* Card content */}
       <div className="p-4">
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(var(--theme-primary), 0.3)', borderWidth: '1px', borderColor: 'rgba(var(--theme-primary), 0.5)', color: 'rgb(var(--theme-primary-light))' }}>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[rgba(var(--theme-primary),0.3)] border border-[rgba(var(--theme-primary),0.5)] text-[rgb(var(--theme-primary-light))]">
             <MilestoneIcon icon={milestone.emoji} size="sm" />
           </div>
           <span className="font-bold text-white">{milestone.count}x te laat</span>

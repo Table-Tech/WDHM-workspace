@@ -8,7 +8,17 @@
       "Bash(cat:*)",
       "Bash(cd /mnt/c/Users/Wish/Downloads/github-repo/Systemen/Team/LateTable/latetable && npx tsc:*)",
       "Bash(npx eslint src --ext .ts,.tsx)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Skill(superpowers:brainstorming)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Skill(superpowers:writing-plans)",
+      "Skill(superpowers:subagent-driven-development)",
+      "Bash(git rev-parse:*)",
+      "Bash(git config:*)",
+      "Bash(git -C /mnt/c/Users/Wish/Downloads/github-repo/Systemen/Team/LateTable/latetable status)",
+      "Bash(git -C /mnt/c/Users/Wish/Downloads/github-repo/Systemen/Team/LateTable/latetable diff src/app/hall-of-fame/page.tsx)",
+      "Bash(git -C /mnt/c/Users/Wish/Downloads/github-repo/Systemen/Team/LateTable/latetable log --oneline -5)"
     ]
   }
 }

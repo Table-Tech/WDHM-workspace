@@ -1,0 +1,107 @@
+LateTable - Systeemoverzicht
+============================
+
+Doel van het systeem
+--------------------
+LateTable is een gedeelde web-app voor vriendengroepen om bij te houden wie te laat komt.
+De app maakt te laat-incidenten zichtbaar, bouwt statistieken op, toont voortgang naar milestones,
+en laat bij milestones diavoorstellingen zien van bewijs (foto/video).
+
+Wat het systeem doet
+--------------------
+1. Vrienden beheren
+- Vrienden toevoegen
+- Vrienden bewerken (naam/kleur)
+- Vrienden verwijderen
+
+2. Te laat registreren
+- Incident aanmaken per vriend
+- Optioneel locatie, tijd, minuten te laat en notitie opslaan
+- Optioneel foto of video uploaden
+
+3. Incident herstellen/verwijderen
+- Laatste te-laat melding per vriend kan verwijderd worden (met bevestiging)
+- Statistieken en voortgang worden direct opnieuw berekend
+
+4. Milestones en straffen
+- Milestone-instellingen beheren via instellingenmodal
+- Aantal en straftekst aanpassen of toevoegen/verwijderen
+- Milestone-icons kiezen
+- Milestone-voortgang tonen als: "Nog Xx -> dan bereik je Yx"
+
+5. Diavoorstellingen en gallery
+- Bewijsmedia wordt getoond in diavoorstellingen (/gallery)
+- Milestone-gallery per vriend en per bereikt milestone-niveau
+- Dashboard toont geen directe media-preview meer in de friend cards
+
+6. Realtime synchronisatie
+- Wijzigingen in vrienden en incidenten worden realtime opgehaald
+- UI wordt automatisch geupdate zonder handmatig refreshen
+
+7. Thema-systeem
+- Thema wordt centraal beheerd met CSS-variabelen
+- Kleuren worden toegepast op knoppen, accenten en componenten
+
+
+Technische opbouw
+-----------------
+Frontend
+- Next.js 16 (App Router)
+- React + TypeScript
+- Tailwind CSS
+
+State en data
+- TanStack Query voor server-state en cache
+- Custom hooks voor friends/incidents/milestones/realtime
+
+Backend diensten
+- Supabase PostgreSQL (data)
+- Supabase Storage (foto/video)
+- Supabase Realtime (live updates)
+
+
+Belangrijkste gebruikersflow
+----------------------------
+1. Gebruiker opent dashboard
+2. Gebruiker markeert vriend als te laat
+3. Incident wordt opgeslagen in database
+4. Counters/progress/milestones verversen direct
+5. Bij milestone-bereik verschijnt milestone-banner
+6. Bewijsmedia is later terug te zien in diavoorstellingen
+
+
+Fouttolerantie en fallback
+--------------------------
+- Als Supabase credentials ontbreken, draait de app in fallback-modus waar mogelijk
+- Queries en realtime worden veilig afgehandeld zonder harde crash
+
+
+Huidige status
+--------------
+- Lint en build draaien succesvol
+- Runtime issues rond image-hosts zijn geconfigureerd
+- Inline-style waarschuwingen zijn opgeruimd in de aangepaste componenten
+
+
+Bestandlocaties (belangrijk)
+----------------------------
+- Dashboard: src/components/dashboard/Dashboard.tsx
+- Friend card: src/components/friends/FriendCard.tsx
+- Progress: src/components/friends/ProgressBar.tsx
+- Instellingen: src/components/settings/SettingsModal.tsx
+- Gallery: src/components/gallery/GalleryPage.tsx
+- Incident hooks: src/hooks/useIncidents.ts
+- Friend hooks: src/hooks/useFriends.ts
+- Milestone utils: src/lib/milestones.ts
+- Next config: next.config.ts
+
+
+Samenvatting
+------------
+LateTable is een complete groepsapp voor te-laat registratie met:
+- beheer van vrienden,
+- incidentregistratie,
+- herstelmogelijkheden,
+- milestone-logica,
+- realtime updates,
+- en diavoorstellingen voor bewijsmedia.

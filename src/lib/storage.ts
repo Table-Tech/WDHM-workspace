@@ -5,6 +5,11 @@ export interface MediaUploadResult {
   type: 'photo' | 'video';
 }
 
+export interface MultipleMediaUploadResult {
+  photoUrls: string[];
+  videoUrls: string[];
+}
+
 export async function uploadIncidentMedia(file: File): Promise<MediaUploadResult | null> {
   if (!hasValidCredentials) {
     console.warn('Supabase is not configured. Media upload is disabled in local fallback mode.');
@@ -18,6 +23,32 @@ export async function uploadIncidentMedia(file: File): Promise<MediaUploadResult
   } else {
     return uploadPhoto(file);
   }
+}
+
+export async function uploadMultipleMedia(files: Array<{ file: File; type: 'photo' | 'video' }>): Promise<MultipleMediaUploadResult> {
+  if (!hasValidCredentials) {
+    console.warn('Supabase is not configured. Media upload is disabled in local fallback mode.');
+    return { photoUrls: [], videoUrls: [] };
+  }
+
+  const photoUrls: string[] = [];
+  const videoUrls: string[] = [];
+
+  // Upload all files in parallel
+  const uploadPromises = files.map(async ({ file, type }) => {
+    const result = type === 'video' ? await uploadVideo(file) : await uploadPhoto(file);
+    if (result) {
+      if (result.type === 'photo') {
+        photoUrls.push(result.url);
+      } else {
+        videoUrls.push(result.url);
+      }
+    }
+  });
+
+  await Promise.all(uploadPromises);
+
+  return { photoUrls, videoUrls };
 }
 
 async function uploadPhoto(file: File): Promise<MediaUploadResult | null> {
@@ -82,6 +113,69 @@ async function uploadVideo(file: File): Promise<MediaUploadResult | null> {
 export async function uploadIncidentPhoto(file: File): Promise<string | null> {
   const result = await uploadPhoto(file);
   return result?.url || null;
+}
+
+// Upload badge image
+export async function uploadBadgeImage(file: File): Promise<string | null> {
+  if (!hasValidCredentials) {
+    console.warn('Supabase is not configured. Badge image upload is disabled.');
+    return null;
+  }
+
+  try {
+    // Resize image for badge (smaller, square-ish)
+    const resizedBlob = await resizeImage(file, 400, 0.9);
+    const filename = `badge-${crypto.randomUUID()}.jpg`;
+
+    const { data, error } = await supabase.storage
+      .from('badge-images')
+      .upload(filename, resizedBlob, {
+        contentType: 'image/jpeg',
+        cacheControl: '3600',
+      });
+
+    if (error) throw error;
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from('badge-images').getPublicUrl(data.path);
+
+    return publicUrl;
+  } catch (error) {
+    console.error('Badge image upload failed:', error);
+    return null;
+  }
+}
+
+// Upload team trip photo
+export async function uploadTripPhoto(file: File): Promise<string | null> {
+  if (!hasValidCredentials) {
+    console.warn('Supabase is not configured. Trip photo upload is disabled.');
+    return null;
+  }
+
+  try {
+    const resizedBlob = await resizeImage(file, 1200, 0.8);
+    const filename = `trip-${crypto.randomUUID()}.jpg`;
+
+    const { data, error } = await supabase.storage
+      .from('trip-photos')
+      .upload(filename, resizedBlob, {
+        contentType: 'image/jpeg',
+        cacheControl: '3600',
+      });
+
+    if (error) throw error;
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from('trip-photos').getPublicUrl(data.path);
+
+    return publicUrl;
+  } catch (error) {
+    console.error('Trip photo upload failed:', error);
+    return null;
+  }
 }
 
 async function resizeImage(file: File, maxWidth: number, quality: number): Promise<Blob> {

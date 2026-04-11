@@ -30,6 +30,17 @@ export function MilestoneSlideshow({
 
   const SLIDE_DURATION = 5000; // 5 seconds per slide
 
+  // Declare handlers before useEffect that uses them
+  const handleNext = useCallback(() => {
+    setCurrentIndex((prev) => (prev + 1) % photoIncidents.length);
+    setProgress(0);
+  }, [photoIncidents.length]);
+
+  const handlePrevious = useCallback(() => {
+    setCurrentIndex((prev) => (prev - 1 + photoIncidents.length) % photoIncidents.length);
+    setProgress(0);
+  }, [photoIncidents.length]);
+
   // Handle keyboard shortcuts
   useEffect(() => {
     if (!isOpen) return;
@@ -49,7 +60,7 @@ export function MilestoneSlideshow({
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, handleNext, handlePrevious]);
 
   // Auto-advance slides
   useEffect(() => {
@@ -74,16 +85,6 @@ export function MilestoneSlideshow({
       clearInterval(slideInterval);
     };
   }, [isPlaying, isOpen, photoIncidents.length]);
-
-  const handleNext = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % photoIncidents.length);
-    setProgress(0);
-  }, [photoIncidents.length]);
-
-  const handlePrevious = useCallback(() => {
-    setCurrentIndex((prev) => (prev - 1 + photoIncidents.length) % photoIncidents.length);
-    setProgress(0);
-  }, [photoIncidents.length]);
 
   const handleTogglePlay = () => {
     setIsPlaying((prev) => !prev);

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Trophy, ArrowLeft, Clock, Flame, Target, Calendar, Star, History } from 'lucide-react';
 import { useRecords, useIconicMoments } from '@/hooks/useRecords';
 import { useResets } from '@/hooks/useSeasons';
@@ -143,7 +144,7 @@ export default function HallOfFamePage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {records.map((record, index) => (
+                {records.map((record) => (
                   <div
                     key={`${record.type}-${record.friend.id}`}
                     className="flex items-center gap-4 p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
@@ -212,10 +213,12 @@ export default function HallOfFamePage() {
                   >
                     {/* Photo */}
                     {moment.incident.photo_url ? (
-                      <img
+                      <Image
                         src={moment.incident.photo_url}
                         alt={`${moment.friend.name} incident`}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
+                        unoptimized
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">

@@ -324,6 +324,13 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
+.glass-modal {
+  background: rgba(15, 15, 25, 0.95);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 /* ============================================
    GRADIENT UTILITIES
    ============================================ */

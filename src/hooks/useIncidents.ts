@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { hasValidCredentials, supabase } from '@/lib/supabase';
-import { uploadIncidentMedia } from '@/lib/storage';
+import { uploadIncidentMedia, uploadMultipleMedia } from '@/lib/storage';
 import type { Incident, IncidentFormData, Friend, IncidentWithFriend, FriendMilestoneGallery, ReachedMilestone, Milestone } from '@/types';
 import { DEFAULT_MILESTONES } from '@/lib/milestones';
 
@@ -39,22 +39,40 @@ async function createIncident(formData: IncidentFormData): Promise<Incident> {
     throw new Error('Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
   }
 
-  let photoUrl: string | null = null;
-  let videoUrl: string | null = null;
+  let photoUrls: string[] = [];
+  let videoUrls: string[] = [];
   let mediaType: 'photo' | 'video' | null = null;
 
-  // Upload media if provided
-  if (formData.media) {
+  // Upload multiple media items if provided
+  if (formData.mediaItems && formData.mediaItems.length > 0) {
+    const result = await uploadMultipleMedia(
+      formData.mediaItems.map((item) => ({ file: item.file, type: item.type }))
+    );
+    photoUrls = result.photoUrls;
+    videoUrls = result.videoUrls;
+
+    // Set media type based on what was uploaded (prioritize photos)
+    if (photoUrls.length > 0) {
+      mediaType = 'photo';
+    } else if (videoUrls.length > 0) {
+      mediaType = 'video';
+    }
+  } else if (formData.media) {
+    // Legacy single file upload
     const result = await uploadIncidentMedia(formData.media);
     if (result) {
       mediaType = result.type;
       if (result.type === 'photo') {
-        photoUrl = result.url;
+        photoUrls = [result.url];
       } else {
-        videoUrl = result.url;
+        videoUrls = [result.url];
       }
     }
   }
+
+  // Store URLs as comma-separated for multiple, or single URL for one
+  const photoUrl = photoUrls.length > 0 ? photoUrls.join(',') : null;
+  const videoUrl = videoUrls.length > 0 ? videoUrls.join(',') : null;
 
   const { data, error } = await supabase
     .from('incidents')
@@ -67,12 +85,28 @@ async function createIncident(formData: IncidentFormData): Promise<Incident> {
       video_url: videoUrl,
       media_type: mediaType,
       note: formData.note || null,
+      latitude: formData.latitude ?? null,
+      longitude: formData.longitude ?? null,
     })
     .select()
     .single();
 
   if (error) throw error;
   return data;
+}
+
+// Delete an incident
+async function deleteIncident(id: string): Promise<void> {
+  if (!hasValidCredentials) {
+    throw new Error('Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+  }
+
+  const { error } = await supabase
+    .from('incidents')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
 }
 
 // Hook: Get all incidents
@@ -104,6 +138,22 @@ export function useCreateIncident() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['incidents'] });
       queryClient.invalidateQueries({ queryKey: ['friends-with-stats'] });
+    },
+  });
+}
+
+// Hook: Delete an incident
+export function useDeleteIncident() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteIncident,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['incidents'] });
+      queryClient.invalidateQueries({ queryKey: ['friends-with-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['incidents-with-friends'] });
+      queryClient.invalidateQueries({ queryKey: ['incidents-with-media'] });
+      queryClient.invalidateQueries({ queryKey: ['milestone-galleries'] });
     },
   });
 }

@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { hasValidCredentials, supabase } from '@/lib/supabase';
-import type { Season, Reset, Friend, Incident, Streak } from '@/types';
+import type { Season, Reset } from '@/types';
 
 // Fetch all seasons ordered by start_date desc
 async function fetchSeasons(): Promise<Season[]> {

@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import NextImage from 'next/image';
-import { MapPin, Clock, Camera, Video, Settings, Image as ImageIcon } from 'lucide-react';
+import { MapPin, Clock, Settings, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FriendAvatar } from './FriendAvatar';
@@ -13,7 +12,7 @@ interface FriendCardProps {
   friend: FriendWithStats;
   onMarkLate: (friendId: string) => void;
   onEdit?: (friendId: string) => void;
-  onViewGallery?: (friendId: string) => void;
+  onDeleteLastIncident?: (incidentId: string, friendName: string) => void;
   isAnimating?: boolean;
 }
 
@@ -21,13 +20,10 @@ export function FriendCard({
   friend,
   onMarkLate,
   onEdit,
-  onViewGallery,
+  onDeleteLastIncident,
   isAnimating = false,
 }: FriendCardProps) {
   const [isHovered, setIsHovered] = useState(false);
-
-  // Check if friend has media in their incidents
-  const hasMedia = friend.last_incident?.photo_url || friend.last_incident?.video_url;
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -97,33 +93,13 @@ export function FriendCard({
         remaining={friend.incidents_until_next}
         nextMilestoneCount={friend.next_milestone?.count}
         nextMilestoneEmoji={friend.next_milestone?.emoji}
+        nextMilestonePenalty={friend.next_milestone?.penalty}
         className="mb-3 sm:mb-4"
       />
 
       {/* Last Incident Info */}
       {friend.last_incident && (
         <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4 p-2 sm:p-3 rounded-lg sm:rounded-xl bg-white/3 border border-white/5">
-          {/* Media thumbnail */}
-          {(friend.last_incident.photo_url || friend.last_incident.video_url) && (
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden shrink-0 bg-white/5 relative">
-              {friend.last_incident.video_url ? (
-                <>
-                  <div className="w-full h-full flex items-center justify-center bg-[rgba(var(--theme-primary),0.2)]">
-                    <Video className="w-4 h-4 sm:w-5 sm:h-5 theme-text-light" />
-                  </div>
-                </>
-              ) : (
-                <NextImage
-                  src={friend.last_incident.photo_url!}
-                  alt={`Laatste incident van ${friend.name}`}
-                  fill
-                  sizes="48px"
-                  className="object-cover"
-                />
-              )}
-            </div>
-          )}
-
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-muted-foreground">
               <Clock className="w-3 h-3 shrink-0" aria-hidden="true" />
@@ -137,17 +113,18 @@ export function FriendCard({
             )}
           </div>
 
-          {hasMedia && onViewGallery ? (
-            <button
-              onClick={() => onViewGallery(friend.id)}
-              className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors theme-text-light shrink-0"
-              aria-label={`Bekijk alle bewijzen van ${friend.name}`}
-            >
-              <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
-            </button>
-          ) : !hasMedia ? (
-            <Camera className="w-4 h-4 sm:w-5 sm:h-5 text-white/20 shrink-0" aria-hidden="true" />
-          ) : null}
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+            {friend.last_incident && onDeleteLastIncident && (
+              <button
+                type="button"
+                onClick={() => onDeleteLastIncident(friend.last_incident!.id, friend.name)}
+                className="p-1.5 sm:p-2 rounded-lg hover:bg-red-500/20 transition-colors text-red-400 hover:text-red-300"
+                aria-label={`Verwijder laatste te-laat melding van ${friend.name}`}
+              >
+                <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
+              </button>
+            )}
+          </div>
         </div>
       )}
 

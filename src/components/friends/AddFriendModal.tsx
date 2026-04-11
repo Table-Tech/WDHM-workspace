@@ -56,7 +56,7 @@ export function AddFriendModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="glass-strong w-[95vw] max-w-sm border-white/10 p-4 sm:p-6 rounded-xl sm:rounded-2xl">
+      <DialogContent className="glass-modal w-[95vw] max-w-sm border-white/10 p-4 sm:p-6 rounded-xl sm:rounded-2xl">
         <DialogHeader>
           <div className="flex items-center gap-2 sm:gap-3 mb-2">
             <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl flex-shrink-0" style={{ background: 'linear-gradient(to bottom right, rgba(var(--theme-primary), 0.2), rgba(var(--theme-primary-light), 0.2))', border: '1px solid rgba(var(--theme-primary), 0.3)' }}>

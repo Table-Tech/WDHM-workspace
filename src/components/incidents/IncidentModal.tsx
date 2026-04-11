@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import NextImage from 'next/image';
-import { MapPin, Clock, Camera, FileText, X, Timer, Send, Video, Image as ImageIcon } from 'lucide-react';
+import { MapPin, Clock, Camera, FileText, X, Timer, Send, Video, Image as ImageIcon, Crosshair, Loader2, Plus } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { FriendAvatar } from '@/components/friends/FriendAvatar';
-import type { Friend, IncidentFormData } from '@/types';
+import { useCurrentLocation } from '@/hooks/useLocation';
+import type { Friend, IncidentFormData, MediaItem } from '@/types';
 
 interface IncidentModalProps {
   friend: Friend | null;
@@ -24,6 +25,8 @@ interface IncidentModalProps {
   onSubmit: (data: IncidentFormData) => Promise<void>;
   isSubmitting?: boolean;
 }
+
+const MAX_MEDIA_ITEMS = 5;
 
 export function IncidentModal({
   friend,
@@ -36,35 +39,41 @@ export function IncidentModal({
   const [scheduledTime, setScheduledTime] = useState('');
   const [minutesLate, setMinutesLate] = useState('');
   const [note, setNote] = useState('');
-  const [media, setMedia] = useState<File | null>(null);
-  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
-  const [mediaType, setMediaType] = useState<'photo' | 'video' | null>(null);
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+  const [gpsCoords, setGpsCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
+  const { getCurrentLocation, isLoading: isGettingLocation, error: locationError } = useCurrentLocation();
+
   const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'photo' | 'video') => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setMedia(file);
-      setMediaType(type);
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const remainingSlots = MAX_MEDIA_ITEMS - mediaItems.length;
+    const filesToProcess = Array.from(files).slice(0, remainingSlots);
+
+    filesToProcess.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setMediaPreview(reader.result as string);
+        setMediaItems((prev) => {
+          if (prev.length >= MAX_MEDIA_ITEMS) return prev;
+          return [...prev, {
+            file,
+            type,
+            preview: reader.result as string,
+          }];
+        });
       };
       reader.readAsDataURL(file);
-    }
+    });
+
+    // Reset input so same file can be selected again
+    e.target.value = '';
   };
 
-  const removeMedia = () => {
-    setMedia(null);
-    setMediaPreview(null);
-    setMediaType(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-    if (videoInputRef.current) {
-      videoInputRef.current.value = '';
-    }
+  const removeMediaItem = (index: number) => {
+    setMediaItems((prev) => prev.filter((_, i) => i !== index));
   };
 
   const resetForm = () => {
@@ -72,14 +81,25 @@ export function IncidentModal({
     setScheduledTime('');
     setMinutesLate('');
     setNote('');
-    setMedia(null);
-    setMediaPreview(null);
-    setMediaType(null);
+    setMediaItems([]);
+    setGpsCoords(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (videoInputRef.current) videoInputRef.current.value = '';
+  };
+
+  const handleGetCurrentLocation = async () => {
+    const coords = await getCurrentLocation();
+    if (coords) {
+      setGpsCoords(coords);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!friend) return;
+
+    // For backward compatibility, use first media item as primary
+    const primaryMedia = mediaItems[0] || null;
 
     await onSubmit({
       friend_id: friend.id,
@@ -87,8 +107,11 @@ export function IncidentModal({
       scheduled_time: scheduledTime,
       minutes_late: minutesLate,
       note,
-      media,
-      mediaType,
+      media: primaryMedia?.file ?? null,
+      mediaType: primaryMedia?.type ?? null,
+      mediaItems,
+      latitude: gpsCoords?.latitude ?? null,
+      longitude: gpsCoords?.longitude ?? null,
     });
 
     resetForm();
@@ -99,11 +122,13 @@ export function IncidentModal({
     onClose();
   };
 
+  const canAddMore = mediaItems.length < MAX_MEDIA_ITEMS;
+
   if (!friend) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="glass-strong w-[95vw] max-w-md border-white/10 max-h-[90vh] overflow-y-auto p-4 sm:p-6 rounded-xl sm:rounded-2xl">
+      <DialogContent className="glass-modal w-[95vw] max-w-md border-white/10 max-h-[90vh] overflow-y-auto p-4 sm:p-6 rounded-xl sm:rounded-2xl">
         <DialogHeader>
           <div className="flex items-center gap-2 sm:gap-3 mb-2">
             <FriendAvatar name={friend.name} color={friend.color} size="sm" className="sm:hidden shrink-0" />
@@ -128,68 +153,101 @@ export function IncidentModal({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 mt-2">
-          {/* Media Upload - Photo or Video */}
+          {/* Media Upload - Multiple Photos or Videos */}
           <div className="space-y-2">
             <Label className="text-xs sm:text-sm text-white/70 flex items-center gap-1.5 sm:gap-2 flex-wrap">
               <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
-              Bewijs (foto of video)
-              <span className="text-white/40 text-xs">(van de plek/situatie)</span>
+              Bewijs (foto&apos;s of video&apos;s)
+              <span className="text-white/40 text-xs">({mediaItems.length}/{MAX_MEDIA_ITEMS})</span>
             </Label>
 
-            {/* Hidden file inputs */}
+            {/* Hidden file inputs with multiple support */}
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
+              multiple
               onChange={(e) => handleMediaChange(e, 'photo')}
               className="hidden"
-              aria-label="Foto uploaden"
+              aria-label="Foto&apos;s uploaden"
             />
             <input
               ref={videoInputRef}
               type="file"
               accept="video/*"
+              multiple
               onChange={(e) => handleMediaChange(e, 'video')}
               className="hidden"
-              aria-label="Video uploaden"
+              aria-label="Video&apos;s uploaden"
             />
 
-            {mediaPreview ? (
-              <div className="relative rounded-lg sm:rounded-xl overflow-hidden bg-white/5 border border-white/10">
-                {mediaType === 'video' ? (
-                  <video
-                    src={mediaPreview}
-                    className="w-full h-32 sm:h-40 object-cover"
-                    controls
-                    muted
-                    playsInline
-                  />
-                ) : (
-                  <NextImage
-                    src={mediaPreview}
-                    alt="Preview van geselecteerde foto"
-                    fill
-                    sizes="(max-width: 640px) 100vw, 448px"
-                    className="object-cover"
-                  />
+            {/* Media Grid */}
+            {mediaItems.length > 0 && (
+              <div className="grid grid-cols-3 gap-2">
+                {mediaItems.map((item, index) => (
+                  <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-white/5 border border-white/10">
+                    {item.type === 'video' ? (
+                      <video
+                        src={item.preview}
+                        className="w-full h-full object-cover"
+                        muted
+                        playsInline
+                      />
+                    ) : (
+                      <NextImage
+                        src={item.preview}
+                        alt={`Media ${index + 1}`}
+                        fill
+                        sizes="120px"
+                        className="object-cover"
+                      />
+                    )}
+                    <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-[10px] text-white flex items-center gap-0.5">
+                      {item.type === 'video' ? (
+                        <Video className="w-2.5 h-2.5" />
+                      ) : (
+                        <ImageIcon className="w-2.5 h-2.5" aria-hidden="true" />
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeMediaItem(index)}
+                      className="absolute top-1 right-1 p-1 rounded-full bg-black/60 hover:bg-red-600/80 transition-colors"
+                      aria-label={`Media ${index + 1} verwijderen`}
+                    >
+                      <X className="w-3 h-3 text-white" />
+                    </button>
+                  </div>
+                ))}
+
+                {/* Add more button (inside grid) */}
+                {canAddMore && (
+                  <div className="flex gap-1">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex-1 aspect-square rounded-lg border-2 border-dashed border-orange-500/30 hover:border-orange-500/50 hover:bg-orange-500/5 transition-all flex flex-col items-center justify-center text-orange-400/70"
+                      title="Foto toevoegen"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <Camera className="w-3 h-3 mt-0.5" aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => videoInputRef.current?.click()}
+                      className="flex-1 aspect-square rounded-lg border-2 border-dashed theme-border-light hover:bg-white/5 transition-all flex flex-col items-center justify-center theme-text"
+                      title="Video toevoegen"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <Video className="w-3 h-3 mt-0.5" aria-hidden="true" />
+                    </button>
+                  </div>
                 )}
-                <div className="absolute top-2 left-2 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full bg-black/50 text-xs text-white flex items-center gap-1">
-                  {mediaType === 'video' ? (
-                    <><Video className="w-3 h-3" /> Video</>
-                  ) : (
-                    <><ImageIcon className="w-3 h-3" aria-hidden="true" /> Foto</>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={removeMedia}
-                  className="absolute top-2 right-2 p-1 sm:p-1.5 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
-                  aria-label="Media verwijderen"
-                >
-                  <X className="w-4 h-4 text-white" />
-                </button>
               </div>
-            ) : (
+            )}
+
+            {/* Initial upload buttons (when no media selected) */}
+            {mediaItems.length === 0 && (
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
@@ -197,7 +255,7 @@ export function IncidentModal({
                   className="h-20 sm:h-24 rounded-lg sm:rounded-xl border-2 border-dashed border-orange-500/30 hover:border-orange-500/50 hover:bg-orange-500/5 active:bg-orange-500/10 transition-all flex flex-col items-center justify-center gap-1.5 sm:gap-2 text-orange-400/70"
                 >
                   <Camera className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
-                  <span className="text-xs">Foto maken</span>
+                  <span className="text-xs">Foto&apos;s maken</span>
                 </button>
                 <button
                   type="button"
@@ -205,7 +263,7 @@ export function IncidentModal({
                   className="h-20 sm:h-24 rounded-lg sm:rounded-xl border-2 border-dashed theme-border-light hover:bg-white/5 active:bg-white/10 transition-all flex flex-col items-center justify-center gap-1.5 sm:gap-2 theme-text"
                 >
                   <Video className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
-                  <span className="text-xs">Video opnemen</span>
+                  <span className="text-xs">Video&apos;s opnemen</span>
                 </button>
               </div>
             )}
@@ -217,13 +275,41 @@ export function IncidentModal({
               <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
               Waar hadden jullie afgesproken?
             </Label>
-            <Input
-              id="location"
-              placeholder="Bijv. McDonalds Centrum, Station..."
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              className="bg-white/5 border-white/10 focus:border-white/30 placeholder:text-white/30 h-9 sm:h-10 text-sm"
-            />
+            <div className="flex gap-2">
+              <Input
+                id="location"
+                placeholder="Bijv. McDonalds Centrum, Station..."
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="bg-white/5 border-white/10 focus:border-white/30 placeholder:text-white/30 h-9 sm:h-10 text-sm flex-1"
+              />
+              <Button
+                type="button"
+                onClick={handleGetCurrentLocation}
+                disabled={isGettingLocation}
+                className={`h-9 sm:h-10 px-3 border-0 transition-all ${
+                  gpsCoords
+                    ? 'bg-green-600 hover:bg-green-500'
+                    : 'bg-white/10 hover:bg-white/20'
+                }`}
+                title="Huidige locatie vastleggen"
+              >
+                {isGettingLocation ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Crosshair className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
+            {gpsCoords && (
+              <p className="text-xs text-green-400 flex items-center gap-1">
+                <Crosshair className="w-3 h-3" />
+                GPS locatie vastgelegd
+              </p>
+            )}
+            {locationError && (
+              <p className="text-xs text-red-400">{locationError}</p>
+            )}
           </div>
 
           {/* Two columns for time and minutes */}

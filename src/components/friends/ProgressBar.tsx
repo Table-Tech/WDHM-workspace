@@ -8,6 +8,7 @@ interface ProgressBarProps {
   remaining: number;
   nextMilestoneCount?: number;
   nextMilestoneEmoji?: string;
+  nextMilestonePenalty?: string;
   className?: string;
 }
 
@@ -16,6 +17,7 @@ export function ProgressBar({
   remaining,
   nextMilestoneCount,
   nextMilestoneEmoji,
+  nextMilestonePenalty,
   className = '',
 }: ProgressBarProps) {
   const colorClass = getProgressColor(percentage);
@@ -38,7 +40,9 @@ export function ProgressBar({
           <span className="mx-1.5 text-white/30">→</span>
           <span className="inline-flex items-center gap-1">
             <MilestoneIcon icon={nextMilestoneEmoji} size="sm" className="theme-text-light" />
-            <span className="text-white/50">dan bereik je {nextMilestoneCount}x</span>
+            <span className="text-white/50">
+              {nextMilestonePenalty ? nextMilestonePenalty : `${nextMilestoneCount}x milestone`}
+            </span>
           </span>
         </p>
       )}

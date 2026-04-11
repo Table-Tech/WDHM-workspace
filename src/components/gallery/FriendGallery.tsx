@@ -246,9 +246,8 @@ export function FriendGallery({ friend, isOpen, onClose }: FriendGalleryProps) {
                     key={index}
                     onClick={() => setCurrentIndex(index)}
                     className={`w-2 h-2 rounded-full transition-all ${
-                      index === currentIndex ? 'w-4' : 'bg-white/30'
+                      index === currentIndex ? 'w-4 bg-[rgb(var(--theme-primary))]' : 'bg-white/30'
                     }`}
-                    style={index === currentIndex ? { backgroundColor: 'rgb(var(--theme-primary))' } : undefined}
                     aria-label={`Ga naar ${index + 1}`}
                   />
                 ))}
@@ -279,7 +278,7 @@ export function FriendGallery({ friend, isOpen, onClose }: FriendGalleryProps) {
           <aside className="hidden lg:block w-72 xl:w-80 shrink-0 border-l border-white/10 p-4 xl:p-6 overflow-y-auto">
             <div className="space-y-4 xl:space-y-6">
               {/* Incident counter */}
-              <div className="text-center p-3 xl:p-4 rounded-xl" style={{ background: 'linear-gradient(to bottom right, rgba(var(--theme-primary), 0.1), rgba(var(--theme-primary-light), 0.1))', border: '1px solid rgba(var(--theme-primary), 0.3)' }}>
+              <div className="text-center p-3 xl:p-4 rounded-xl bg-linear-to-br from-[rgba(var(--theme-primary),0.1)] to-[rgba(var(--theme-primary-light),0.1)] border border-[rgba(var(--theme-primary),0.3)]">
                 <span className="text-2xl xl:text-3xl font-bold text-white">
                   {currentIndex + 1} / {mediaIncidents.length}
                 </span>
@@ -307,11 +306,10 @@ export function FriendGallery({ friend, isOpen, onClose }: FriendGalleryProps) {
                           relative aspect-square rounded-lg overflow-hidden border-2 transition-all
                           ${
                             index === currentIndex
-                              ? 'ring-2'
+                              ? 'border-[rgb(var(--theme-primary))] shadow-[0_0_0_2px_rgba(var(--theme-primary),0.3)]'
                               : 'border-white/10 hover:border-white/30'
                           }
                         `}
-                        style={index === currentIndex ? { borderColor: 'rgb(var(--theme-primary))', boxShadow: '0 0 0 2px rgba(var(--theme-primary), 0.3)' } : undefined}
                       >
                         {incident.video_url ? (
                           <div className="w-full h-full bg-white/5 flex items-center justify-center">
