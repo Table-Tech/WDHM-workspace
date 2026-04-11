@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Disc3, Coins, Users } from 'lucide-react';
+import { SpinWheel } from '@/components/games/SpinWheel';
+import { CoinFlip } from '@/components/games/CoinFlip';
+import { TeamMaker } from '@/components/games/TeamMaker';
 
 type GameTab = 'wheel' | 'coin' | 'teams';
 
@@ -56,17 +59,11 @@ export default function GamesPage() {
         ))}
       </div>
 
-      {/* Game Content - placeholders for now */}
+      {/* Game Content */}
       <div className="glass-card rounded-2xl p-6">
-        {activeTab === 'wheel' && (
-          <div className="text-center text-white/50">Spin Wheel component komt hier</div>
-        )}
-        {activeTab === 'coin' && (
-          <div className="text-center text-white/50">Coin Flip component komt hier</div>
-        )}
-        {activeTab === 'teams' && (
-          <div className="text-center text-white/50">Team Maker component komt hier</div>
-        )}
+        {activeTab === 'wheel' && <SpinWheel />}
+        {activeTab === 'coin' && <CoinFlip />}
+        {activeTab === 'teams' && <TeamMaker />}
       </div>
     </main>
   );
