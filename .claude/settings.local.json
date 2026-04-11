@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx shadcn@latest init:*)",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(npm run build:*)",
+      "Bash(cat:*)",
+      "Bash(cd /mnt/c/Users/Wish/Downloads/github-repo/Systemen/Team/LateTable/latetable && npx tsc:*)",
+      "Bash(npx eslint src --ext .ts,.tsx)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}
