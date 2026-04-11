@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { UserPlus, Clock, Zap, Settings } from 'lucide-react';
+import Link from 'next/link';
+import { UserPlus, Clock, Zap, Settings, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FriendCard } from '@/components/friends/FriendCard';
 import { AddFriendModal } from '@/components/friends/AddFriendModal';
@@ -188,16 +189,26 @@ export function Dashboard() {
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 sm:gap-3">
+                {/* Gallery Button */}
+                <Link href="/gallery">
+                  <Button
+                    variant="ghost"
+                    className="h-10 w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all p-0"
+                    aria-label="Diavoorstellingen bekijken"
+                  >
+                    <ImageIcon className="w-5 h-5 text-white/70" />
+                  </Button>
+                </Link>
+
                 {/* Settings Button */}
                 <Button
-                  variant="outline"
-                  size="icon"
+                  variant="ghost"
                   onClick={() => setIsSettingsOpen(true)}
-                  className="border-white/10 hover:bg-white/5"
-                  aria-label="Instellingen"
+                  className="h-10 w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all p-0"
+                  aria-label="Instellingen openen"
                 >
-                  <Settings className="w-4 h-4" />
+                  <Settings className="w-5 h-5 text-white/70" />
                 </Button>
 
                 {/* Add Friend Button */}
