@@ -111,8 +111,58 @@ INSERT INTO badges (name, description, icon, condition_type, condition_value, ra
 ON CONFLICT DO NOTHING;
 
 -- 9. Create storage buckets for badge and trip images
--- Run these in Supabase Dashboard > Storage:
--- - Create bucket: badge-images (public)
--- - Create bucket: trip-photos (public)
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'badge-images',
+  'badge-images',
+  true,
+  5242880, -- 5MB
+  ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'trip-photos',
+  'trip-photos',
+  true,
+  10485760, -- 10MB
+  ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- Storage policies for badge-images
+CREATE POLICY "Public badge images are viewable by everyone"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'badge-images');
+
+CREATE POLICY "Anyone can upload badge images"
+  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'badge-images');
+
+CREATE POLICY "Anyone can update badge images"
+  ON storage.objects FOR UPDATE
+  USING (bucket_id = 'badge-images');
+
+CREATE POLICY "Anyone can delete badge images"
+  ON storage.objects FOR DELETE
+  USING (bucket_id = 'badge-images');
+
+-- Storage policies for trip-photos
+CREATE POLICY "Public trip photos are viewable by everyone"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'trip-photos');
+
+CREATE POLICY "Anyone can upload trip photos"
+  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'trip-photos');
+
+CREATE POLICY "Anyone can update trip photos"
+  ON storage.objects FOR UPDATE
+  USING (bucket_id = 'trip-photos');
+
+CREATE POLICY "Anyone can delete trip photos"
+  ON storage.objects FOR DELETE
+  USING (bucket_id = 'trip-photos');
 
 -- Done!
