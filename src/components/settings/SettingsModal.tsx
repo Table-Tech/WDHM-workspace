@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Settings, Plus, Trash2, Save, X, Check, Palette } from 'lucide-react';
+import { Settings, Plus, Trash2, Save, X, Check, Palette, RotateCcw, AlertTriangle } from 'lucide-react';
+import { usePerformReset } from '@/hooks/useSeasons';
 import { MilestoneIcon, ICON_OPTIONS, DEFAULT_ICON } from '@/components/shared/MilestoneIcon';
 import {
   Dialog,
@@ -51,10 +52,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const addMutation = useAddMilestone();
   const deleteMutation = useDeleteMilestone();
   const { themeId, setThemeId, themes } = useTheme();
+  const resetMutation = usePerformReset();
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<EditableMilestone | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [newMilestone, setNewMilestone] = useState<EditableMilestone>({
     id: 'new',
     milestone_count: '',
@@ -70,6 +73,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   }, [isOpen]);
 
   const isSaving = updateMutation.isPending || addMutation.isPending || deleteMutation.isPending;
+
+  const handleReset = async () => {
+    await resetMutation.mutateAsync(null);
+    setShowResetConfirm(false);
+  };
 
   const handleEdit = (milestone: GroupSetting) => {
     setEditingId(milestone.id);
@@ -374,6 +382,58 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         <p className="text-sm mt-1">Voeg een nieuwe milestone toe om te beginnen.</p>
                       </div>
                     )}
+                  </div>
+                )}
+              </div>
+
+              {/* Reset Section */}
+              <div className="mt-6 pt-6 border-t border-white/10">
+                <h3 className="font-semibold text-white mb-2 flex items-center gap-2">
+                  <RotateCcw className="w-4 h-4 text-orange-400" />
+                  Reset
+                </h3>
+                <p className="text-sm text-white/50 mb-3">
+                  Start een nieuw seizoen. Alle counts worden gereset, maar de geschiedenis blijft bewaard.
+                </p>
+                {/* Show either reset button or confirmation */}
+                {!showResetConfirm ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowResetConfirm(true)}
+                    className="w-full border-orange-500/20 hover:bg-orange-500/10 h-9 text-sm text-orange-400 disabled:opacity-50"
+                    disabled={resetMutation.isPending}
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 mr-2" />
+                    Nieuw Seizoen Starten
+                  </Button>
+                ) : (
+                  <div className="p-3 sm:p-4 rounded-lg sm:rounded-xl bg-orange-500/10 border border-orange-500/20 space-y-3">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="w-4 h-4 text-orange-400 mt-0.5 shrink-0" />
+                      <p className="text-sm text-orange-200">
+                        Dit zet alle counts op 0. Dit kan niet ongedaan gemaakt worden. Ben je zeker?
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setShowResetConfirm(false)}
+                        className="flex-1 border-slate-600 hover:bg-slate-700 h-9 text-sm text-white"
+                        disabled={resetMutation.isPending}
+                      >
+                        Annuleren
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={handleReset}
+                        disabled={resetMutation.isPending}
+                        className="flex-1 bg-orange-600 hover:bg-orange-700 h-9 text-sm text-white"
+                      >
+                        Ja, Reset
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
