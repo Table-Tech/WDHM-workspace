@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
-import { UserPlus, Clock, Zap, Settings, Image as ImageIcon } from 'lucide-react';
+import { UserPlus, Clock, Zap, Settings, Image as ImageIcon, Award, MapPin, BarChart3, Gamepad2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FriendCard } from '@/components/friends/FriendCard';
 import { AddFriendModal } from '@/components/friends/AddFriendModal';
@@ -11,10 +11,9 @@ import { IncidentModal } from '@/components/incidents/IncidentModal';
 import { Leaderboard } from '@/components/leaderboard/Leaderboard';
 import { MilestoneBanner } from '@/components/shared/MilestoneBanner';
 import { MilestoneGallery } from '@/components/gallery/MilestoneGallery';
-import { FriendGallery } from '@/components/gallery/FriendGallery';
 import { SettingsModal } from '@/components/settings/SettingsModal';
 import { useFriendsWithStats, useAddFriend, useUpdateFriend, useDeleteFriend } from '@/hooks/useFriends';
-import { useCreateIncident } from '@/hooks/useIncidents';
+import { useCreateIncident, useDeleteIncident } from '@/hooks/useIncidents';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { useMilestones } from '@/hooks/useMilestones';
 import type { Friend, IncidentFormData, MilestoneReachedEvent } from '@/types';
@@ -32,9 +31,6 @@ export function Dashboard() {
   // Edit friend modal state
   const [editingFriend, setEditingFriend] = useState<Friend | null>(null);
   const [isEditFriendOpen, setIsEditFriendOpen] = useState(false);
-  // Friend gallery state
-  const [galleryFriend, setGalleryFriend] = useState<Friend | null>(null);
-  const [isFriendGalleryOpen, setIsFriendGalleryOpen] = useState(false);
 
   // Data hooks
   const { data: friends = [], isLoading, error } = useFriendsWithStats();
@@ -43,6 +39,7 @@ export function Dashboard() {
   const updateFriendMutation = useUpdateFriend();
   const deleteFriendMutation = useDeleteFriend();
   const createIncidentMutation = useCreateIncident();
+  const deleteIncidentMutation = useDeleteIncident();
 
   // Realtime sync with milestone callback
   const handleMilestoneReached = useCallback((event: MilestoneReachedEvent) => {
@@ -83,15 +80,6 @@ export function Dashboard() {
     setEditingFriend(null);
   };
 
-  // Handler for viewing a friend's gallery
-  const handleViewFriendGallery = (friendId: string) => {
-    const friend = friends.find((f) => f.id === friendId);
-    if (friend) {
-      setGalleryFriend(friend);
-      setIsFriendGalleryOpen(true);
-    }
-  };
-
   // Handlers
   const handleMarkLate = (friendId: string) => {
     const friend = friends.find((f) => f.id === friendId);
@@ -114,6 +102,14 @@ export function Dashboard() {
     // Trigger animation
     setAnimatingFriendId(data.friend_id);
     setTimeout(() => setAnimatingFriendId(null), 1000);
+  };
+
+  const handleDeleteLastIncident = async (incidentId: string, friendName: string) => {
+    if (!confirm(`Laatste te-laat melding van ${friendName} verwijderen?`)) {
+      return;
+    }
+
+    await deleteIncidentMutation.mutateAsync(incidentId);
   };
 
   // Loading state
@@ -189,15 +185,59 @@ export function Dashboard() {
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 {/* Gallery Button */}
                 <Link href="/gallery">
                   <Button
                     variant="ghost"
-                    className="h-10 w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all p-0"
+                    className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all p-0"
                     aria-label="Diavoorstellingen bekijken"
                   >
-                    <ImageIcon className="w-5 h-5 text-white/70" />
+                    <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white/70" />
+                  </Button>
+                </Link>
+
+                {/* Badges Button */}
+                <Link href="/badges">
+                  <Button
+                    variant="ghost"
+                    className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all p-0"
+                    aria-label="Badges bekijken"
+                  >
+                    <Award className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
+                  </Button>
+                </Link>
+
+                {/* Map Button */}
+                <Link href="/map">
+                  <Button
+                    variant="ghost"
+                    className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all p-0"
+                    aria-label="Kaart bekijken"
+                  >
+                    <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />
+                  </Button>
+                </Link>
+
+                {/* Stats Button */}
+                <Link href="/stats">
+                  <Button
+                    variant="ghost"
+                    className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all p-0"
+                    aria-label="Statistieken bekijken"
+                  >
+                    <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
+                  </Button>
+                </Link>
+
+                {/* Games Button */}
+                <Link href="/games">
+                  <Button
+                    variant="ghost"
+                    className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all p-0"
+                    aria-label="Games spelen"
+                  >
+                    <Gamepad2 className="w-4 h-4 sm:w-5 sm:h-5 text-pink-400" />
                   </Button>
                 </Link>
 
@@ -205,20 +245,19 @@ export function Dashboard() {
                 <Button
                   variant="ghost"
                   onClick={() => setIsSettingsOpen(true)}
-                  className="h-10 w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all p-0"
+                  className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all p-0"
                   aria-label="Instellingen openen"
                 >
-                  <Settings className="w-5 h-5 text-white/70" />
+                  <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-white/70" />
                 </Button>
 
                 {/* Add Friend Button */}
                 <Button
                   onClick={() => setIsAddFriendOpen(true)}
-                  className="theme-gradient hover:opacity-90 border-0 shadow-[0_10px_15px_-3px_rgba(var(--theme-primary),0.25)]"
+                  className="theme-gradient hover:opacity-90 border-0 shadow-[0_10px_15px_-3px_rgba(var(--theme-primary),0.25)] h-9 sm:h-10 px-3 sm:px-4"
                 >
-                  <UserPlus className="w-4 h-4 mr-2" aria-hidden="true" />
-                  <span className="hidden sm:inline">Vriend toevoegen</span>
-                  <span className="sm:hidden">Toevoegen</span>
+                  <UserPlus className="w-4 h-4 sm:mr-2" aria-hidden="true" />
+                  <span className="hidden sm:inline">Vriend</span>
                 </Button>
               </div>
             </div>
@@ -266,7 +305,7 @@ export function Dashboard() {
                     friend={friend}
                     onMarkLate={handleMarkLate}
                     onEdit={handleEditFriend}
-                    onViewGallery={handleViewFriendGallery}
+                    onDeleteLastIncident={handleDeleteLastIncident}
                     isAnimating={animatingFriendId === friend.id}
                   />
                 ))}
@@ -325,15 +364,6 @@ export function Dashboard() {
         onDelete={handleDeleteFriend}
         isSaving={updateFriendMutation.isPending}
         isDeleting={deleteFriendMutation.isPending}
-      />
-
-      <FriendGallery
-        friend={galleryFriend}
-        isOpen={isFriendGalleryOpen}
-        onClose={() => {
-          setIsFriendGalleryOpen(false);
-          setGalleryFriend(null);
-        }}
       />
     </>
   );
