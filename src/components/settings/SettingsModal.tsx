@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Settings, Plus, Trash2, Save, X } from 'lucide-react';
+import { MilestoneIcon, ICON_OPTIONS, MILESTONE_ICONS, DEFAULT_ICON } from '@/components/shared/MilestoneIcon';
 import {
   Dialog,
   DialogContent,
@@ -29,11 +30,10 @@ interface EditableMilestone {
   id: string;
   milestone_count: string;
   penalty_text: string;
-  emoji: string;
+  icon: string;
   isNew?: boolean;
 }
 
-const EMOJI_OPTIONS = ['🍺', '🍕', '🎤', '👕', '✈️', '🎁', '💰', '🏃', '🧹', '📱', '🎮', '🍳'];
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { data: milestones = [], isLoading } = useMilestoneSettings();
@@ -48,9 +48,16 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     id: 'new',
     milestone_count: '',
     penalty_text: '',
-    emoji: '🎁',
+    icon: DEFAULT_ICON,
     isNew: true,
   });
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      scrollContainerRef.current?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }
+  }, [isOpen]);
 
   const handleEdit = (milestone: GroupSetting) => {
     setEditingId(milestone.id);
@@ -58,7 +65,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       id: milestone.id,
       milestone_count: milestone.milestone_count.toString(),
       penalty_text: milestone.penalty_text,
-      emoji: milestone.emoji,
+      icon: milestone.emoji, // emoji field in DB stores icon name
     });
     setShowAddForm(false);
   };
@@ -74,7 +81,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       id: editForm.id,
       milestone_count: count,
       penalty_text: editForm.penalty_text.trim(),
-      emoji: editForm.emoji,
+      emoji: editForm.icon, // icon stored in emoji DB field
     });
 
     setEditingId(null);
@@ -89,14 +96,14 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     await addMutation.mutateAsync({
       milestone_count: count,
       penalty_text: newMilestone.penalty_text.trim(),
-      emoji: newMilestone.emoji,
+      emoji: newMilestone.icon, // icon stored in emoji DB field
     });
 
     setNewMilestone({
       id: 'new',
       milestone_count: '',
       penalty_text: '',
-      emoji: '🎁',
+      icon: DEFAULT_ICON,
       isNew: true,
     });
     setShowAddForm(false);
@@ -117,10 +124,14 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="glass-strong w-[95vw] max-w-lg border-white/10 max-h-[85vh] overflow-y-auto p-4 sm:p-6 rounded-xl sm:rounded-2xl">
-        <DialogHeader>
-          <div className="flex items-center gap-2 sm:gap-3 mb-2">
-            <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 border border-violet-500/30 flex-shrink-0">
+      <DialogContent
+        className="w-[calc(100vw-1rem)] sm:w-[95vw] max-w-lg border border-white/15 bg-slate-950/90 backdrop-blur-xl max-h-[85dvh] sm:max-h-[85dvh] overflow-hidden p-0 rounded-xl sm:rounded-2xl shadow-2xl shadow-black/60"
+        showCloseButton={false}
+      >
+        <div className="flex h-full max-h-[85dvh] flex-col">
+          <DialogHeader className="sticky top-0 z-10 p-4 sm:p-6 border-b border-white/10 bg-slate-950/85 backdrop-blur-md">
+            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-linear-to-br from-violet-500/20 to-purple-500/20 border border-violet-500/30 shrink-0">
               <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-violet-400" aria-hidden="true" />
             </div>
             <div className="min-w-0">
@@ -130,44 +141,48 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </DialogDescription>
             </div>
           </div>
-        </DialogHeader>
+          </DialogHeader>
 
-        <div className="space-y-3 sm:space-y-4 mt-3 sm:mt-4">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="text-xs sm:text-sm font-semibold text-white/70">Milestones & Straffen</h3>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                setShowAddForm(true);
-                setEditingId(null);
-                setEditForm(null);
-              }}
-              className="border-violet-500/30 text-violet-400 hover:bg-violet-500/10 h-8 text-xs sm:text-sm px-2 sm:px-3"
-              disabled={isSaving}
-            >
-              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" />
-              <span className="hidden sm:inline">Toevoegen</span>
-              <span className="sm:hidden">Nieuw</span>
-            </Button>
-          </div>
+          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain p-4 sm:p-6">
+            <div className="space-y-3 sm:space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-xs sm:text-sm font-semibold text-white/70">Milestones & Straffen</h3>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setShowAddForm(true);
+                    setEditingId(null);
+                    setEditForm(null);
+                  }}
+                  className="border-violet-500/30 text-violet-400 hover:bg-violet-500/10 h-8 text-xs sm:text-sm px-2 sm:px-3"
+                  disabled={isSaving}
+                >
+                  <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" />
+                  <span className="hidden sm:inline">Toevoegen</span>
+                  <span className="sm:hidden">Nieuw</span>
+                </Button>
+              </div>
 
-          {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Laden...</div>
-          ) : (
-            <div className="space-y-3">
-              {/* Add new milestone form */}
-              {showAddForm && (
-                <div className="p-3 sm:p-4 rounded-lg sm:rounded-xl bg-violet-500/10 border border-violet-500/30 space-y-2.5 sm:space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs sm:text-sm font-medium text-violet-300">Nieuwe milestone</span>
-                    <button
-                      onClick={() => setShowAddForm(false)}
-                      className="p-1 hover:bg-white/10 rounded"
-                    >
-                      <X className="w-4 h-4 text-white/50" />
-                    </button>
-                  </div>
+              {isLoading ? (
+                <div className="text-center py-8 text-muted-foreground">Laden...</div>
+              ) : (
+                <div className="space-y-3">
+                  {/* Add new milestone form */}
+                  {showAddForm && (
+                    <div className="p-3 sm:p-4 rounded-lg sm:rounded-xl bg-violet-500/10 border border-violet-500/30 space-y-2.5 sm:space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs sm:text-sm font-medium text-violet-300">Nieuwe milestone</span>
+                        <button
+                          type="button"
+                          onClick={() => setShowAddForm(false)}
+                          className="p-1 hover:bg-white/10 rounded"
+                          aria-label="Formulier sluiten"
+                          title="Formulier sluiten"
+                        >
+                          <X className="w-4 h-4 text-white/50" />
+                        </button>
+                      </div>
 
                   <div className="grid grid-cols-[60px_1fr] sm:grid-cols-[80px_1fr] gap-2 sm:gap-3">
                     <div>
@@ -197,24 +212,25 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </div>
 
                   <div>
-                    <Label className="text-xs text-white/50">Emoji</Label>
+                    <Label className="text-xs text-white/50">Icoon</Label>
                     <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-1">
-                      {EMOJI_OPTIONS.map((emoji) => (
+                      {ICON_OPTIONS.map((iconName) => (
                         <button
-                          key={emoji}
+                          key={iconName}
                           type="button"
-                          onClick={() => setNewMilestone({ ...newMilestone, emoji })}
+                          onClick={() => setNewMilestone({ ...newMilestone, icon: iconName })}
                           className={`
-                            w-8 h-8 sm:w-9 sm:h-9 rounded-lg text-base sm:text-lg flex items-center justify-center
+                            w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center
                             transition-all
                             ${
-                              newMilestone.emoji === emoji
-                                ? 'bg-violet-500/30 border-2 border-violet-500'
-                                : 'bg-white/5 border border-white/10 hover:bg-white/10'
+                              newMilestone.icon === iconName
+                                ? 'bg-violet-500/30 border-2 border-violet-500 text-violet-300'
+                                : 'bg-white/5 border border-white/10 hover:bg-white/10 text-white/70'
                             }
                           `}
+                          title={iconName}
                         >
-                          {emoji}
+                          <MilestoneIcon icon={iconName} size="sm" />
                         </button>
                       ))}
                     </div>
@@ -235,19 +251,19 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 </div>
               )}
 
-              {/* Existing milestones */}
-              {milestones.map((milestone) => (
-                <div
-                  key={milestone.id}
-                  className={`
+                  {/* Existing milestones */}
+                  {milestones.map((milestone) => (
+                    <div
+                      key={milestone.id}
+                      className={`
                     p-3 sm:p-4 rounded-lg sm:rounded-xl border transition-all
                     ${
                       editingId === milestone.id
-                        ? 'bg-white/[0.06] border-violet-500/50'
-                        : 'bg-white/[0.03] border-white/10 hover:bg-white/[0.05]'
+                        ? 'bg-white/6 border-violet-500/50'
+                        : 'bg-white/3 border-white/10 hover:bg-white/5'
                     }
                   `}
-                >
+                    >
                   {editingId === milestone.id && editForm ? (
                     // Edit mode
                     <div className="space-y-2.5 sm:space-y-3">
@@ -277,24 +293,25 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       </div>
 
                       <div>
-                        <Label className="text-xs text-white/50">Emoji</Label>
+                        <Label className="text-xs text-white/50">Icoon</Label>
                         <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-1">
-                          {EMOJI_OPTIONS.map((emoji) => (
+                          {ICON_OPTIONS.map((iconName) => (
                             <button
-                              key={emoji}
+                              key={iconName}
                               type="button"
-                              onClick={() => setEditForm({ ...editForm, emoji })}
+                              onClick={() => setEditForm({ ...editForm, icon: iconName })}
                               className={`
-                                w-8 h-8 sm:w-9 sm:h-9 rounded-lg text-base sm:text-lg flex items-center justify-center
+                                w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center
                                 transition-all
                                 ${
-                                  editForm.emoji === emoji
-                                    ? 'bg-violet-500/30 border-2 border-violet-500'
-                                    : 'bg-white/5 border border-white/10 hover:bg-white/10'
+                                  editForm.icon === iconName
+                                    ? 'bg-violet-500/30 border-2 border-violet-500 text-violet-300'
+                                    : 'bg-white/5 border border-white/10 hover:bg-white/10 text-white/70'
                                 }
                               `}
+                              title={iconName}
                             >
-                              {emoji}
+                              <MilestoneIcon icon={iconName} size="sm" />
                             </button>
                           ))}
                         </div>
@@ -324,7 +341,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   ) : (
                     // View mode
                     <div className="flex items-center gap-2 sm:gap-3">
-                      <span className="text-xl sm:text-2xl flex-shrink-0">{milestone.emoji}</span>
+                      <span className="text-xl sm:text-2xl shrink-0">{milestone.emoji}</span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-xs sm:text-sm font-bold text-white">
@@ -335,7 +352,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                           {milestone.penalty_text}
                         </p>
                       </div>
-                      <div className="flex gap-0.5 sm:gap-1 flex-shrink-0">
+                      <div className="flex gap-0.5 sm:gap-1 shrink-0">
                         <Button
                           size="sm"
                           variant="ghost"
@@ -357,23 +374,25 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       </div>
                     </div>
                   )}
-                </div>
-              ))}
+                    </div>
+                  ))}
 
-              {milestones.length === 0 && !showAddForm && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>Geen milestones gevonden.</p>
-                  <p className="text-sm mt-1">Voeg een nieuwe milestone toe om te beginnen.</p>
+                  {milestones.length === 0 && !showAddForm && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p>Geen milestones gevonden.</p>
+                      <p className="text-sm mt-1">Voeg een nieuwe milestone toe om te beginnen.</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          )}
-        </div>
+          </div>
 
-        <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-white/10">
-          <Button onClick={onClose} variant="outline" className="w-full border-white/10 h-9 sm:h-10 text-sm">
-            Sluiten
-          </Button>
+          <div className="sticky bottom-0 z-10 p-4 sm:p-6 pt-3 sm:pt-4 border-t border-white/10 bg-slate-950/85 backdrop-blur-md">
+            <Button onClick={onClose} variant="outline" className="w-full border-white/10 h-9 sm:h-10 text-sm">
+              Sluiten
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

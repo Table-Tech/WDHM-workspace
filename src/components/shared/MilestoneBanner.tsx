@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { PartyPopper, Image } from 'lucide-react';
+import { PartyPopper, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { MilestoneReachedEvent } from '@/types';
 
@@ -11,16 +11,6 @@ interface MilestoneBannerProps {
   onViewGallery: () => void;
   duration?: number;
 }
-
-// Pre-defined confetti positions to avoid Math.random during render
-const CONFETTI_COLORS = ['#fbbf24', '#f97316', '#ef4444', '#a855f7', '#6366f1'];
-const CONFETTI_PARTICLES = Array.from({ length: 12 }, (_, i) => ({
-  left: ((i * 17 + 7) % 100),
-  top: ((i * 23 + 11) % 100),
-  colorIndex: i % 5,
-  delay: (i * 0.17) % 2,
-  duration: 2 + (i * 0.13) % 2,
-}));
 
 export function MilestoneBanner({
   event,
@@ -83,30 +73,13 @@ export function MilestoneBanner({
             relative overflow-hidden
             glass-strong rounded-2xl p-6
             border border-yellow-500/30
-            bg-gradient-to-r from-yellow-500/10 via-orange-500/10 to-red-500/10
+            bg-linear-to-r from-yellow-500/10 via-orange-500/10 to-red-500/10
           "
         >
           {/* Animated background effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 via-orange-500/10 to-yellow-500/5 animate-gradient" />
+          <div className="absolute inset-0 bg-linear-to-r from-yellow-500/5 via-orange-500/10 to-yellow-500/5 animate-gradient" />
 
-          {/* Confetti particles (decorative) */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {CONFETTI_PARTICLES.map((particle, i) => (
-              <div
-                key={i}
-                className="absolute w-2 h-2 rounded-full animate-float"
-                style={{
-                  left: `${particle.left}%`,
-                  top: `${particle.top}%`,
-                  backgroundColor: CONFETTI_COLORS[particle.colorIndex],
-                  animationDelay: `${particle.delay}s`,
-                  animationDuration: `${particle.duration}s`,
-                  opacity: 0.6,
-                }}
-                aria-hidden="true"
-              />
-            ))}
-          </div>
+          <div className="absolute inset-0 pointer-events-none bg-radial from-yellow-300/10 via-transparent to-transparent" />
 
           {/* Content */}
           <div className="relative flex flex-col items-center text-center gap-3">
@@ -136,9 +109,9 @@ export function MilestoneBanner({
             {hasMedia && (
               <Button
                 onClick={handleViewGallery}
-                className="mt-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0"
+                className="mt-2 bg-linear-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0"
               >
-                <Image className="w-4 h-4 mr-2" aria-hidden="true" />
+                <ImageIcon className="w-4 h-4 mr-2" aria-hidden="true" />
                 Bekijk alle bewijzen ({event.incidents.filter((i) => i.photo_url || i.video_url).length})
               </Button>
             )}

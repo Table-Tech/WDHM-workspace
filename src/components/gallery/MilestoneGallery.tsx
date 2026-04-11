@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import NextImage from 'next/image';
 import {
   X,
   ChevronLeft,
@@ -12,7 +13,7 @@ import {
   Timer,
   FileText,
   Calendar,
-  Image,
+  Image as ImageIcon,
   Video,
   Info,
   ChevronUp,
@@ -116,7 +117,7 @@ export function MilestoneGallery({
       aria-label={`Diavoorstelling van ${friend.name} incidenten`}
     >
       {/* Header */}
-      <header className="flex-shrink-0 p-3 sm:p-4 flex items-center justify-between border-b border-white/10">
+      <header className="shrink-0 p-3 sm:p-4 flex items-center justify-between border-b border-white/10">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <FriendAvatar name={friend.name} color={friend.color} size="sm" className="sm:hidden" />
           <FriendAvatar name={friend.name} color={friend.color} size="md" className="hidden sm:flex" />
@@ -129,7 +130,7 @@ export function MilestoneGallery({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           {mediaIncidents.length > 1 && (
             <Button
               variant="ghost"
@@ -172,7 +173,7 @@ export function MilestoneGallery({
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="text-center">
             <div className="p-4 rounded-full bg-white/5 w-fit mx-auto mb-4">
-              <Image className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground" aria-hidden="true" />
+              <ImageIcon className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground" aria-hidden="true" />
             </div>
             <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">Geen media gevonden</h3>
             <p className="text-sm text-muted-foreground">
@@ -217,10 +218,12 @@ export function MilestoneGallery({
                   playsInline
                 />
               ) : currentIncident?.photo_url ? (
-                <img
+                <NextImage
                   key={currentIncident.id}
                   src={currentIncident.photo_url}
                   alt={`Incident bij ${currentIncident.location || 'onbekende locatie'}`}
+                  width={1400}
+                  height={900}
                   className="max-h-[50vh] sm:max-h-[60vh] lg:max-h-[70vh] w-auto rounded-xl object-contain"
                 />
               ) : null}
@@ -230,7 +233,7 @@ export function MilestoneGallery({
                 {currentIncident?.video_url ? (
                   <><Video className="w-3 h-3 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Video</span></>
                 ) : (
-                  <><Image className="w-3 h-3 sm:w-4 sm:h-4" aria-hidden="true" /> <span className="hidden sm:inline">Foto</span></>
+                  <><ImageIcon className="w-3 h-3 sm:w-4 sm:h-4" aria-hidden="true" /> <span className="hidden sm:inline">Foto</span></>
                 )}
               </div>
 
@@ -245,6 +248,7 @@ export function MilestoneGallery({
               <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1 lg:hidden px-4">
                 {mediaIncidents.slice(0, 8).map((_, index) => (
                   <button
+                    type="button"
                     key={index}
                     onClick={() => setCurrentIndex(index)}
                     className={`w-2 h-2 rounded-full transition-all ${
@@ -264,8 +268,11 @@ export function MilestoneGallery({
           {showDetails && currentIncident && (
             <div className="absolute bottom-0 left-0 right-0 bg-black/95 border-t border-white/10 p-4 lg:hidden animate-slide-in-bottom max-h-[60vh] overflow-y-auto">
               <button
+                type="button"
                 onClick={() => setShowDetails(false)}
                 className="absolute top-2 right-2 p-2 hover:bg-white/10 rounded-full"
+                aria-label="Verberg details"
+                title="Verberg details"
               >
                 <ChevronUp className="w-5 h-5" />
               </button>
@@ -274,10 +281,10 @@ export function MilestoneGallery({
           )}
 
           {/* Desktop Info Panel */}
-          <aside className="hidden lg:block w-72 xl:w-80 flex-shrink-0 border-l border-white/10 p-4 xl:p-6 overflow-y-auto">
+          <aside className="hidden lg:block w-72 xl:w-80 shrink-0 border-l border-white/10 p-4 xl:p-6 overflow-y-auto">
             <div className="space-y-4 xl:space-y-6">
               {/* Incident counter */}
-              <div className="text-center p-3 xl:p-4 rounded-xl bg-gradient-to-br from-violet-500/10 to-purple-500/10 border border-violet-500/30">
+              <div className="text-center p-3 xl:p-4 rounded-xl bg-linear-to-br from-violet-500/10 to-purple-500/10 border border-violet-500/30">
                 <span className="text-2xl xl:text-3xl font-bold text-white">
                   {currentIndex + 1} / {mediaIncidents.length}
                 </span>
@@ -298,6 +305,7 @@ export function MilestoneGallery({
                   <div className="grid grid-cols-3 gap-1.5 xl:gap-2">
                     {mediaIncidents.map((incident, index) => (
                       <button
+                        type="button"
                         key={incident.id}
                         onClick={() => setCurrentIndex(index)}
                         className={`
@@ -314,10 +322,12 @@ export function MilestoneGallery({
                             <Video className="w-4 h-4 xl:w-6 xl:h-6 text-muted-foreground" />
                           </div>
                         ) : (
-                          <img
+                          <NextImage
                             src={incident.photo_url!}
-                            alt=""
-                            className="w-full h-full object-cover"
+                            alt={`Thumbnail incident ${index + 1} van ${friend.name}`}
+                            fill
+                            sizes="120px"
+                            className="object-cover"
                           />
                         )}
                         <div className="absolute bottom-0.5 right-0.5 text-[8px] xl:text-[10px] bg-black/60 px-1 xl:px-1.5 py-0.5 rounded">
@@ -335,12 +345,12 @@ export function MilestoneGallery({
 
       {/* Progress bar */}
       {mediaIncidents.length > 1 && isPlaying && (
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10 z-10">
-          <div
-            className="h-full bg-gradient-to-r from-violet-500 to-purple-500 transition-all duration-100"
-            style={{ width: `${((currentIndex + 1) / mediaIncidents.length) * 100}%` }}
-          />
-        </div>
+        <progress
+          className="absolute bottom-0 left-0 right-0 h-1 w-full z-10 overflow-hidden rounded-none appearance-none [&::-webkit-progress-bar]:bg-white/10 [&::-webkit-progress-value]:bg-linear-to-r [&::-webkit-progress-value]:from-violet-500 [&::-webkit-progress-value]:to-purple-500 [&::-moz-progress-bar]:bg-violet-500"
+          max={mediaIncidents.length}
+          value={currentIndex + 1}
+          aria-label="Diavoorstelling voortgang"
+        />
       )}
     </div>
   );
@@ -355,7 +365,7 @@ function IncidentDetails({ incident, formatDate }: { incident: Incident; formatD
       </h3>
 
       <div className="flex items-start gap-2 xl:gap-3 p-2 xl:p-3 rounded-xl bg-white/5">
-        <Calendar className="w-4 h-4 xl:w-5 xl:h-5 text-violet-400 flex-shrink-0 mt-0.5" />
+        <Calendar className="w-4 h-4 xl:w-5 xl:h-5 text-violet-400 shrink-0 mt-0.5" />
         <div>
           <p className="text-[10px] xl:text-xs text-muted-foreground">Datum</p>
           <p className="text-sm xl:text-base text-white">{formatDate(incident.created_at)}</p>
@@ -364,7 +374,7 @@ function IncidentDetails({ incident, formatDate }: { incident: Incident; formatD
 
       {incident.location && (
         <div className="flex items-start gap-2 xl:gap-3 p-2 xl:p-3 rounded-xl bg-white/5">
-          <MapPin className="w-4 h-4 xl:w-5 xl:h-5 text-orange-400 flex-shrink-0 mt-0.5" />
+          <MapPin className="w-4 h-4 xl:w-5 xl:h-5 text-orange-400 shrink-0 mt-0.5" />
           <div>
             <p className="text-[10px] xl:text-xs text-muted-foreground">Locatie</p>
             <p className="text-sm xl:text-base text-white">{incident.location}</p>
@@ -374,7 +384,7 @@ function IncidentDetails({ incident, formatDate }: { incident: Incident; formatD
 
       {incident.scheduled_time && (
         <div className="flex items-start gap-2 xl:gap-3 p-2 xl:p-3 rounded-xl bg-white/5">
-          <Clock className="w-4 h-4 xl:w-5 xl:h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+          <Clock className="w-4 h-4 xl:w-5 xl:h-5 text-blue-400 shrink-0 mt-0.5" />
           <div>
             <p className="text-[10px] xl:text-xs text-muted-foreground">Afgesproken</p>
             <p className="text-sm xl:text-base text-white">{incident.scheduled_time}</p>
@@ -384,7 +394,7 @@ function IncidentDetails({ incident, formatDate }: { incident: Incident; formatD
 
       {incident.minutes_late && (
         <div className="flex items-start gap-2 xl:gap-3 p-2 xl:p-3 rounded-xl bg-white/5">
-          <Timer className="w-4 h-4 xl:w-5 xl:h-5 text-red-400 flex-shrink-0 mt-0.5" />
+          <Timer className="w-4 h-4 xl:w-5 xl:h-5 text-red-400 shrink-0 mt-0.5" />
           <div>
             <p className="text-[10px] xl:text-xs text-muted-foreground">Te laat</p>
             <p className="text-sm xl:text-lg text-white font-bold">{incident.minutes_late} min</p>
@@ -394,7 +404,7 @@ function IncidentDetails({ incident, formatDate }: { incident: Incident; formatD
 
       {incident.note && (
         <div className="flex items-start gap-2 xl:gap-3 p-2 xl:p-3 rounded-xl bg-white/5">
-          <FileText className="w-4 h-4 xl:w-5 xl:h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+          <FileText className="w-4 h-4 xl:w-5 xl:h-5 text-yellow-400 shrink-0 mt-0.5" />
           <div>
             <p className="text-[10px] xl:text-xs text-muted-foreground">Excuus</p>
             <p className="text-sm xl:text-base text-white italic">&ldquo;{incident.note}&rdquo;</p>
@@ -449,7 +459,7 @@ function MobileIncidentDetails({ incident, formatDate }: { incident: Incident; f
 
       {incident.note && (
         <div className="col-span-2 flex items-start gap-2 p-2 rounded-lg bg-white/5">
-          <FileText className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
+          <FileText className="w-4 h-4 text-yellow-400 shrink-0 mt-0.5" />
           <div className="min-w-0">
             <p className="text-[10px] text-muted-foreground">Excuus</p>
             <p className="text-xs text-white italic truncate">&ldquo;{incident.note}&rdquo;</p>

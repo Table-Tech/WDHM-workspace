@@ -176,7 +176,7 @@ export function Dashboard() {
             <div className="flex items-center justify-between">
               {/* Logo */}
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-violet-600 to-purple-600 shadow-lg shadow-violet-600/25">
+                <div className="p-2 rounded-xl bg-linear-to-br from-violet-600 to-purple-600 shadow-lg shadow-violet-600/25">
                   <Clock className="w-6 h-6 text-white" aria-hidden="true" />
                 </div>
                 <div>
@@ -203,7 +203,7 @@ export function Dashboard() {
                 {/* Add Friend Button */}
                 <Button
                   onClick={() => setIsAddFriendOpen(true)}
-                  className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0 shadow-lg shadow-violet-600/25"
+                  className="bg-linear-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0 shadow-lg shadow-violet-600/25"
                 >
                   <UserPlus className="w-4 h-4 mr-2" aria-hidden="true" />
                   <span className="hidden sm:inline">Vriend toevoegen</span>
@@ -232,7 +232,7 @@ export function Dashboard() {
               <Button
                 onClick={() => setIsAddFriendOpen(true)}
                 size="lg"
-                className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0"
+                className="bg-linear-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0"
               >
                 <UserPlus className="w-5 h-5 mr-2" aria-hidden="true" />
                 Eerste vriend toevoegen
@@ -273,7 +273,7 @@ export function Dashboard() {
         <footer className="border-t border-white/5 py-6 mt-auto">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <p className="text-center text-sm text-muted-foreground">
-              LateTable — Hou je vrienden scherp!
+              LateTable Hou je vrienden scherp!
             </p>
           </div>
         </footer>

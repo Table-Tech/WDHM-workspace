@@ -14,13 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'LateTable - Hou je vrienden scherp!',
+  title: 'LateTable Hou je vrienden scherp!',
   description:
     'Een gedeelde web-app voor je vriendengroep om bij te houden wie het vaakst te laat komt. Met milestones, straffen en realtime updates.',
   keywords: ['te laat', 'vrienden', 'tracker', 'app', 'milestones', 'straffen'],
   authors: [{ name: 'LateTable' }],
   openGraph: {
-    title: 'LateTable - Hou je vrienden scherp!',
+    title: 'LateTable Hou je vrienden scherp!',
     description:
       'Hou bij wie het vaakst te laat komt in je vriendengroep. Met milestones en straffen!',
     type: 'website',
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'LateTable - Hou je vrienden scherp!',
+    title: 'LateTable Hou je vrienden scherp!',
     description:
       'Hou bij wie het vaakst te laat komt in je vriendengroep. Met milestones en straffen!',
   },

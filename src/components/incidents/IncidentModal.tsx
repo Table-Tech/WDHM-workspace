@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { MapPin, Clock, Camera, FileText, X, Timer, Send, Video, Image } from 'lucide-react';
+import NextImage from 'next/image';
+import { MapPin, Clock, Camera, FileText, X, Timer, Send, Video, Image as ImageIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -105,8 +106,8 @@ export function IncidentModal({
       <DialogContent className="glass-strong w-[95vw] max-w-md border-white/10 max-h-[90vh] overflow-y-auto p-4 sm:p-6 rounded-xl sm:rounded-2xl">
         <DialogHeader>
           <div className="flex items-center gap-2 sm:gap-3 mb-2">
-            <FriendAvatar name={friend.name} color={friend.color} size="sm" className="sm:hidden flex-shrink-0" />
-            <FriendAvatar name={friend.name} color={friend.color} size="md" className="hidden sm:flex flex-shrink-0" />
+            <FriendAvatar name={friend.name} color={friend.color} size="sm" className="sm:hidden shrink-0" />
+            <FriendAvatar name={friend.name} color={friend.color} size="md" className="hidden sm:flex shrink-0" />
             <div className="min-w-0">
               <DialogTitle className="text-lg sm:text-xl text-white truncate">
                 {friend.name} is te laat!
@@ -139,7 +140,6 @@ export function IncidentModal({
               ref={fileInputRef}
               type="file"
               accept="image/*"
-              capture="environment"
               onChange={(e) => handleMediaChange(e, 'photo')}
               className="hidden"
               aria-label="Foto uploaden"
@@ -148,7 +148,6 @@ export function IncidentModal({
               ref={videoInputRef}
               type="file"
               accept="video/*"
-              capture="environment"
               onChange={(e) => handleMediaChange(e, 'video')}
               className="hidden"
               aria-label="Video uploaden"
@@ -165,17 +164,19 @@ export function IncidentModal({
                     playsInline
                   />
                 ) : (
-                  <img
+                  <NextImage
                     src={mediaPreview}
-                    alt="Preview"
-                    className="w-full h-32 sm:h-40 object-cover"
+                    alt="Preview van geselecteerde foto"
+                    fill
+                    sizes="(max-width: 640px) 100vw, 448px"
+                    className="object-cover"
                   />
                 )}
                 <div className="absolute top-2 left-2 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full bg-black/50 text-xs text-white flex items-center gap-1">
                   {mediaType === 'video' ? (
                     <><Video className="w-3 h-3" /> Video</>
                   ) : (
-                    <><Image className="w-3 h-3" aria-hidden="true" /> Foto</>
+                    <><ImageIcon className="w-3 h-3" aria-hidden="true" /> Foto</>
                   )}
                 </div>
                 <button
@@ -292,7 +293,7 @@ export function IncidentModal({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 border-0 gap-1.5 sm:gap-2 h-10 sm:h-11 text-sm"
+              className="flex-1 bg-linear-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 border-0 gap-1.5 sm:gap-2 h-10 sm:h-11 text-sm"
             >
               {isSubmitting ? (
                 'Verzenden...'
