@@ -12,6 +12,7 @@ import { Leaderboard } from '@/components/leaderboard/Leaderboard';
 import { MilestoneBanner } from '@/components/shared/MilestoneBanner';
 import { MilestoneGallery } from '@/components/gallery/MilestoneGallery';
 import { SettingsModal } from '@/components/settings/SettingsModal';
+import { InviteButton } from '@/components/invite/InviteButton';
 import { useFriendsWithStats, useAddFriend, useUpdateFriend, useDeleteFriend } from '@/hooks/useFriends';
 import { useCreateIncident, useDeleteIncident } from '@/hooks/useIncidents';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
@@ -251,6 +252,9 @@ export function Dashboard() {
                     <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
                   </Button>
                 </Link>
+
+                {/* Invite Button */}
+                <InviteButton variant="icon" />
 
                 {/* Settings Button */}
                 <Button
