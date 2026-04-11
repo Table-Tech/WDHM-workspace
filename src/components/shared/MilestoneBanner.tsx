@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { PartyPopper, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { MilestoneIcon } from '@/components/shared/MilestoneIcon';
 import type { MilestoneReachedEvent } from '@/types';
 
 interface MilestoneBannerProps {
@@ -99,7 +100,9 @@ export function MilestoneBanner({
 
             {/* Penalty */}
             <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/10">
-              <span className="text-3xl">{event.milestone.emoji}</span>
+              <div className="w-12 h-12 rounded-xl bg-yellow-500/20 border border-yellow-500/30 flex items-center justify-center text-yellow-400">
+                <MilestoneIcon icon={event.milestone.emoji} size="xl" />
+              </div>
               <p className="text-white/90 text-lg">
                 {event.milestone.penalty}
               </p>
@@ -109,7 +112,7 @@ export function MilestoneBanner({
             {hasMedia && (
               <Button
                 onClick={handleViewGallery}
-                className="mt-2 bg-linear-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0"
+                className="mt-2 theme-gradient hover:opacity-90 border-0"
               >
                 <ImageIcon className="w-4 h-4 mr-2" aria-hidden="true" />
                 Bekijk alle bewijzen ({event.incidents.filter((i) => i.photo_url || i.video_url).length})

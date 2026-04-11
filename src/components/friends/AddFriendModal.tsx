@@ -59,8 +59,8 @@ export function AddFriendModal({
       <DialogContent className="glass-strong w-[95vw] max-w-sm border-white/10 p-4 sm:p-6 rounded-xl sm:rounded-2xl">
         <DialogHeader>
           <div className="flex items-center gap-2 sm:gap-3 mb-2">
-            <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 border border-violet-500/30 flex-shrink-0">
-              <UserPlus className="w-4 h-4 sm:w-5 sm:h-5 text-violet-400" aria-hidden="true" />
+            <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl flex-shrink-0" style={{ background: 'linear-gradient(to bottom right, rgba(var(--theme-primary), 0.2), rgba(var(--theme-primary-light), 0.2))', border: '1px solid rgba(var(--theme-primary), 0.3)' }}>
+              <UserPlus className="w-4 h-4 sm:w-5 sm:h-5 theme-text-light" aria-hidden="true" />
             </div>
             <div className="min-w-0">
               <DialogTitle className="text-lg sm:text-xl text-white">
@@ -86,7 +86,7 @@ export function AddFriendModal({
                 setName(e.target.value);
                 setError('');
               }}
-              className="bg-white/5 border-white/10 focus:border-violet-500/50 placeholder:text-white/30 h-9 sm:h-10 text-sm"
+              className="bg-white/5 border-white/10 focus:border-white/30 placeholder:text-white/30 h-9 sm:h-10 text-sm"
               autoFocus
               aria-describedby={error ? 'name-error' : undefined}
             />
@@ -110,7 +110,7 @@ export function AddFriendModal({
             <Button
               type="submit"
               disabled={isSubmitting || !name.trim()}
-              className="flex-1 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0 h-9 sm:h-10 text-sm"
+              className="flex-1 theme-gradient hover:opacity-90 border-0 h-9 sm:h-10 text-sm"
             >
               {isSubmitting ? 'Bezig...' : 'Toevoegen'}
             </Button>

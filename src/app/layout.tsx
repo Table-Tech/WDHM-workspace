@@ -39,6 +39,7 @@ export default function RootLayout({
     <html
       lang="nl"
       className="h-full"
+      data-scroll-behavior="smooth"
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         {/* Noise texture overlay for futuristic effect */}
@@ -47,7 +48,7 @@ export default function RootLayout({
         {/* Skip link for accessibility */}
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-violet-600 focus:text-white focus:rounded-lg"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 theme-bg focus:text-white focus:rounded-lg"
         >
           Spring naar inhoud
         </a>

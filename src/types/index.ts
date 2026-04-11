@@ -65,3 +65,16 @@ export interface MilestoneReachedEvent {
   milestone: Milestone;
   incidents: Incident[];
 }
+
+// Gallery types for milestone slideshows
+export interface ReachedMilestone {
+  milestone: Milestone;
+  incidents: Incident[];  // Only incidents between previous milestone and this one
+  reachedAt: string;      // Date when milestone was reached
+}
+
+export interface FriendMilestoneGallery {
+  friend: Friend;
+  totalIncidents: number;
+  reachedMilestones: ReachedMilestone[];
+}

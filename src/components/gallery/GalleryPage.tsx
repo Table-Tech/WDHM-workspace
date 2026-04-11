@@ -75,7 +75,7 @@ export function GalleryPage() {
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500 mx-auto mb-4" />
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: 'rgb(var(--theme-primary))' }} />
               <p className="text-muted-foreground">Laden...</p>
             </div>
           </div>
@@ -113,7 +113,7 @@ function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <div className="p-6 rounded-full bg-white/5 mb-6">
-        <ImageIcon className="w-12 h-12 text-violet-400" />
+        <ImageIcon className="w-12 h-12 theme-text-light" />
       </div>
       <h2 className="text-2xl font-bold text-white mb-2">
         Nog geen diavoorstellingen
@@ -123,7 +123,7 @@ function EmptyState() {
         verschijnt hier een diavoorstelling.
       </p>
       <Link href="/">
-        <Button className="bg-linear-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0">
+        <Button className="theme-gradient hover:opacity-90 border-0">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Terug naar dashboard
         </Button>
@@ -191,7 +191,7 @@ function MilestoneCard({ reached, onOpen, formatDate }: MilestoneCardProps) {
       className={`
         relative rounded-xl border text-left transition-all overflow-hidden
         ${hasMedia
-          ? 'bg-slate-900 border-slate-800 hover:border-violet-500/50 hover:bg-slate-800/80 cursor-pointer'
+          ? 'bg-slate-900 border-slate-800 hover:border-[rgba(var(--theme-primary),0.5)] hover:bg-slate-800/80 cursor-pointer'
           : 'bg-slate-900/50 border-slate-800/50 cursor-not-allowed opacity-60'
         }
       `}
@@ -218,7 +218,7 @@ function MilestoneCard({ reached, onOpen, formatDate }: MilestoneCardProps) {
         {/* Play button overlay for slideshows with media */}
         {hasMedia && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="p-3 rounded-full bg-violet-600/90 shadow-lg">
+            <div className="p-3 rounded-full shadow-lg" style={{ backgroundColor: 'rgba(var(--theme-primary-dark), 0.9)' }}>
               <Play className="w-6 h-6 text-white fill-white" />
             </div>
           </div>
@@ -246,7 +246,7 @@ function MilestoneCard({ reached, onOpen, formatDate }: MilestoneCardProps) {
       {/* Card content */}
       <div className="p-4">
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-8 h-8 rounded-lg bg-violet-600/30 border border-violet-500/50 flex items-center justify-center text-violet-300">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(var(--theme-primary), 0.3)', borderWidth: '1px', borderColor: 'rgba(var(--theme-primary), 0.5)', color: 'rgb(var(--theme-primary-light))' }}>
             <MilestoneIcon icon={milestone.emoji} size="sm" />
           </div>
           <span className="font-bold text-white">{milestone.count}x te laat</span>

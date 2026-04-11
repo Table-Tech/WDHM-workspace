@@ -254,8 +254,9 @@ export function MilestoneGallery({
                     key={index}
                     onClick={() => setCurrentIndex(index)}
                     className={`w-2 h-2 rounded-full transition-all ${
-                      index === currentIndex ? 'bg-violet-500 w-4' : 'bg-white/30'
+                      index === currentIndex ? 'w-4' : 'bg-white/30'
                     }`}
+                    style={index === currentIndex ? { backgroundColor: 'rgb(var(--theme-primary))' } : undefined}
                     aria-label={`Ga naar ${index + 1}`}
                   />
                 ))}
@@ -286,7 +287,7 @@ export function MilestoneGallery({
           <aside className="hidden lg:block w-72 xl:w-80 shrink-0 border-l border-white/10 p-4 xl:p-6 overflow-y-auto">
             <div className="space-y-4 xl:space-y-6">
               {/* Incident counter */}
-              <div className="text-center p-3 xl:p-4 rounded-xl bg-linear-to-br from-violet-500/10 to-purple-500/10 border border-violet-500/30">
+              <div className="text-center p-3 xl:p-4 rounded-xl" style={{ background: 'linear-gradient(to bottom right, rgba(var(--theme-primary), 0.1), rgba(var(--theme-primary-light), 0.1))', border: '1px solid rgba(var(--theme-primary), 0.3)' }}>
                 <span className="text-2xl xl:text-3xl font-bold text-white">
                   {currentIndex + 1} / {mediaIncidents.length}
                 </span>
@@ -314,10 +315,11 @@ export function MilestoneGallery({
                           relative aspect-square rounded-lg overflow-hidden border-2 transition-all
                           ${
                             index === currentIndex
-                              ? 'border-violet-500 ring-2 ring-violet-500/30'
+                              ? 'ring-2'
                               : 'border-white/10 hover:border-white/30'
                           }
                         `}
+                        style={index === currentIndex ? { borderColor: 'rgb(var(--theme-primary))', boxShadow: '0 0 0 2px rgba(var(--theme-primary), 0.3)' } : undefined}
                       >
                         {incident.video_url ? (
                           <div className="w-full h-full bg-white/5 flex items-center justify-center">
@@ -348,7 +350,7 @@ export function MilestoneGallery({
       {/* Progress bar */}
       {mediaIncidents.length > 1 && isPlaying && (
         <progress
-          className="absolute bottom-0 left-0 right-0 h-1 w-full z-10 overflow-hidden rounded-none appearance-none [&::-webkit-progress-bar]:bg-white/10 [&::-webkit-progress-value]:bg-linear-to-r [&::-webkit-progress-value]:from-violet-500 [&::-webkit-progress-value]:to-purple-500 [&::-moz-progress-bar]:bg-violet-500"
+          className="absolute bottom-0 left-0 right-0 h-1 w-full z-10 overflow-hidden rounded-none appearance-none [&::-webkit-progress-bar]:bg-white/10 [&::-webkit-progress-value]:theme-gradient [&::-moz-progress-bar]:theme-bg"
           max={mediaIncidents.length}
           value={currentIndex + 1}
           aria-label="Diavoorstelling voortgang"
@@ -367,7 +369,7 @@ function IncidentDetails({ incident, formatDate }: { incident: Incident; formatD
       </h3>
 
       <div className="flex items-start gap-2 xl:gap-3 p-2 xl:p-3 rounded-xl bg-white/5">
-        <Calendar className="w-4 h-4 xl:w-5 xl:h-5 text-violet-400 shrink-0 mt-0.5" />
+        <Calendar className="w-4 h-4 xl:w-5 xl:h-5 theme-text-light shrink-0 mt-0.5" />
         <div>
           <p className="text-[10px] xl:text-xs text-muted-foreground">Datum</p>
           <p className="text-sm xl:text-base text-white">{formatDate(incident.created_at)}</p>
@@ -422,7 +424,7 @@ function MobileIncidentDetails({ incident, formatDate }: { incident: Incident; f
   return (
     <div className="grid grid-cols-2 gap-3">
       <div className="flex items-center gap-2 p-2 rounded-lg bg-white/5">
-        <Calendar className="w-4 h-4 text-violet-400" />
+        <Calendar className="w-4 h-4 theme-text-light" />
         <div>
           <p className="text-[10px] text-muted-foreground">Datum</p>
           <p className="text-xs text-white">{formatDate(incident.created_at)}</p>

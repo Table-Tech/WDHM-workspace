@@ -202,7 +202,7 @@ export function IncidentModal({
                 <button
                   type="button"
                   onClick={() => videoInputRef.current?.click()}
-                  className="h-20 sm:h-24 rounded-lg sm:rounded-xl border-2 border-dashed border-violet-500/30 hover:border-violet-500/50 hover:bg-violet-500/5 active:bg-violet-500/10 transition-all flex flex-col items-center justify-center gap-1.5 sm:gap-2 text-violet-400/70"
+                  className="h-20 sm:h-24 rounded-lg sm:rounded-xl border-2 border-dashed theme-border-light hover:bg-white/5 active:bg-white/10 transition-all flex flex-col items-center justify-center gap-1.5 sm:gap-2 theme-text"
                 >
                   <Video className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
                   <span className="text-xs">Video opnemen</span>
@@ -222,7 +222,7 @@ export function IncidentModal({
               placeholder="Bijv. McDonalds Centrum, Station..."
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="bg-white/5 border-white/10 focus:border-violet-500/50 placeholder:text-white/30 h-9 sm:h-10 text-sm"
+              className="bg-white/5 border-white/10 focus:border-white/30 placeholder:text-white/30 h-9 sm:h-10 text-sm"
             />
           </div>
 
@@ -240,7 +240,7 @@ export function IncidentModal({
                 type="time"
                 value={scheduledTime}
                 onChange={(e) => setScheduledTime(e.target.value)}
-                className="bg-white/5 border-white/10 focus:border-violet-500/50 h-9 sm:h-10 text-sm"
+                className="bg-white/5 border-white/10 focus:border-white/30 h-9 sm:h-10 text-sm"
               />
             </div>
 
@@ -258,7 +258,7 @@ export function IncidentModal({
                 placeholder="15"
                 value={minutesLate}
                 onChange={(e) => setMinutesLate(e.target.value)}
-                className="bg-white/5 border-white/10 focus:border-violet-500/50 placeholder:text-white/30 h-9 sm:h-10 text-sm"
+                className="bg-white/5 border-white/10 focus:border-white/30 placeholder:text-white/30 h-9 sm:h-10 text-sm"
               />
             </div>
           </div>
@@ -276,7 +276,7 @@ export function IncidentModal({
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows={2}
-              className="bg-white/5 border-white/10 focus:border-violet-500/50 placeholder:text-white/30 resize-none text-sm"
+              className="bg-white/5 border-white/10 focus:border-white/30 placeholder:text-white/30 resize-none text-sm"
             />
           </div>
 

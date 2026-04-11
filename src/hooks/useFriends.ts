@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { hasValidCredentials, supabase } from '@/lib/supabase';
 import { getRandomAvatarColor } from '@/lib/colors';
 import type { Friend, Incident, FriendWithStats } from '@/types';
-import { calculateMilestoneProgress, DEFAULT_MILESTONES } from '@/lib/milestones';
+import { calculateMilestoneProgress, convertToMilestones, DEFAULT_MILESTONES } from '@/lib/milestones';
 
 // Fetch all friends
 async function fetchFriends(): Promise<Friend[]> {
@@ -56,6 +56,22 @@ async function fetchLastIncidents(): Promise<Record<string, Incident>> {
   });
 
   return lastIncidents;
+}
+
+// Fetch milestone settings and convert to app milestone model
+async function fetchMilestonesForStats() {
+  if (!hasValidCredentials) return DEFAULT_MILESTONES;
+
+  const { data, error } = await supabase
+    .from('group_settings')
+    .select('*')
+    .order('milestone_count', { ascending: true });
+
+  if (error || !data || data.length === 0) {
+    return DEFAULT_MILESTONES;
+  }
+
+  return convertToMilestones(data);
 }
 
 // Add a new friend
@@ -124,17 +140,18 @@ export function useFriendsWithStats() {
   return useQuery({
     queryKey: ['friends-with-stats'],
     queryFn: async (): Promise<FriendWithStats[]> => {
-      const [friends, incidentCounts, lastIncidents] = await Promise.all([
+      const [friends, incidentCounts, lastIncidents, milestones] = await Promise.all([
         fetchFriends(),
         fetchIncidentCounts(),
         fetchLastIncidents(),
+        fetchMilestonesForStats(),
       ]);
 
       return friends.map((friend) => {
         const count = incidentCounts[friend.id] || 0;
         const { current, next, progress, remaining } = calculateMilestoneProgress(
           count,
-          DEFAULT_MILESTONES
+          milestones
         );
 
         return {

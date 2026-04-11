@@ -1,12 +1,13 @@
 import type { Milestone, GroupSetting } from '@/types';
 
 // Default milestones used when database is not available
+// emoji field now stores icon names (e.g., 'beer', 'pizza') instead of actual emojis
 export const DEFAULT_MILESTONES: Milestone[] = [
-  { count: 5, emoji: '🍺', penalty: 'Jij betaalt de volgende ronde drankjes voor de hele groep' },
-  { count: 10, emoji: '🍕', penalty: 'Jij trakteert de groep op pizza of eten naar keuze van de groep' },
-  { count: 15, emoji: '🎤', penalty: 'Jij zingt een solo bij de volgende karaoke-avond, geen excuses' },
-  { count: 20, emoji: '👕', penalty: 'Je draagt een week lang een schaamshirt dat de groep kiest en ontwerpt' },
-  { count: 25, emoji: '✈️', penalty: 'Jij organiseert en regelt volledig een weekendje weg voor de hele groep' },
+  { count: 5, emoji: 'beer', penalty: 'Jij betaalt de volgende ronde drankjes voor de hele groep' },
+  { count: 10, emoji: 'pizza', penalty: 'Jij trakteert de groep op pizza of eten naar keuze van de groep' },
+  { count: 15, emoji: 'mic', penalty: 'Jij zingt een solo bij de volgende karaoke-avond, geen excuses' },
+  { count: 20, emoji: 'shirt', penalty: 'Je draagt een week lang een schaamshirt dat de groep kiest en ontwerpt' },
+  { count: 25, emoji: 'plane', penalty: 'Jij organiseert en regelt volledig een weekendje weg voor de hele groep' },
 ];
 
 export function convertToMilestones(settings: GroupSetting[]): Milestone[] {

@@ -140,7 +140,7 @@ export function EditFriendModal({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Naam van je vriend"
-                className="bg-white/5 border-white/10 focus:border-violet-500/50 h-9 sm:h-11 text-sm"
+                className="bg-white/5 border-white/10 focus:border-white/30 h-9 sm:h-11 text-sm"
                 autoComplete="off"
                 disabled={isProcessing}
               />
@@ -197,7 +197,7 @@ export function EditFriendModal({
               <Button
                 type="submit"
                 disabled={!name.trim() || isProcessing}
-                className="flex-1 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0 gap-1.5 sm:gap-2 h-9 sm:h-10 text-sm"
+                className="flex-1 theme-gradient hover:opacity-90 border-0 gap-1.5 sm:gap-2 h-9 sm:h-10 text-sm"
               >
                 {isSaving ? (
                   'Opslaan...'

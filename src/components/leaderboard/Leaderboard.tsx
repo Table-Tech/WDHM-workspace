@@ -119,7 +119,7 @@ export function Leaderboard({ friends, milestones = DEFAULT_MILESTONES }: Leader
           className="w-full flex items-center justify-between text-sm font-semibold text-white/70 mb-2 sm:mb-3 p-2 sm:p-0 rounded-lg sm:rounded-none hover:bg-white/5 sm:hover:bg-transparent transition-colors lg:pointer-events-none"
         >
           <span className="flex items-center gap-2">
-            <ClipboardList className="w-4 h-4 sm:w-5 sm:h-5 text-violet-400" aria-hidden="true" />
+            <ClipboardList className="w-4 h-4 sm:w-5 sm:h-5 theme-text-light" aria-hidden="true" />
             Milestones & Straffen
           </span>
           <ChevronDown className={`w-4 h-4 lg:hidden transition-transform ${showMilestones ? 'rotate-180' : ''}`} />
@@ -136,7 +136,7 @@ export function Leaderboard({ friends, milestones = DEFAULT_MILESTONES }: Leader
               <span className="flex-shrink-0 w-7 sm:w-8 text-white/50 font-medium">
                 {milestone.count}x
               </span>
-              <MilestoneIcon icon={milestone.emoji} size="sm" className="flex-shrink-0 text-violet-400" />
+              <MilestoneIcon icon={milestone.emoji} size="sm" className="flex-shrink-0 theme-text-light" />
               <span className="line-clamp-2">{milestone.penalty}</span>
             </div>
           ))}

@@ -121,7 +121,7 @@ export function Dashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
-          <div className="w-12 h-12 rounded-full border-2 border-violet-500 border-t-transparent animate-spin mx-auto" />
+          <div className="w-12 h-12 rounded-full border-2 border-[rgb(var(--theme-primary))] border-t-transparent animate-spin mx-auto" />
           <p className="text-muted-foreground">Laden...</p>
         </div>
       </div>
@@ -177,7 +177,7 @@ export function Dashboard() {
             <div className="flex items-center justify-between">
               {/* Logo */}
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-linear-to-br from-violet-600 to-purple-600 shadow-lg shadow-violet-600/25">
+                <div className="p-2 rounded-xl theme-gradient shadow-[0_10px_15px_-3px_rgba(var(--theme-primary),0.25)]">
                   <Clock className="w-6 h-6 text-white" aria-hidden="true" />
                 </div>
                 <div>
@@ -214,7 +214,7 @@ export function Dashboard() {
                 {/* Add Friend Button */}
                 <Button
                   onClick={() => setIsAddFriendOpen(true)}
-                  className="bg-linear-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0 shadow-lg shadow-violet-600/25"
+                  className="theme-gradient hover:opacity-90 border-0 shadow-[0_10px_15px_-3px_rgba(var(--theme-primary),0.25)]"
                 >
                   <UserPlus className="w-4 h-4 mr-2" aria-hidden="true" />
                   <span className="hidden sm:inline">Vriend toevoegen</span>
@@ -231,7 +231,7 @@ export function Dashboard() {
             // Empty state
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <div className="p-6 rounded-full bg-white/5 mb-6">
-                <UserPlus className="w-12 h-12 text-violet-400" aria-hidden="true" />
+                <UserPlus className="w-12 h-12 theme-text-light" aria-hidden="true" />
               </div>
               <h2 className="text-2xl font-bold text-white mb-2">
                 Geen vrienden nog
@@ -243,7 +243,7 @@ export function Dashboard() {
               <Button
                 onClick={() => setIsAddFriendOpen(true)}
                 size="lg"
-                className="bg-linear-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0"
+                className="theme-gradient hover:opacity-90 border-0"
               >
                 <UserPlus className="w-5 h-5 mr-2" aria-hidden="true" />
                 Eerste vriend toevoegen
