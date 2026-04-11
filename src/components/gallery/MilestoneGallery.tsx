@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FriendAvatar } from '@/components/friends/FriendAvatar';
+import { MilestoneIcon } from '@/components/shared/MilestoneIcon';
 import type { Incident, Friend, Milestone } from '@/types';
 
 interface MilestoneGalleryProps {
@@ -122,8 +123,9 @@ export function MilestoneGallery({
           <FriendAvatar name={friend.name} color={friend.color} size="sm" className="sm:hidden" />
           <FriendAvatar name={friend.name} color={friend.color} size="md" className="hidden sm:flex" />
           <div className="min-w-0">
-            <h2 className="text-base sm:text-xl font-bold text-white truncate">
-              {friend.name} - {milestone.count}x te laat! {milestone.emoji}
+            <h2 className="text-base sm:text-xl font-bold text-white truncate flex items-center gap-2">
+              {friend.name} - {milestone.count}x te laat!
+              <MilestoneIcon icon={milestone.emoji} size="md" className="text-yellow-400" />
             </h2>
             <p className="text-xs sm:text-sm text-muted-foreground truncate hidden sm:block">
               {milestone.penalty}

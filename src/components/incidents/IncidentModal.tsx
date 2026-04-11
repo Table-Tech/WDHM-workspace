@@ -121,8 +121,9 @@ export function IncidentModal({
 
         {/* Quick info banner */}
         <div className="p-2.5 sm:p-3 rounded-lg sm:rounded-xl bg-orange-500/10 border border-orange-500/20 text-xs sm:text-sm text-orange-300/90">
-          <p>
-            📍 Voeg bewijs toe: waar hadden jullie afgesproken? Maak een foto van de plek!
+          <p className="flex items-center gap-1.5">
+            <MapPin className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+            Voeg bewijs toe: waar hadden jullie afgesproken? Maak een foto van de plek!
           </p>
         </div>
 
