@@ -1,20 +1,21 @@
 'use client';
 
 import { getProgressColor, getProgressGlow } from '@/lib/milestones';
+import { MilestoneIcon } from '@/components/shared/MilestoneIcon';
 
 interface ProgressBarProps {
   percentage: number;
   remaining: number;
+  nextMilestoneCount?: number;
   nextMilestoneEmoji?: string;
-  nextMilestonePenalty?: string;
   className?: string;
 }
 
 export function ProgressBar({
   percentage,
   remaining,
+  nextMilestoneCount,
   nextMilestoneEmoji,
-  nextMilestonePenalty,
   className = '',
 }: ProgressBarProps) {
   const colorClass = getProgressColor(percentage);
@@ -23,35 +24,21 @@ export function ProgressBar({
   return (
     <div className={`space-y-2 ${className}`}>
       {/* Progress bar container */}
-      <div
-        className="h-2.5 bg-white/5 rounded-full overflow-hidden"
-        role="progressbar"
-        aria-valuenow={percentage}
-        aria-valuemin={0}
-        aria-valuemax={100}
+      <progress
+        className={`h-2.5 w-full overflow-hidden rounded-full appearance-none bg-white/5 [&::-webkit-progress-bar]:bg-white/5 [&::-webkit-progress-value]:bg-linear-to-r [&::-webkit-progress-value]:${colorClass} [&::-moz-progress-bar]:bg-emerald-500 ${percentage >= 80 ? `shadow-lg ${glowClass}` : ''}`}
+        max={100}
+        value={percentage}
         aria-label={`Voortgang naar volgende milestone: ${Math.round(percentage)}%`}
-      >
-        {/* Progress fill */}
-        <div
-          className={`
-            h-full rounded-full bg-gradient-to-r ${colorClass}
-            transition-all duration-600 ease-out
-            ${percentage >= 80 ? `shadow-lg ${glowClass}` : ''}
-          `}
-          style={{ width: `${percentage}%` }}
-        />
-      </div>
+      />
 
       {/* Label */}
-      {nextMilestoneEmoji && nextMilestonePenalty && remaining > 0 && (
+      {nextMilestoneEmoji && nextMilestoneCount && remaining > 0 && (
         <p className="text-xs text-muted-foreground">
           <span className="text-white/70">Nog {remaining}x</span>
           <span className="mx-1.5 text-white/30">→</span>
           <span className="inline-flex items-center gap-1">
-            <span>{nextMilestoneEmoji}</span>
-            <span className="text-white/50 truncate max-w-[180px]">
-              {nextMilestonePenalty}
-            </span>
+            <MilestoneIcon icon={nextMilestoneEmoji} size="sm" className="theme-text-light" />
+            <span className="text-white/50">dan bereik je {nextMilestoneCount}x</span>
           </span>
         </p>
       )}

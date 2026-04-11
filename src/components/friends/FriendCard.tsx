@@ -60,14 +60,6 @@ export function FriendCard({
           <FriendAvatar name={friend.name} color={friend.color} size="md" className="hidden sm:flex shrink-0" />
           <div className="min-w-0 flex-1">
             <h3 className="font-semibold text-base sm:text-lg text-white truncate">{friend.name}</h3>
-            {friend.current_milestone && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1 sm:gap-1.5 mt-0.5">
-                <span className="shrink-0">{friend.current_milestone.emoji}</span>
-                <span className="truncate max-w-25 sm:max-w-37.5">
-                  {friend.current_milestone.penalty}
-                </span>
-              </p>
-            )}
           </div>
         </div>
 
@@ -86,10 +78,13 @@ export function FriendCard({
             variant="secondary"
             className={`
               text-sm sm:text-lg font-bold px-2 sm:px-3 py-1 sm:py-1.5
-              bg-linear-to-r from-violet-600/20 to-purple-600/20
-              border border-violet-500/30 text-violet-300
+              border theme-border-light
               ${isAnimating ? 'animate-bounce-scale' : ''}
             `}
+            style={{
+              background: `linear-gradient(to right, rgba(var(--theme-primary-dark), 0.2), rgba(var(--theme-primary), 0.2))`,
+              color: `rgb(var(--theme-primary-light))`,
+            }}
           >
             {friend.incident_count}x
           </Badge>
@@ -100,8 +95,8 @@ export function FriendCard({
       <ProgressBar
         percentage={friend.progress_percentage}
         remaining={friend.incidents_until_next}
+        nextMilestoneCount={friend.next_milestone?.count}
         nextMilestoneEmoji={friend.next_milestone?.emoji}
-        nextMilestonePenalty={friend.next_milestone?.penalty}
         className="mb-3 sm:mb-4"
       />
 
@@ -113,8 +108,8 @@ export function FriendCard({
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden shrink-0 bg-white/5 relative">
               {friend.last_incident.video_url ? (
                 <>
-                  <div className="w-full h-full bg-violet-500/20 flex items-center justify-center">
-                    <Video className="w-4 h-4 sm:w-5 sm:h-5 text-violet-400" />
+                  <div className="w-full h-full flex items-center justify-center bg-[rgba(var(--theme-primary),0.2)]">
+                    <Video className="w-4 h-4 sm:w-5 sm:h-5 theme-text-light" />
                   </div>
                 </>
               ) : (
@@ -145,7 +140,7 @@ export function FriendCard({
           {hasMedia && onViewGallery ? (
             <button
               onClick={() => onViewGallery(friend.id)}
-              className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors text-violet-400 hover:text-violet-300 shrink-0"
+              className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors theme-text-light shrink-0"
               aria-label={`Bekijk alle bewijzen van ${friend.name}`}
             >
               <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
