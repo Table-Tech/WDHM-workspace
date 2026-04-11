@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
-import { UserPlus, Clock, Zap, Settings, Image as ImageIcon, Award, MapPin, BarChart3, Gamepad2 } from 'lucide-react';
+import { UserPlus, Clock, Zap, Settings, Image as ImageIcon, Award, MapPin, BarChart3, Gamepad2, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FriendCard } from '@/components/friends/FriendCard';
 import { AddFriendModal } from '@/components/friends/AddFriendModal';
@@ -238,6 +238,17 @@ export function Dashboard() {
                     aria-label="Games spelen"
                   >
                     <Gamepad2 className="w-4 h-4 sm:w-5 sm:h-5 text-pink-400" />
+                  </Button>
+                </Link>
+
+                {/* Hall of Fame Button */}
+                <Link href="/hall-of-fame">
+                  <Button
+                    variant="ghost"
+                    className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all p-0"
+                    aria-label="Hall of Fame bekijken"
+                  >
+                    <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
                   </Button>
                 </Link>
 
