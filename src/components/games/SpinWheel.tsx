@@ -19,7 +19,7 @@ const COLORS = [
   "#355C7D",
 ]
 
-export default function SpinWheel() {
+export function SpinWheel() {
   const [names, setNames] = useState<string[]>([])
   const [newName, setNewName] = useState("")
   const [spinText, setSpinText] = useState("Waarvoor draai je?")

@@ -147,6 +147,13 @@ export interface FriendWithStats extends Friend {
   current_streak?: number;
 }
 
+// Media item for multiple uploads
+export interface MediaItem {
+  file: File;
+  type: 'photo' | 'video';
+  preview: string;
+}
+
 // Form types
 export interface IncidentFormData {
   friend_id: string;
@@ -156,6 +163,7 @@ export interface IncidentFormData {
   note: string;
   media: File | null;
   mediaType: 'photo' | 'video' | null;
+  mediaItems: MediaItem[];
   latitude: number | null;
   longitude: number | null;
 }
@@ -241,7 +249,7 @@ export interface Reset {
 }
 
 // Hall of Fame types
-export interface Record {
+export interface HallOfFameRecord {
   type: 'longest_streak' | 'most_minutes_single' | 'total_minutes' | 'most_monthly' | 'longest_ontime';
   friend: Friend;
   value: number;

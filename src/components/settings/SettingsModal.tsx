@@ -75,7 +75,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const isSaving = updateMutation.isPending || addMutation.isPending || deleteMutation.isPending;
 
   const handleReset = async () => {
-    await resetMutation.mutateAsync(null);
+    await resetMutation.mutateAsync();
     setShowResetConfirm(false);
   };
 

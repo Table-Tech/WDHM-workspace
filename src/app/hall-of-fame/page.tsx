@@ -6,7 +6,7 @@ import { Trophy, ArrowLeft, Clock, Flame, Target, Calendar, Star, History } from
 import { useRecords, useIconicMoments } from '@/hooks/useRecords';
 import { useResets } from '@/hooks/useSeasons';
 import { FriendAvatar } from '@/components/friends/FriendAvatar';
-import type { Record } from '@/types';
+import type { HallOfFameRecord } from '@/types';
 
 type Tab = 'records' | 'iconic' | 'history';
 
@@ -16,7 +16,7 @@ const TABS: { value: Tab; label: string; icon: React.ReactNode }[] = [
   { value: 'history', label: 'History', icon: <History className="w-4 h-4" /> },
 ];
 
-function getRecordLabel(type: Record['type']): string {
+function getRecordLabel(type: HallOfFameRecord['type']): string {
   switch (type) {
     case 'longest_streak':
       return 'Langste Te Laat Streak';
@@ -33,7 +33,7 @@ function getRecordLabel(type: Record['type']): string {
   }
 }
 
-function getRecordIcon(type: Record['type']) {
+function getRecordIcon(type: HallOfFameRecord['type']) {
   switch (type) {
     case 'longest_streak':
       return <Flame className="w-5 h-5 text-orange-400" />;
@@ -50,7 +50,7 @@ function getRecordIcon(type: Record['type']) {
   }
 }
 
-function formatRecordValue(record: Record): string {
+function formatRecordValue(record: HallOfFameRecord): string {
   switch (record.type) {
     case 'longest_streak':
     case 'longest_ontime':

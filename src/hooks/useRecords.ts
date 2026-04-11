@@ -2,10 +2,10 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { hasValidCredentials, supabase } from '@/lib/supabase';
-import type { Record, Friend, Incident, IconicMoment, Streak } from '@/types';
+import type { HallOfFameRecord, Friend, Incident, IconicMoment, Streak } from '@/types';
 
 // Fetch hall of fame records
-async function fetchRecords(): Promise<Record[]> {
+async function fetchRecords(): Promise<HallOfFameRecord[]> {
   if (!hasValidCredentials) return [];
 
   try {
@@ -28,7 +28,7 @@ async function fetchRecords(): Promise<Record[]> {
     const friends = (friendsData || []) as Friend[];
     const incidents = (incidentsData || []) as Incident[];
 
-    const records: Record[] = [];
+    const records: HallOfFameRecord[] = [];
 
     // 1. Longest late streak
     const longestLateStreak = streaks
@@ -77,14 +77,15 @@ async function fetchRecords(): Promise<Record[]> {
     });
 
     if (mostMinutesSingle && maxMinutes > 0) {
-      const friend = friends.find((f) => f.id === mostMinutesSingle!.friend_id);
+      const latestIncident = mostMinutesSingle as Incident;
+      const friend = friends.find((f) => f.id === latestIncident.friend_id);
       if (friend) {
         records.push({
           type: 'most_minutes_single',
           friend,
           value: maxMinutes,
-          incident: mostMinutesSingle,
-          date: mostMinutesSingle.created_at,
+          incident: latestIncident,
+          date: latestIncident.created_at,
         });
       }
     }
