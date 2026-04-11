@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { hasValidCredentials, supabase } from './supabase';
 
 export interface MediaUploadResult {
   url: string;
@@ -6,6 +6,11 @@ export interface MediaUploadResult {
 }
 
 export async function uploadIncidentMedia(file: File): Promise<MediaUploadResult | null> {
+  if (!hasValidCredentials) {
+    console.warn('Supabase is not configured. Media upload is disabled in local fallback mode.');
+    return null;
+  }
+
   const isVideo = file.type.startsWith('video/');
 
   if (isVideo) {

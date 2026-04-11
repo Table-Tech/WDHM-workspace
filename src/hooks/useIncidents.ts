@@ -1,12 +1,14 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { hasValidCredentials, supabase } from '@/lib/supabase';
 import { uploadIncidentMedia } from '@/lib/storage';
 import type { Incident, IncidentFormData, Friend, IncidentWithFriend } from '@/types';
 
 // Fetch all incidents
 async function fetchIncidents(): Promise<Incident[]> {
+  if (!hasValidCredentials) return [];
+
   const { data, error } = await supabase
     .from('incidents')
     .select('*')
@@ -18,6 +20,8 @@ async function fetchIncidents(): Promise<Incident[]> {
 
 // Fetch incidents for a specific friend
 async function fetchIncidentsByFriend(friendId: string): Promise<Incident[]> {
+  if (!hasValidCredentials) return [];
+
   const { data, error } = await supabase
     .from('incidents')
     .select('*')
@@ -30,6 +34,10 @@ async function fetchIncidentsByFriend(friendId: string): Promise<Incident[]> {
 
 // Create a new incident
 async function createIncident(formData: IncidentFormData): Promise<Incident> {
+  if (!hasValidCredentials) {
+    throw new Error('Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+  }
+
   let photoUrl: string | null = null;
   let videoUrl: string | null = null;
   let mediaType: 'photo' | 'video' | null = null;
@@ -71,6 +79,8 @@ export function useIncidents() {
   return useQuery({
     queryKey: ['incidents'],
     queryFn: fetchIncidents,
+    enabled: hasValidCredentials,
+    placeholderData: [],
   });
 }
 
@@ -79,7 +89,8 @@ export function useIncidentsByFriend(friendId: string | null) {
   return useQuery({
     queryKey: ['incidents', friendId],
     queryFn: () => (friendId ? fetchIncidentsByFriend(friendId) : Promise.resolve([])),
-    enabled: !!friendId,
+    enabled: !!friendId && hasValidCredentials,
+    placeholderData: [],
   });
 }
 
@@ -104,6 +115,8 @@ export function useIncidentCount(friendId: string) {
 
 // Fetch all incidents with friend data for gallery
 async function fetchIncidentsWithFriends(): Promise<IncidentWithFriend[]> {
+  if (!hasValidCredentials) return [];
+
   const { data, error } = await supabase
     .from('incidents')
     .select(`
@@ -124,6 +137,8 @@ export function useIncidentsWithFriends() {
   return useQuery({
     queryKey: ['incidents-with-friends'],
     queryFn: fetchIncidentsWithFriends,
+    enabled: hasValidCredentials,
+    placeholderData: [],
   });
 }
 
@@ -133,6 +148,7 @@ export function useIncidentsWithMediaByFriend(friendId: string | null) {
     queryKey: ['incidents-with-media', friendId],
     queryFn: async (): Promise<Incident[]> => {
       if (!friendId) return [];
+      if (!hasValidCredentials) return [];
 
       const { data, error } = await supabase
         .from('incidents')
@@ -144,6 +160,7 @@ export function useIncidentsWithMediaByFriend(friendId: string | null) {
       if (error) throw error;
       return data || [];
     },
-    enabled: !!friendId,
+    enabled: !!friendId && hasValidCredentials,
+    placeholderData: [],
   });
 }

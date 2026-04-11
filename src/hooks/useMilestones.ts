@@ -1,12 +1,14 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { hasValidCredentials, supabase } from '@/lib/supabase';
 import { convertToMilestones, DEFAULT_MILESTONES } from '@/lib/milestones';
 import type { GroupSetting, Milestone } from '@/types';
 
 // Fetch milestones from database
 async function fetchMilestones(): Promise<GroupSetting[]> {
+  if (!hasValidCredentials) return [];
+
   const { data, error } = await supabase
     .from('group_settings')
     .select('*')
@@ -27,6 +29,10 @@ async function updateMilestone(milestone: {
   penalty_text: string;
   emoji: string;
 }): Promise<GroupSetting> {
+  if (!hasValidCredentials) {
+    throw new Error('Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+  }
+
   const { data, error } = await supabase
     .from('group_settings')
     .update({
@@ -49,6 +55,10 @@ async function addMilestone(milestone: {
   penalty_text: string;
   emoji: string;
 }): Promise<GroupSetting> {
+  if (!hasValidCredentials) {
+    throw new Error('Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+  }
+
   const { data, error } = await supabase
     .from('group_settings')
     .insert({
@@ -65,6 +75,10 @@ async function addMilestone(milestone: {
 
 // Delete a milestone
 async function deleteMilestone(id: string): Promise<void> {
+  if (!hasValidCredentials) {
+    throw new Error('Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+  }
+
   const { error } = await supabase
     .from('group_settings')
     .delete()
@@ -85,6 +99,8 @@ export function useMilestones() {
       return convertToMilestones(settings);
     },
     staleTime: 1000 * 60 * 5,
+    enabled: hasValidCredentials,
+    placeholderData: DEFAULT_MILESTONES,
   });
 }
 
@@ -93,6 +109,8 @@ export function useMilestoneSettings() {
   return useQuery({
     queryKey: ['milestone-settings'],
     queryFn: fetchMilestones,
+    enabled: hasValidCredentials,
+    placeholderData: [],
   });
 }
 

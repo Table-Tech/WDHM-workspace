@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { hasValidCredentials, supabase } from '@/lib/supabase';
 import type { Incident, MilestoneReachedEvent } from '@/types';
 import { shouldShowMilestoneBanner, DEFAULT_MILESTONES } from '@/lib/milestones';
 
@@ -19,6 +19,11 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}) {
 
   // Update incident counts cache
   const updateIncidentCounts = useCallback(async () => {
+    if (!hasValidCredentials) {
+      incidentCountsRef.current = {};
+      return;
+    }
+
     const { data } = await supabase.from('incidents').select('friend_id');
     const counts: Record<string, number> = {};
     (data || []).forEach((incident) => {
@@ -33,6 +38,8 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}) {
   }, [updateIncidentCounts]);
 
   useEffect(() => {
+    if (!hasValidCredentials) return;
+
     // Subscribe to friends table changes
     const friendsChannel = supabase
       .channel('friends-changes')

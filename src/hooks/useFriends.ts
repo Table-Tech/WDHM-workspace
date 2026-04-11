@@ -1,13 +1,15 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { hasValidCredentials, supabase } from '@/lib/supabase';
 import { getRandomAvatarColor } from '@/lib/colors';
 import type { Friend, Incident, FriendWithStats } from '@/types';
 import { calculateMilestoneProgress, DEFAULT_MILESTONES } from '@/lib/milestones';
 
 // Fetch all friends
 async function fetchFriends(): Promise<Friend[]> {
+  if (!hasValidCredentials) return [];
+
   const { data, error } = await supabase
     .from('friends')
     .select('*')
@@ -19,6 +21,8 @@ async function fetchFriends(): Promise<Friend[]> {
 
 // Fetch incident counts per friend
 async function fetchIncidentCounts(): Promise<Record<string, number>> {
+  if (!hasValidCredentials) return {};
+
   const { data, error } = await supabase
     .from('incidents')
     .select('friend_id');
@@ -35,6 +39,8 @@ async function fetchIncidentCounts(): Promise<Record<string, number>> {
 
 // Fetch last incident per friend
 async function fetchLastIncidents(): Promise<Record<string, Incident>> {
+  if (!hasValidCredentials) return {};
+
   const { data, error } = await supabase
     .from('incidents')
     .select('*')
@@ -54,6 +60,10 @@ async function fetchLastIncidents(): Promise<Record<string, Incident>> {
 
 // Add a new friend
 async function addFriend(name: string): Promise<Friend> {
+  if (!hasValidCredentials) {
+    throw new Error('Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+  }
+
   const { data, error } = await supabase
     .from('friends')
     .insert({
@@ -69,6 +79,10 @@ async function addFriend(name: string): Promise<Friend> {
 
 // Update a friend
 async function updateFriend(data: { id: string; name: string; color: string }): Promise<Friend> {
+  if (!hasValidCredentials) {
+    throw new Error('Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+  }
+
   const { data: friend, error } = await supabase
     .from('friends')
     .update({
@@ -85,6 +99,10 @@ async function updateFriend(data: { id: string; name: string; color: string }): 
 
 // Delete a friend
 async function deleteFriend(id: string): Promise<void> {
+  if (!hasValidCredentials) {
+    throw new Error('Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+  }
+
   const { error } = await supabase
     .from('friends')
     .delete()
