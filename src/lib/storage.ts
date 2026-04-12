@@ -178,6 +178,56 @@ export async function uploadTripPhoto(file: File): Promise<string | null> {
   }
 }
 
+// Upload memory photo
+export async function uploadMemoryPhoto(file: File): Promise<string | null> {
+  if (!hasValidCredentials) {
+    console.warn('Supabase is not configured. Memory photo upload is disabled.');
+    return null;
+  }
+
+  try {
+    const resizedBlob = await resizeImage(file, 1600, 0.85);
+    const filename = `memory-${crypto.randomUUID()}.jpg`;
+
+    const { data, error } = await supabase.storage
+      .from('memory-photos')
+      .upload(filename, resizedBlob, {
+        contentType: 'image/jpeg',
+        cacheControl: '3600',
+      });
+
+    if (error) throw error;
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from('memory-photos').getPublicUrl(data.path);
+
+    return publicUrl;
+  } catch (error) {
+    console.error('Memory photo upload failed:', error);
+    return null;
+  }
+}
+
+// Upload multiple memory photos
+export async function uploadMemoryPhotos(files: File[]): Promise<string[]> {
+  if (!hasValidCredentials) {
+    console.warn('Supabase is not configured. Memory photo upload is disabled.');
+    return [];
+  }
+
+  const urls: string[] = [];
+
+  for (const file of files) {
+    const url = await uploadMemoryPhoto(file);
+    if (url) {
+      urls.push(url);
+    }
+  }
+
+  return urls;
+}
+
 async function resizeImage(file: File, maxWidth: number, quality: number): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image();

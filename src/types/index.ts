@@ -268,3 +268,35 @@ export interface IncidentExtended extends Incident {
   archived_at: string | null;
   season_id: string | null;
 }
+
+// Team Memories types
+export interface MemoryAlbum {
+  id: string;
+  title: string;
+  description: string | null;
+  cover_url: string | null;
+  event_date: string | null;
+  created_at: string;
+}
+
+export interface MemoryPhoto {
+  id: string;
+  album_id: string;
+  photo_url: string;
+  video_url: string | null;
+  caption: string | null;
+  is_cover: boolean;
+  created_at: string;
+}
+
+export interface MemoryAlbumWithPhotos extends MemoryAlbum {
+  photos: MemoryPhoto[];
+  photo_count: number;
+}
+
+export interface MemoryAlbumFormData {
+  title: string;
+  description: string;
+  event_date: string;
+  photos: File[];
+}
