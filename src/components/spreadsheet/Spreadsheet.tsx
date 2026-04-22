@@ -58,22 +58,22 @@ function SpreadsheetContent() {
     <div className="min-h-screen bg-zinc-950">
       {/* Compact Header */}
       <header className="sticky top-0 z-50 bg-zinc-950/95 backdrop-blur border-b border-zinc-800">
-        <div className="max-w-[1600px] mx-auto px-4 py-2">
-          <div className="flex items-center justify-between">
+        <div className="max-w-[1600px] mx-auto px-2 sm:px-4 py-2">
+          <div className="flex items-center justify-between gap-2">
             {/* Left: Back + Logo */}
-            <div className="flex items-center gap-3">
-              <Link href="/" className="p-1.5 hover:bg-zinc-800 rounded-lg transition-colors">
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              <Link href="/" className="p-1 sm:p-1.5 hover:bg-zinc-800 rounded-lg transition-colors">
                 <ArrowLeft className="w-4 h-4 text-zinc-400" />
               </Link>
               <div className="flex items-center gap-2">
-                <Image src="/logo.jpeg" alt="Logo" width={28} height={28} className="rounded-lg" />
-                <span className="text-sm font-semibold text-white">TechTable</span>
-                <span className="text-xs text-zinc-500">Financieel 2026</span>
+                <Image src="/logo.jpeg" alt="Logo" width={24} height={24} className="rounded-lg sm:w-7 sm:h-7" />
+                <span className="text-xs sm:text-sm font-semibold text-white hidden xs:inline">TechTable</span>
+                <span className="text-[10px] sm:text-xs text-zinc-500 hidden md:inline">Financieel 2026</span>
               </div>
             </div>
 
-            {/* Tabs */}
-            <nav className="flex items-center gap-0.5">
+            {/* Tabs - scrollable on mobile */}
+            <nav className="flex items-center gap-0.5 overflow-x-auto scrollbar-hide">
               {TABS.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -81,13 +81,13 @@ function SpreadsheetContent() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                       isActive
                         ? 'bg-zinc-800 text-white'
                         : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
                     }`}
                   >
-                    <Icon className="w-3.5 h-3.5" />
+                    <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     <span className="hidden sm:inline">{tab.label}</span>
                   </button>
                 );
@@ -98,7 +98,7 @@ function SpreadsheetContent() {
       </header>
 
       {/* Content */}
-      <main className="max-w-[1600px] mx-auto px-4 py-4">
+      <main className="max-w-[1600px] mx-auto px-2 sm:px-4 py-3 sm:py-4">
         {renderTab()}
       </main>
     </div>
