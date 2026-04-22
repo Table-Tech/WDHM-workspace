@@ -60,10 +60,10 @@ export function DashboardTab() {
   const [mounted, setMounted] = useState(false);
 
   // Prevent hydration mismatch and chart dimension errors
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setMounted(true); }, []);
 
   const {
+    isHydrated,
     instellingen,
     getDashboardMetrics,
     getFounderVerdelingen,
@@ -111,6 +111,24 @@ export function DashboardTab() {
   const displayMarge = displayInkomsten > 0
     ? (displayWinst / displayInkomsten) * 100
     : 0;
+
+  // Show loading skeleton until data is hydrated from localStorage
+  if (!isHydrated) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="h-8 bg-zinc-800 rounded w-64" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="bg-zinc-900 rounded-xl p-4 h-24" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-zinc-900 rounded-xl h-80" />
+          <div className="bg-zinc-900 rounded-xl h-80" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
