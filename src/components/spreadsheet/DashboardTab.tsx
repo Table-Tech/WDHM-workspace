@@ -568,12 +568,6 @@ export function DashboardTab() {
         </div>
       )}
 
-      {/* Future Years Placeholder */}
-      <div className="bg-zinc-900/30 rounded-xl border border-dashed border-zinc-700 p-6 text-center">
-        <TrendingUp className="w-8 h-8 text-zinc-600 mx-auto mb-2" />
-        <p className="text-zinc-500 text-sm">Jaar-over-jaar vergelijking</p>
-        <p className="text-zinc-600 text-xs mt-1">Beschikbaar wanneer er data is voor meerdere jaren</p>
-      </div>
     </div>
   );
 }
