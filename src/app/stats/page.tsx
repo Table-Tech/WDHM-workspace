@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { BarChart3, ArrowLeft, Calendar, Trophy, Users, Flame, Target } from 'lucide-react';
+import { BarChart3, ArrowLeft, Calendar, Trophy, Users, Flame, Target, PartyPopper } from 'lucide-react';
 import { LeaderboardTable } from '@/components/stats/LeaderboardTable';
 import { FunStats } from '@/components/stats/FunStats';
 import { StatCard } from '@/components/stats/StatCard';
@@ -110,7 +110,7 @@ export default function StatsPage() {
                 flex items-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all border backdrop-blur-md
                 ${leaderboardType === type.value
                   ? 'bg-blue-600/80 border-blue-400 text-white'
-                  : 'bg-black/40 border-white/20 text-white hover:bg-black/50 hover:border-white/30'
+                  : 'bg-zinc-900/90 border-white/20 text-white hover:bg-zinc-800/90 hover:border-white/30'
                 }
               `}
             >
@@ -123,7 +123,7 @@ export default function StatsPage() {
         {/* Period Filter */}
         <div className="flex items-center gap-2 mb-4">
           <Calendar className="w-4 h-4 text-white/50" />
-          <div className="flex gap-1 bg-black/40 backdrop-blur-md border border-white/20 rounded-lg p-1">
+          <div className="flex gap-1 bg-zinc-900/90 backdrop-blur-md border border-white/20 rounded-lg p-1">
             {PERIODS.map((p) => (
               <button
                 key={p.value}
@@ -132,7 +132,7 @@ export default function StatsPage() {
                   px-3 py-1 rounded-md text-sm transition-all
                   ${period === p.value
                     ? 'bg-blue-600/80 text-white'
-                    : 'text-white/70 hover:bg-black/40 hover:text-white'
+                    : 'text-white/70 hover:bg-zinc-800/80 hover:text-white'
                   }
                 `}
               >
@@ -143,7 +143,7 @@ export default function StatsPage() {
         </div>
 
         {/* Leaderboard */}
-        <div className="bg-black/50 backdrop-blur-xl border border-white/15 rounded-xl p-3 sm:p-4 shadow-xl">
+        <div className="bg-zinc-900/90 backdrop-blur-xl border border-white/15 rounded-xl p-3 sm:p-4 shadow-xl">
           <LeaderboardTable
             entries={leaderboard}
             type={leaderboardType}
@@ -155,7 +155,7 @@ export default function StatsPage() {
       {/* Fun Stats Section */}
       <section>
         <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-          <span className="text-xl">🎉</span>
+          <PartyPopper className="w-5 h-5 text-yellow-400" />
           Fun Facts
         </h2>
         <FunStats />

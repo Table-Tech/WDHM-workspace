@@ -41,10 +41,10 @@ export function FriendCard({
   return (
     <article
       className={`
-        bg-black/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-3 sm:p-5
+        bg-zinc-900/90 backdrop-blur-xl rounded-xl sm:rounded-2xl p-3 sm:p-5
         border border-white/15 shadow-xl
         transition-all duration-300 ease-out
-        hover:bg-black/60 hover:border-white/25
+        hover:bg-zinc-800/95 hover:border-white/25
         ${isAnimating ? 'animate-glow-pulse' : ''}
         ${friend.progress_percentage >= 80 ? 'border-red-500/50' : ''}
       `}

@@ -9,6 +9,7 @@ import { FriendCard } from '@/components/friends/FriendCard';
 import { AddFriendModal } from '@/components/friends/AddFriendModal';
 import { EditFriendModal } from '@/components/friends/EditFriendModal';
 import { IncidentModal } from '@/components/incidents/IncidentModal';
+import { OnTimeModal } from '@/components/incidents/OnTimeModal';
 import { Leaderboard } from '@/components/leaderboard/Leaderboard';
 import { MilestoneBanner } from '@/components/shared/MilestoneBanner';
 import { MilestoneGallery } from '@/components/gallery/MilestoneGallery';
@@ -17,10 +18,11 @@ import { InviteButton } from '@/components/invite/InviteButton';
 import { BadgeNotification } from '@/components/badges';
 import { useFriendsWithStats, useAddFriend, useUpdateFriend, useDeleteFriend } from '@/hooks/useFriends';
 import { useCreateIncident, useDeleteIncident } from '@/hooks/useIncidents';
-import { useMarkAsOnTime, useUndoOnTime } from '@/hooks/useStreaks';
+import { useCreateOnTimeIncident } from '@/hooks/useOnTimeIncidents';
+import { useUndoOnTime } from '@/hooks/useStreaks';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { useMilestones } from '@/hooks/useMilestones';
-import type { Friend, IncidentFormData, MilestoneReachedEvent, FriendBadge } from '@/types';
+import type { Friend, IncidentFormData, OnTimeFormData, MilestoneReachedEvent, FriendBadge } from '@/types';
 
 export function Dashboard() {
   // State
@@ -28,6 +30,8 @@ export function Dashboard() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [isIncidentModalOpen, setIsIncidentModalOpen] = useState(false);
+  const [isOnTimeModalOpen, setIsOnTimeModalOpen] = useState(false);
+  const [onTimeFriend, setOnTimeFriend] = useState<Friend | null>(null);
   const [milestoneEvent, setMilestoneEvent] = useState<MilestoneReachedEvent | null>(null);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [galleryEvent, setGalleryEvent] = useState<MilestoneReachedEvent | null>(null);
@@ -47,7 +51,7 @@ export function Dashboard() {
   const deleteFriendMutation = useDeleteFriend();
   const createIncidentMutation = useCreateIncident();
   const deleteIncidentMutation = useDeleteIncident();
-  const markOnTimeMutation = useMarkAsOnTime();
+  const createOnTimeIncidentMutation = useCreateOnTimeIncident();
   const undoOnTimeMutation = useUndoOnTime();
 
   // Realtime sync with milestone callback
@@ -120,18 +124,31 @@ export function Dashboard() {
     setTimeout(() => setAnimatingFriendId(null), 1000);
   };
 
-  // Handler for marking someone as on time
-  const handleMarkOnTime = async (friendId: string) => {
+  // Handler for opening on-time modal
+  const handleMarkOnTime = (friendId: string) => {
     const friend = friends.find((f) => f.id === friendId);
-    if (!friend) return;
+    if (friend) {
+      setOnTimeFriend(friend);
+      setIsOnTimeModalOpen(true);
+    }
+  };
 
-    const result = await markOnTimeMutation.mutateAsync(friendId);
+  // Handler for creating on-time incident with photo
+  const handleCreateOnTimeIncident = async (data: OnTimeFormData) => {
+    const result = await createOnTimeIncidentMutation.mutateAsync(data);
+    setIsOnTimeModalOpen(false);
 
     // Show badge notifications if any were earned
-    if (result && result.newBadges.length > 0) {
-      setBadgeFriendName(friend.name);
+    if (result.newBadges.length > 0) {
+      setBadgeFriendName(onTimeFriend?.name || '');
       setEarnedBadges(result.newBadges);
     }
+
+    setOnTimeFriend(null);
+
+    // Trigger animation
+    setAnimatingFriendId(data.friend_id);
+    setTimeout(() => setAnimatingFriendId(null), 1000);
   };
 
   // Handler for undoing an on-time mark (in case of accidental click)
@@ -450,6 +467,17 @@ export function Dashboard() {
         onDelete={handleDeleteFriend}
         isSaving={updateFriendMutation.isPending}
         isDeleting={deleteFriendMutation.isPending}
+      />
+
+      <OnTimeModal
+        friend={onTimeFriend}
+        isOpen={isOnTimeModalOpen}
+        onClose={() => {
+          setIsOnTimeModalOpen(false);
+          setOnTimeFriend(null);
+        }}
+        onSubmit={handleCreateOnTimeIncident}
+        isSubmitting={createOnTimeIncidentMutation.isPending}
       />
     </>
   );
