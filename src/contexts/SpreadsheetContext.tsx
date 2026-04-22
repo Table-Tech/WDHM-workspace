@@ -786,11 +786,14 @@ export function SpreadsheetProvider({ children }: { children: ReactNode }) {
     const sumUpToCurrent = (arr: number[]) =>
       arr.reduce((sum, val, i) => i <= currentMonthIndex ? sum + val : sum, 0);
 
-    // Uitgaven voor hele jaar (bekend vooraf - vaste kosten)
+    // Uitgaven: als het boekjaar nog niet begonnen is (currentMonthIndex === -1),
+    // toon ook 0 uitgaven om misleidende negatieve winst te voorkomen.
+    // Anders: hele jaar uitgaven (bekend vooraf - vaste kosten)
     const sumAll = (arr: number[]) => arr.reduce((sum, val) => sum + val, 0);
 
     const totaalInkomsten = sumUpToCurrent(mrr) + sumUpToCurrent(eenmalig);
-    const totaalUitgaven = sumAll(uitgavenTotaal); // Hele jaar uitgaven (bekend)
+    // Als boekjaar nog niet gestart, ook uitgaven op 0 zetten
+    const totaalUitgaven = currentMonthIndex >= 0 ? sumAll(uitgavenTotaal) : 0;
     const totaalCommissie = sumUpToCurrent(commissie); // Commissie is % van inkomsten
     const totaalWinst = totaalInkomsten - totaalUitgaven - totaalCommissie;
 
