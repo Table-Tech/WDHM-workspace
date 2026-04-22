@@ -21,7 +21,8 @@ const FASE_STYLES: Record<PipelineFase, string> = {
 type InnerTab = 'klanten' | 'leads';
 
 export function KlantenMRRTab() {
-  const { klanten, leads, addKlant, updateKlant, deleteKlant, deleteLead, getKlantenKPIs, moveKlantToLeads, restoreLeadToKlant } = useSpreadsheet();
+  const { klanten, leads, addKlant, updateKlant, deleteKlant, deleteLead, getKlantenKPIs, moveKlantToLeads, restoreLeadToKlant, instellingen, getSalesPersoon } = useSpreadsheet();
+  const salesPersonen = instellingen.salesPersonen || [];
   const [innerTab, setInnerTab] = useState<InnerTab>('klanten');
   const [expandedKlant, setExpandedKlant] = useState<string | null>(null);
   const [showAfwijsModal, setShowAfwijsModal] = useState<string | null>(null);
@@ -39,8 +40,7 @@ export function KlantenMRRTab() {
       productDienst: '',
       mrrPerMaand: 0,
       eenmalig: 0,
-      salesCommissie: false,
-      salesCommissiePercentage: 0,
+      salesPersoonId: '',
       status: 'Actief',
       maandInkomsten: Array(12).fill(0),
       contactpersoon: '',
@@ -227,26 +227,24 @@ export function KlantenMRRTab() {
                     />
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <button
-                        onClick={() => updateKlant(klant.id, { salesCommissie: !klant.salesCommissie })}
-                        className={`text-xs px-2 py-1 rounded ${klant.salesCommissie ? 'bg-orange-500/20 text-orange-400' : 'text-zinc-600'}`}
+                    {salesPersonen.length === 0 ? (
+                      <span className="text-zinc-600 text-xs">—</span>
+                    ) : (
+                      <select
+                        value={klant.salesPersoonId || ''}
+                        onChange={(e) => updateKlant(klant.id, { salesPersoonId: e.target.value })}
+                        className={`text-xs px-2 py-1 rounded bg-zinc-800 border-0 ${
+                          klant.salesPersoonId ? 'text-orange-400' : 'text-zinc-500'
+                        }`}
                       >
-                        {klant.salesCommissie ? 'Ja' : '—'}
-                      </button>
-                      {klant.salesCommissie && (
-                        <div className="flex items-center">
-                          <input
-                            type="number"
-                            value={klant.salesCommissiePercentage || ''}
-                            onChange={(e) => updateKlant(klant.id, { salesCommissiePercentage: parseFloat(e.target.value) || 0 })}
-                            placeholder="15"
-                            className="bg-transparent text-orange-400 w-10 text-center focus:outline-none focus:bg-zinc-800 rounded text-xs"
-                          />
-                          <span className="text-orange-400 text-xs">%</span>
-                        </div>
-                      )}
-                    </div>
+                        <option value="">—</option>
+                        {salesPersonen.map(sp => (
+                          <option key={sp.id} value={sp.id}>
+                            {sp.naam} ({sp.commissiePercentage}%)
+                          </option>
+                        ))}
+                      </select>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <button

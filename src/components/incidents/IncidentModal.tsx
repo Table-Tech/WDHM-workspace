@@ -88,9 +88,13 @@ export function IncidentModal({
   };
 
   const handleGetCurrentLocation = async () => {
-    const coords = await getCurrentLocation();
-    if (coords) {
-      setGpsCoords(coords);
+    const result = await getCurrentLocation();
+    if (result) {
+      setGpsCoords({ latitude: result.latitude, longitude: result.longitude });
+      // Auto-fill the location field with the address
+      if (result.address && !location) {
+        setLocation(result.address);
+      }
     }
   };
 
@@ -128,7 +132,7 @@ export function IncidentModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="glass-modal w-[95vw] max-w-md border-white/10 max-h-[90vh] overflow-y-auto p-4 sm:p-6 rounded-xl sm:rounded-2xl">
+      <DialogContent className="bg-black/80 backdrop-blur-xl w-[95vw] max-w-md border border-white/15 max-h-[90vh] overflow-y-auto p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-2xl">
         <DialogHeader>
           <div className="flex items-center gap-2 sm:gap-3 mb-2">
             <FriendAvatar name={friend.name} color={friend.color} size="sm" className="sm:hidden shrink-0" />
@@ -145,7 +149,7 @@ export function IncidentModal({
         </DialogHeader>
 
         {/* Quick info banner */}
-        <div className="p-2.5 sm:p-3 rounded-lg sm:rounded-xl bg-orange-500/10 border border-orange-500/20 text-xs sm:text-sm text-orange-300/90">
+        <div className="p-2.5 sm:p-3 rounded-lg sm:rounded-xl bg-black/40 backdrop-blur-md border border-orange-500/30 text-xs sm:text-sm text-orange-300/90">
           <p className="flex items-center gap-1.5">
             <MapPin className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
             Voeg bewijs toe: waar hadden jullie afgesproken? Maak een foto van de plek!
@@ -185,7 +189,7 @@ export function IncidentModal({
             {mediaItems.length > 0 && (
               <div className="grid grid-cols-3 gap-2">
                 {mediaItems.map((item, index) => (
-                  <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-white/5 border border-white/10">
+                  <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-black/40 border border-white/15">
                     {item.type === 'video' ? (
                       <video
                         src={item.preview}
@@ -269,42 +273,57 @@ export function IncidentModal({
             )}
           </div>
 
-          {/* Location */}
+          {/* Location with GPS */}
           <div className="space-y-1.5 sm:space-y-2">
             <Label htmlFor="location" className="text-xs sm:text-sm text-white/70 flex items-center gap-1.5 sm:gap-2">
               <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
-              Waar hadden jullie afgesproken?
+              Locatie
             </Label>
-            <div className="flex gap-2">
-              <Input
-                id="location"
-                placeholder="Bijv. McDonalds Centrum, Station..."
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="bg-white/5 border-white/10 focus:border-white/30 placeholder:text-white/30 h-9 sm:h-10 text-sm flex-1"
-              />
-              <Button
-                type="button"
-                onClick={handleGetCurrentLocation}
-                disabled={isGettingLocation}
-                className={`h-9 sm:h-10 px-3 border-0 transition-all ${
-                  gpsCoords
-                    ? 'bg-green-600 hover:bg-green-500'
-                    : 'bg-white/10 hover:bg-white/20'
-                }`}
-                title="Huidige locatie vastleggen"
-              >
-                {isGettingLocation ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Crosshair className="w-4 h-4" />
-                )}
-              </Button>
-            </div>
+
+            {/* GPS Button - Prominent */}
+            <Button
+              type="button"
+              onClick={handleGetCurrentLocation}
+              disabled={isGettingLocation}
+              className={`w-full h-11 sm:h-12 border-0 transition-all gap-2 ${
+                gpsCoords
+                  ? 'bg-green-600 hover:bg-green-500'
+                  : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500'
+              }`}
+            >
+              {isGettingLocation ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Locatie ophalen...</span>
+                </>
+              ) : gpsCoords ? (
+                <>
+                  <Crosshair className="w-5 h-5" />
+                  <span>✓ Locatie vastgelegd</span>
+                </>
+              ) : (
+                <>
+                  <Crosshair className="w-5 h-5" />
+                  <span>📍 Pak Huidige Locatie</span>
+                </>
+              )}
+            </Button>
+
+            {/* Address input - auto-filled or manual */}
+            <Input
+              id="location"
+              placeholder="Adres wordt automatisch ingevuld..."
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              className={`bg-black/40 border-white/20 focus:border-white/40 placeholder:text-white/30 h-9 sm:h-10 text-sm backdrop-blur-md ${
+                gpsCoords && location ? 'border-green-500/40' : ''
+              }`}
+            />
+
             {gpsCoords && (
               <p className="text-xs text-green-400 flex items-center gap-1">
                 <Crosshair className="w-3 h-3" />
-                GPS locatie vastgelegd
+                GPS coördinaten opgeslagen voor de kaart
               </p>
             )}
             {locationError && (
@@ -326,7 +345,7 @@ export function IncidentModal({
                 type="time"
                 value={scheduledTime}
                 onChange={(e) => setScheduledTime(e.target.value)}
-                className="bg-white/5 border-white/10 focus:border-white/30 h-9 sm:h-10 text-sm"
+                className="bg-black/40 border-white/20 focus:border-white/40 h-9 sm:h-10 text-sm backdrop-blur-md"
               />
             </div>
 
@@ -344,7 +363,7 @@ export function IncidentModal({
                 placeholder="15"
                 value={minutesLate}
                 onChange={(e) => setMinutesLate(e.target.value)}
-                className="bg-white/5 border-white/10 focus:border-white/30 placeholder:text-white/30 h-9 sm:h-10 text-sm"
+                className="bg-black/40 border-white/20 focus:border-white/40 placeholder:text-white/30 h-9 sm:h-10 text-sm backdrop-blur-md"
               />
             </div>
           </div>
@@ -362,7 +381,7 @@ export function IncidentModal({
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows={2}
-              className="bg-white/5 border-white/10 focus:border-white/30 placeholder:text-white/30 resize-none text-sm"
+              className="bg-black/40 border-white/20 focus:border-white/40 placeholder:text-white/30 resize-none text-sm backdrop-blur-md"
             />
           </div>
 
@@ -372,7 +391,7 @@ export function IncidentModal({
               type="button"
               variant="outline"
               onClick={handleClose}
-              className="flex-1 border-white/10 hover:bg-white/5 h-10 sm:h-11 text-sm"
+              className="flex-1 border-white/20 hover:bg-white/10 h-10 sm:h-11 text-sm"
               disabled={isSubmitting}
             >
               Annuleren

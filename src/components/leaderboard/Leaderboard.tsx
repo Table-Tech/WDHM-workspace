@@ -29,13 +29,13 @@ function getRankIcon(rank: number, isMobile: boolean = false) {
 function getRankStyle(rank: number) {
   switch (rank) {
     case 1:
-      return 'bg-yellow-500/10 border-yellow-500/30';
+      return 'bg-yellow-500/20 border-yellow-500/40';
     case 2:
-      return 'bg-gray-500/10 border-gray-500/30';
+      return 'bg-black/30 border-white/20';
     case 3:
-      return 'bg-amber-600/10 border-amber-600/30';
+      return 'bg-amber-600/20 border-amber-600/40';
     default:
-      return 'bg-white/[0.02] border-white/5';
+      return 'bg-black/30 border-white/15';
   }
 }
 
@@ -50,7 +50,7 @@ export function Leaderboard({ friends, milestones = DEFAULT_MILESTONES }: Leader
 
   return (
     <aside
-      className="glass-card rounded-xl sm:rounded-2xl p-3 sm:p-5 h-fit lg:sticky lg:top-24"
+      className="bg-black/50 backdrop-blur-xl border border-white/15 shadow-xl rounded-xl sm:rounded-2xl p-3 sm:p-5 h-fit lg:sticky lg:top-24"
       aria-labelledby="leaderboard-heading"
     >
       {/* Header */}
