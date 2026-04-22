@@ -58,10 +58,10 @@ function SpreadsheetContent() {
     <div className="min-h-screen bg-zinc-950">
       {/* Compact Header */}
       <header className="sticky top-0 z-50 bg-zinc-950/95 backdrop-blur border-b border-zinc-800">
-        <div className="max-w-[1600px] mx-auto px-2 sm:px-4 py-2">
+        <div className="max-w-400 mx-auto px-2 sm:px-4 py-2">
           <div className="flex items-center justify-between gap-2">
             {/* Left: Back + Logo */}
-            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
               <Link href="/" className="p-1 sm:p-1.5 hover:bg-zinc-800 rounded-lg transition-colors">
                 <ArrowLeft className="w-4 h-4 text-zinc-400" />
               </Link>
@@ -81,7 +81,7 @@ function SpreadsheetContent() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+                    className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
                       isActive
                         ? 'bg-zinc-800 text-white'
                         : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
@@ -98,7 +98,7 @@ function SpreadsheetContent() {
       </header>
 
       {/* Content */}
-      <main className="max-w-[1600px] mx-auto px-2 sm:px-4 py-3 sm:py-4">
+      <main className="max-w-400 mx-auto px-2 sm:px-4 py-3 sm:py-4">
         {renderTab()}
       </main>
     </div>

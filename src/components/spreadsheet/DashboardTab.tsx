@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, type ReactElement } from 'react';
 import { useSpreadsheet } from '@/contexts/SpreadsheetContext';
 import { formatEuro, formatPercentage } from '@/lib/spreadsheet-utils';
 import {
@@ -20,6 +20,18 @@ import {
 import { Users, Wallet, Receipt, PiggyBank, Target, Building2, Info, Calendar, ChevronDown, Percent } from 'lucide-react';
 
 const CHART_COLORS = ['#14b8a6', '#22c55e', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4'];
+const CHART_DOT_CLASSES = ['bg-teal-500', 'bg-green-500', 'bg-blue-500', 'bg-violet-500', 'bg-amber-500', 'bg-red-500', 'bg-pink-500', 'bg-cyan-500'];
+
+const TOOLTIP_TEXT_COLOR_CLASSES: Record<string, string> = {
+  '#14b8a6': 'text-teal-400',
+  '#22c55e': 'text-green-400',
+  '#3b82f6': 'text-blue-400',
+  '#8b5cf6': 'text-violet-400',
+  '#f59e0b': 'text-amber-400',
+  '#ef4444': 'text-red-400',
+  '#ec4899': 'text-pink-400',
+  '#06b6d4': 'text-cyan-400',
+};
 
 const MAANDEN = [
   { value: -1, label: 'Heel jaar', kort: 'Jaar' },
@@ -44,7 +56,10 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
       <div className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 shadow-xl">
         <p className="text-zinc-400 text-xs mb-1">{label}</p>
         {payload.map((entry, index) => (
-          <p key={index} style={{ color: entry.color }} className="text-sm font-medium">
+          <p
+            key={index}
+            className={`text-sm font-medium ${TOOLTIP_TEXT_COLOR_CLASSES[entry.color] || 'text-zinc-200'}`}
+          >
             {entry.name}: {formatEuro(entry.value)}
           </p>
         ))}
@@ -52,6 +67,52 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
     );
   }
   return null;
+}
+
+function ChartContainer({
+  className,
+  minWidth,
+  minHeight,
+  children,
+}: {
+  className: string;
+  minWidth: number;
+  minHeight: number;
+  children: ReactElement;
+}) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [hasValidSize, setHasValidSize] = useState(false);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const updateSize = () => {
+      const rect = container.getBoundingClientRect();
+      setHasValidSize(rect.width > 0 && rect.height > 0);
+    };
+
+    const frame = requestAnimationFrame(updateSize);
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(container);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, []);
+
+  return (
+    <div ref={containerRef} className={className}>
+      {hasValidSize ? (
+        <ResponsiveContainer width="100%" height="100%" minWidth={minWidth} minHeight={minHeight}>
+          {children}
+        </ResponsiveContainer>
+      ) : (
+        <div className="h-full flex items-center justify-center text-zinc-600 text-sm">Laden...</div>
+      )}
+    </div>
+  );
 }
 
 export function DashboardTab() {
@@ -152,12 +213,12 @@ export function DashboardTab() {
             >
               <Calendar className="w-4 h-4 text-zinc-400" />
               <span className="text-xs sm:text-sm text-white truncate">{selectedMaandLabel}</span>
-              <ChevronDown className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+              <ChevronDown className="w-4 h-4 text-zinc-400 shrink-0" />
             </button>
             {showMonthDropdown && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowMonthDropdown(false)} />
-                <div className="absolute right-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-20 min-w-[160px] max-h-80 overflow-y-auto">
+                <div className="absolute right-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-20 min-w-40 max-h-80 overflow-y-auto">
                   {MAANDEN.map((maand) => {
                     const isFuture = maand.value >= 0 && maand.value > currentMonthIndex;
                     return (
@@ -185,7 +246,7 @@ export function DashboardTab() {
             )}
           </div>
           {/* Year indicator */}
-          <div className="bg-teal-500/10 border border-teal-500/20 rounded-lg px-3 sm:px-4 py-1.5 sm:py-2 flex-shrink-0">
+          <div className="bg-teal-500/10 border border-teal-500/20 rounded-lg px-3 sm:px-4 py-1.5 sm:py-2 shrink-0">
             <p className="text-[10px] sm:text-xs text-teal-400">Boekjaar</p>
             <p className="text-base sm:text-lg font-bold text-white">{instellingen.boekjaar}</p>
           </div>
@@ -195,7 +256,7 @@ export function DashboardTab() {
       {/* Info box */}
       {isYearView && (
         <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-4 py-3 flex items-start gap-3">
-          <Info className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+          <Info className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
           <p className="text-xs text-blue-300/80">
             <span className="font-medium text-blue-300">Kosten zijn voor het hele jaar berekend (bekend vooraf).</span>{' '}
             Inkomsten worden pas getoond na afloop van de maand. Je ziet daarom mogelijk negatieve winst aan het begin van het jaar.
@@ -205,7 +266,7 @@ export function DashboardTab() {
 
       {!isYearView && !isFutureMonth && (
         <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg px-4 py-3 flex items-start gap-3">
-          <Calendar className="w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0" />
+          <Calendar className="w-4 h-4 text-purple-400 mt-0.5 shrink-0" />
           <p className="text-xs text-purple-300/80">
             <span className="font-medium text-purple-300">Je bekijkt {selectedMaandLabel} {instellingen.boekjaar}.</span>{' '}
             Selecteer &quot;Heel jaar&quot; om het volledige jaaroverzicht te zien.
@@ -215,7 +276,7 @@ export function DashboardTab() {
 
       {isFutureMonth && (
         <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg px-4 py-3 flex items-start gap-3">
-          <Calendar className="w-4 h-4 text-orange-400 mt-0.5 flex-shrink-0" />
+          <Calendar className="w-4 h-4 text-orange-400 mt-0.5 shrink-0" />
           <p className="text-xs text-orange-300/80">
             <span className="font-medium text-orange-300">{selectedMaandLabel} {instellingen.boekjaar} is nog niet begonnen.</span>{' '}
             Kosten zijn al wel bekend, maar inkomsten worden pas getoond na afloop van de maand.
@@ -261,9 +322,8 @@ export function DashboardTab() {
         {/* Monthly Revenue vs Expenses - 2/3 width */}
         <div className="lg:col-span-2 bg-zinc-900/50 rounded-xl border border-zinc-800 p-3 sm:p-4">
           <h3 className="text-sm font-semibold text-white mb-4">Inkomsten vs Kosten per Maand</h3>
-          <div className="h-48 sm:h-64">
-            {mounted ? (
-              <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={150}>
+          {mounted ? (
+            <ChartContainer className="h-48 sm:h-64" minWidth={200} minHeight={150}>
                 <AreaChart
                   data={monthlyData.map(d => ({
                     ...d,
@@ -305,22 +365,20 @@ export function DashboardTab() {
                     strokeWidth={2}
                   />
                 </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-zinc-600 text-sm">Laden...</div>
-            )}
-          </div>
+            </ChartContainer>
+          ) : (
+            <div className="h-48 sm:h-64 flex items-center justify-center text-zinc-600 text-sm">Laden...</div>
+          )}
         </div>
 
         {/* Expense Breakdown Pie Chart - 1/3 width */}
         <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 p-3 sm:p-4">
           <h3 className="text-sm font-semibold text-white mb-1">Kosten Verdeling</h3>
           <p className="text-[10px] text-zinc-500 mb-3">Jaarbedragen</p>
-          <div className="h-48 sm:h-64">
-            {!mounted ? (
-              <div className="h-full flex items-center justify-center text-zinc-600 text-sm">Laden...</div>
-            ) : uitgavenBreakdown.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%" minWidth={150} minHeight={150}>
+          {!mounted ? (
+            <div className="h-48 sm:h-64 flex items-center justify-center text-zinc-600 text-sm">Laden...</div>
+          ) : uitgavenBreakdown.length > 0 ? (
+            <ChartContainer className="h-48 sm:h-64" minWidth={150} minHeight={150}>
                 <PieChart>
                   <Pie
                     data={uitgavenBreakdown}
@@ -344,25 +402,23 @@ export function DashboardTab() {
                     labelStyle={{ color: '#a1a1aa' }}
                   />
                 </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-zinc-500 text-sm">
-                Geen uitgaven
-              </div>
-            )}
-          </div>
+            </ChartContainer>
+          ) : (
+            <div className="h-48 sm:h-64 flex items-center justify-center text-zinc-500 text-sm">
+              Geen uitgaven
+            </div>
+          )}
           {/* Legend */}
           <div className="mt-2 space-y-1 max-h-20 sm:max-h-24 overflow-y-auto">
             {uitgavenBreakdown.slice(0, 5).map((item, index) => (
               <div key={item.categorie} className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2 min-w-0">
                   <div
-                    className="w-2 h-2 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                    className={`w-2 h-2 rounded-full shrink-0 ${CHART_DOT_CLASSES[index % CHART_DOT_CLASSES.length]}`}
                   />
                   <span className="text-zinc-400 truncate">{item.categorie}</span>
                 </div>
-                <span className="text-zinc-300 flex-shrink-0 ml-2">{formatEuro(item.totaal)}</span>
+                <span className="text-zinc-300 shrink-0 ml-2">{formatEuro(item.totaal)}</span>
               </div>
             ))}
           </div>
@@ -372,9 +428,8 @@ export function DashboardTab() {
       {/* Monthly Profit Chart - alleen verleden/huidige maanden */}
       <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 p-3 sm:p-4">
         <h3 className="text-sm font-semibold text-white mb-4">Winst per Maand</h3>
-        <div className="h-40 sm:h-48">
-          {mounted ? (
-            <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={120}>
+        {mounted ? (
+          <ChartContainer className="h-40 sm:h-48" minWidth={200} minHeight={120}>
               <BarChart
                 data={monthlyData.map(d => ({ ...d, winst: d.isFuture ? null : d.winst }))}
                 margin={{ top: 5, right: 10, left: -10, bottom: 5 }}
@@ -385,11 +440,10 @@ export function DashboardTab() {
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="winst" name="Winst" fill="#22c55e" radius={[4, 4, 0, 0]} />
               </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-full flex items-center justify-center text-zinc-600 text-sm">Laden...</div>
-          )}
-        </div>
+          </ChartContainer>
+        ) : (
+          <div className="h-40 sm:h-48 flex items-center justify-center text-zinc-600 text-sm">Laden...</div>
+        )}
       </div>
 
       {/* Two Column Layout: Founders + Pipeline */}
@@ -455,22 +509,22 @@ export function DashboardTab() {
               {Object.entries(pipelineStats.perFase).map(([fase, aantal]) => {
                 const percentage = yearSummary.aantalKlanten > 0 ? (aantal / yearSummary.aantalKlanten) * 100 : 0;
                 const colors: Record<string, string> = {
-                  'Lead': 'bg-zinc-500',
-                  'Contact gelegd': 'bg-blue-500',
-                  'Offerte gestuurd': 'bg-yellow-500',
-                  'In onderhandeling': 'bg-orange-500',
-                  'Klant': 'bg-green-500',
-                  'Afgevallen': 'bg-red-500',
+                  'Lead': 'accent-zinc-500',
+                  'Contact gelegd': 'accent-blue-500',
+                  'Offerte gestuurd': 'accent-yellow-500',
+                  'In onderhandeling': 'accent-orange-500',
+                  'Klant': 'accent-green-500',
+                  'Afgevallen': 'accent-red-500',
                 };
+                const progressValue = Math.max(percentage, aantal > 0 ? 5 : 0);
                 return (
                   <div key={fase} className="flex items-center gap-2">
                     <span className="text-xs text-zinc-400 w-28 truncate">{fase}</span>
-                    <div className="flex-1 bg-zinc-800 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full ${colors[fase] || 'bg-zinc-500'}`}
-                        style={{ width: `${Math.max(percentage, aantal > 0 ? 5 : 0)}%` }}
-                      />
-                    </div>
+                    <progress
+                      className={`flex-1 h-2 overflow-hidden rounded-full [&::-webkit-progress-bar]:bg-zinc-800 [&::-webkit-progress-value]:rounded-full [&::-moz-progress-bar]:rounded-full ${colors[fase] || 'accent-zinc-500'}`}
+                      max={100}
+                      value={progressValue}
+                    />
                     <span className="text-xs text-zinc-300 w-6 text-right">{aantal}</span>
                   </div>
                 );
@@ -577,18 +631,28 @@ export function DashboardTab() {
           <div className="mt-4 bg-zinc-800/30 rounded-lg p-3">
             <div className="flex items-center gap-4">
               <div className="flex-1">
-                <div className="flex h-6 rounded overflow-hidden">
-                  <div
-                    className="bg-teal-500 flex items-center justify-center text-[10px] font-medium text-white"
-                    style={{ width: `${(btwSummary.omzetExclBTW / (btwSummary.omzetInclBTW || 1)) * 100}%` }}
-                  >
-                    Excl BTW
+                <div className="space-y-2">
+                  <div>
+                    <div className="flex items-center justify-between text-[10px] mb-1">
+                      <span className="text-zinc-300">Excl BTW</span>
+                      <span className="text-teal-400">{formatPercentage((btwSummary.omzetExclBTW / (btwSummary.omzetInclBTW || 1)) * 100)}</span>
+                    </div>
+                    <progress
+                      className="w-full h-2 overflow-hidden rounded-full accent-teal-500 [&::-webkit-progress-bar]:bg-zinc-800 [&::-webkit-progress-value]:rounded-full [&::-moz-progress-bar]:rounded-full"
+                      max={100}
+                      value={(btwSummary.omzetExclBTW / (btwSummary.omzetInclBTW || 1)) * 100}
+                    />
                   </div>
-                  <div
-                    className="bg-orange-500 flex items-center justify-center text-[10px] font-medium text-white"
-                    style={{ width: `${(btwSummary.btwBedrag / (btwSummary.omzetInclBTW || 1)) * 100}%` }}
-                  >
-                    BTW
+                  <div>
+                    <div className="flex items-center justify-between text-[10px] mb-1">
+                      <span className="text-zinc-300">BTW</span>
+                      <span className="text-orange-400">{formatPercentage((btwSummary.btwBedrag / (btwSummary.omzetInclBTW || 1)) * 100)}</span>
+                    </div>
+                    <progress
+                      className="w-full h-2 overflow-hidden rounded-full accent-orange-500 [&::-webkit-progress-bar]:bg-zinc-800 [&::-webkit-progress-value]:rounded-full [&::-moz-progress-bar]:rounded-full"
+                      max={100}
+                      value={(btwSummary.btwBedrag / (btwSummary.omzetInclBTW || 1)) * 100}
+                    />
                   </div>
                 </div>
               </div>
