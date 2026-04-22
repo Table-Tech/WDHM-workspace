@@ -1,64 +1,70 @@
-import type { Badge, Incident, FriendBadge } from '@/types';
+import type { Badge, Incident, FriendBadge, Streak } from '@/types';
 import { hasValidCredentials, supabase } from './supabase';
 
+// Extended evaluator context
+interface EvaluatorContext {
+  friendId: string;
+  badge: Badge;
+  currentIncident: Incident | null;
+  allIncidents: Incident[];
+  lateStreak: Streak | null;
+  onTimeStreak: Streak | null;
+}
+
 // Badge condition evaluators
-type BadgeEvaluator = (
-  friendId: string,
-  badge: Badge,
-  currentIncident: Incident,
-  allIncidents: Incident[]
-) => boolean;
+type BadgeEvaluator = (ctx: EvaluatorContext) => boolean;
 
 const evaluators: Record<string, BadgeEvaluator> = {
   // First ever late incident
-  first_late: (_friendId, _badge, _currentIncident, allIncidents) => {
-    return allIncidents.length === 1;
+  first_late: (ctx) => {
+    return ctx.allIncidents.length === 1;
   },
 
   // Total X times late
-  total_late: (_friendId, badge, _currentIncident, allIncidents) => {
-    return allIncidents.length >= (badge.condition_value || 0);
+  total_late: (ctx) => {
+    return ctx.allIncidents.length >= (ctx.badge.condition_value || 0);
   },
 
-  // X consecutive late incidents
-  consecutive_late: (_friendId, badge, _currentIncident, allIncidents) => {
-    // Since we're tracking late incidents, the count of incidents IS the streak
-    // This badge triggers when they've been late X times in a row
-    return allIncidents.length >= (badge.condition_value || 0);
+  // X consecutive late incidents - uses actual streak from database
+  consecutive_late: (ctx) => {
+    const currentStreak = ctx.lateStreak?.current_count || 0;
+    const bestStreak = ctx.lateStreak?.best_count || 0;
+    // Check both current and best streak (badge should be awarded if they ever reached it)
+    return Math.max(currentStreak, bestStreak) >= (ctx.badge.condition_value || 0);
   },
 
   // Single incident >X minutes late
-  minutes_late_single: (_friendId, badge, currentIncident) => {
-    const minLate = currentIncident.minutes_late || 0;
-    return minLate >= (badge.condition_value || 0);
+  minutes_late_single: (ctx) => {
+    // Check if any incident meets the condition
+    return ctx.allIncidents.some((i) => (i.minutes_late || 0) >= (ctx.badge.condition_value || 0));
   },
 
   // Average >X minutes late
-  minutes_late_avg: (_friendId, badge, _currentIncident, allIncidents) => {
-    if (allIncidents.length < 3) return false; // Need at least 3 incidents for meaningful avg
-    const totalMinutes = allIncidents.reduce((sum, i) => sum + (i.minutes_late || 0), 0);
-    const avg = totalMinutes / allIncidents.length;
-    return avg >= (badge.condition_value || 0);
+  minutes_late_avg: (ctx) => {
+    if (ctx.allIncidents.length < 3) return false; // Need at least 3 incidents for meaningful avg
+    const totalMinutes = ctx.allIncidents.reduce((sum, i) => sum + (i.minutes_late || 0), 0);
+    const avg = totalMinutes / ctx.allIncidents.length;
+    return avg >= (ctx.badge.condition_value || 0);
   },
 
   // X incidents without evidence (no photo/video)
-  no_evidence: (_friendId, badge, _currentIncident, allIncidents) => {
-    const withoutEvidence = allIncidents.filter((i) => !i.photo_url && !i.video_url);
-    return withoutEvidence.length >= (badge.condition_value || 0);
+  no_evidence: (ctx) => {
+    const withoutEvidence = ctx.allIncidents.filter((i) => !i.photo_url && !i.video_url);
+    return withoutEvidence.length >= (ctx.badge.condition_value || 0);
   },
 
   // X incidents always with evidence
-  always_evidence: (_friendId, badge, _currentIncident, allIncidents) => {
-    if (allIncidents.length < (badge.condition_value || 0)) return false;
-    const withEvidence = allIncidents.filter((i) => i.photo_url || i.video_url);
-    return withEvidence.length >= (badge.condition_value || 0);
+  always_evidence: (ctx) => {
+    const withEvidence = ctx.allIncidents.filter((i) => i.photo_url || i.video_url);
+    return withEvidence.length >= (ctx.badge.condition_value || 0);
   },
 
-  // On time streak (this is complex - would need additional tracking)
-  on_time_streak: () => {
-    // This requires additional "check-in" system to track on-time arrivals
-    // For now, we'll skip automatic evaluation
-    return false;
+  // On time streak - uses streak from database
+  on_time_streak: (ctx) => {
+    const currentStreak = ctx.onTimeStreak?.current_count || 0;
+    const bestStreak = ctx.onTimeStreak?.best_count || 0;
+    // Check both current and best streak
+    return Math.max(currentStreak, bestStreak) >= (ctx.badge.condition_value || 0);
   },
 
   // Custom badges are manually assigned
@@ -66,30 +72,24 @@ const evaluators: Record<string, BadgeEvaluator> = {
 };
 
 // Evaluate if a badge should be awarded
-export function evaluateBadgeCondition(
-  friendId: string,
-  badge: Badge,
-  currentIncident: Incident,
-  allIncidents: Incident[]
-): boolean {
-  const evaluator = evaluators[badge.condition_type];
+export function evaluateBadgeCondition(ctx: EvaluatorContext): boolean {
+  const evaluator = evaluators[ctx.badge.condition_type];
   if (!evaluator) return false;
-  return evaluator(friendId, badge, currentIncident, allIncidents);
+  return evaluator(ctx);
 }
 
 // Check and award badges after an incident
 export async function checkAndAwardBadges(
   friendId: string,
-  incident: Incident
+  incident: Incident | null = null
 ): Promise<FriendBadge[]> {
   if (!hasValidCredentials) return [];
 
   try {
-    // Fetch all badges
+    // Fetch all badges (both system and custom)
     const { data: badges, error: badgesError } = await supabase
       .from('badges')
-      .select('*')
-      .eq('is_system', true);
+      .select('*');
 
     if (badgesError || !badges) return [];
 
@@ -112,6 +112,15 @@ export async function checkAndAwardBadges(
 
     if (incidentsError || !allIncidents) return [];
 
+    // Fetch streaks for this friend
+    const { data: streaks } = await supabase
+      .from('streaks')
+      .select('*')
+      .eq('friend_id', friendId);
+
+    const lateStreak = streaks?.find((s) => s.streak_type === 'late') || null;
+    const onTimeStreak = streaks?.find((s) => s.streak_type === 'on_time') || null;
+
     const newlyEarned: FriendBadge[] = [];
 
     // Check each badge
@@ -119,13 +128,21 @@ export async function checkAndAwardBadges(
       // Skip if already earned
       if (earnedBadgeIds.has(badge.id)) continue;
 
-      // Evaluate condition
-      const shouldAward = evaluateBadgeCondition(
+      // Skip custom badges (manually assigned)
+      if (badge.condition_type === 'custom') continue;
+
+      // Build evaluator context
+      const ctx: EvaluatorContext = {
         friendId,
         badge,
-        incident,
-        allIncidents
-      );
+        currentIncident: incident,
+        allIncidents,
+        lateStreak,
+        onTimeStreak,
+      };
+
+      // Evaluate condition
+      const shouldAward = evaluateBadgeCondition(ctx);
 
       if (shouldAward) {
         // Award the badge
@@ -134,7 +151,7 @@ export async function checkAndAwardBadges(
           .insert({
             friend_id: friendId,
             badge_id: badge.id,
-            earned_incident_id: incident.id,
+            earned_incident_id: incident?.id || null,
           })
           .select(`
             *,
@@ -155,6 +172,30 @@ export async function checkAndAwardBadges(
   } catch (error) {
     console.error('Badge check failed:', error);
     return [];
+  }
+}
+
+// Check badges for all friends (useful for batch updates)
+export async function checkBadgesForAllFriends(): Promise<Map<string, FriendBadge[]>> {
+  if (!hasValidCredentials) return new Map();
+
+  try {
+    const { data: friends } = await supabase.from('friends').select('id');
+    if (!friends) return new Map();
+
+    const results = new Map<string, FriendBadge[]>();
+
+    for (const friend of friends) {
+      const newBadges = await checkAndAwardBadges(friend.id);
+      if (newBadges.length > 0) {
+        results.set(friend.id, newBadges);
+      }
+    }
+
+    return results;
+  } catch (error) {
+    console.error('Batch badge check failed:', error);
+    return new Map();
   }
 }
 
