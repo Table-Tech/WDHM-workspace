@@ -21,7 +21,7 @@ const FASE_STYLES: Record<PipelineFase, string> = {
 type InnerTab = 'klanten' | 'leads';
 
 export function KlantenMRRTab() {
-  const { klanten, leads, addKlant, updateKlant, deleteKlant, deleteLead, getKlantenKPIs, moveKlantToLeads, restoreLeadToKlant, instellingen } = useSpreadsheet();
+  const { isHydrated, klanten, leads, addKlant, updateKlant, deleteKlant, deleteLead, getKlantenKPIs, moveKlantToLeads, restoreLeadToKlant, instellingen } = useSpreadsheet();
   const salesPersonen = instellingen.salesPersonen || [];
   const [innerTab, setInnerTab] = useState<InnerTab>('klanten');
   const [expandedKlant, setExpandedKlant] = useState<string | null>(null);
@@ -72,6 +72,16 @@ export function KlantenMRRTab() {
     setShowAfwijsModal(null);
     setAfwijsReden('');
   };
+
+  // Show loading skeleton until data is hydrated from localStorage
+  if (!isHydrated) {
+    return (
+      <div className="space-y-4 animate-pulse">
+        <div className="h-8 bg-zinc-800 rounded w-48" />
+        <div className="bg-zinc-900 rounded-xl h-96" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

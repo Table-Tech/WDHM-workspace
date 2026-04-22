@@ -216,7 +216,7 @@ export function SalesTeamSection() {
 
   if (!isLoaded) {
     return (
-      <div className="mt-8 p-6 bg-zinc-900/50 rounded-2xl border border-zinc-800">
+      <div className="mt-8 p-6 bg-zinc-900 rounded-2xl border border-zinc-800">
         <div className="animate-pulse h-32 bg-zinc-800/50 rounded-xl" />
       </div>
     );
@@ -240,7 +240,7 @@ export function SalesTeamSection() {
         {salesTeam.map((person) => (
           <div
             key={person.id}
-            className={`bg-zinc-900/50 rounded-2xl border p-4 transition-all ${
+            className={`bg-zinc-900 rounded-2xl border p-4 transition-all ${
               dragOverPerson === person.id
                 ? 'border-blue-500 bg-blue-500/5'
                 : 'border-zinc-800'
@@ -276,7 +276,7 @@ export function SalesTeamSection() {
                   className={`group flex items-start gap-2 p-2 rounded-lg border transition-all cursor-grab active:cursor-grabbing ${
                     task.completed
                       ? 'bg-zinc-800/30 border-zinc-800'
-                      : 'bg-zinc-800/50 border-zinc-700 hover:border-zinc-600'
+                      : 'bg-zinc-800 border-zinc-700 hover:border-zinc-600'
                   }`}
                 >
                   <GripVertical className="w-4 h-4 text-zinc-600 mt-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />

@@ -16,6 +16,7 @@ const ZOOM_STYLES: Record<ZoomLevel, { text: string; cell: string; header: strin
 
 export function MaandoverzichtTab() {
   const {
+    isHydrated,
     instellingen,
     klanten,
     uitgaven,
@@ -84,6 +85,16 @@ export function MaandoverzichtTab() {
     const date = new Date(startDatum);
     return `Vanaf ${date.toLocaleDateString('nl-NL', { month: 'short', year: 'numeric' })}`;
   };
+
+  // Show loading skeleton until data is hydrated from localStorage
+  if (!isHydrated) {
+    return (
+      <div className="space-y-4 animate-pulse">
+        <div className="h-8 bg-zinc-800 rounded w-48" />
+        <div className="bg-zinc-900 rounded-xl h-96" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3 sm:space-y-4">
