@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 const TEAM_COLORS = [
-  { bg: "bg-red-100", border: "border-red-500", text: "text-red-700" },
-  { bg: "bg-blue-100", border: "border-blue-500", text: "text-blue-700" },
-  { bg: "bg-green-100", border: "border-green-500", text: "text-green-700" },
-  { bg: "bg-yellow-100", border: "border-yellow-500", text: "text-yellow-700" },
-  { bg: "bg-purple-100", border: "border-purple-500", text: "text-purple-700" },
-  { bg: "bg-pink-100", border: "border-pink-500", text: "text-pink-700" },
-  { bg: "bg-orange-100", border: "border-orange-500", text: "text-orange-700" },
-  { bg: "bg-teal-100", border: "border-teal-500", text: "text-teal-700" },
+  { bg: "bg-red-950", border: "border-red-500", text: "text-red-400" },
+  { bg: "bg-blue-950", border: "border-blue-500", text: "text-blue-400" },
+  { bg: "bg-green-950", border: "border-green-500", text: "text-green-400" },
+  { bg: "bg-yellow-950", border: "border-yellow-500", text: "text-yellow-400" },
+  { bg: "bg-purple-950", border: "border-purple-500", text: "text-purple-400" },
+  { bg: "bg-pink-950", border: "border-pink-500", text: "text-pink-400" },
+  { bg: "bg-orange-950", border: "border-orange-500", text: "text-orange-400" },
+  { bg: "bg-teal-950", border: "border-teal-500", text: "text-teal-400" },
 ]
 
 interface Player {
@@ -152,7 +152,7 @@ export function TeamMaker() {
             {players.map((player, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-2 rounded-lg border border-border bg-background"
+                className="flex items-center justify-between p-2 rounded-lg border border-zinc-700 bg-zinc-900"
               >
                 <span className="text-sm truncate">{player.name}</span>
                 <button
@@ -201,7 +201,7 @@ export function TeamMaker() {
                     team.map((player, playerIndex) => (
                       <div
                         key={playerIndex}
-                        className={`p-2 rounded border ${colors.border} bg-white ${colors.text} text-sm font-medium`}
+                        className={`p-2 rounded border ${colors.border} bg-zinc-900 ${colors.text} text-sm font-medium`}
                       >
                         {player.name}
                       </div>

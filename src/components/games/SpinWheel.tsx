@@ -242,9 +242,9 @@ export function SpinWheel() {
           </div>
 
           {winner && (
-            <div className="mt-4 p-6 bg-primary/10 rounded-lg border-2 border-primary animate-in fade-in zoom-in duration-500">
-              <p className="text-sm text-muted-foreground mb-1">Winnaar:</p>
-              <p className="text-3xl font-bold text-primary">{winner}</p>
+            <div className="mt-4 p-6 bg-zinc-900 rounded-lg border-2 border-green-500 animate-in fade-in zoom-in duration-500">
+              <p className="text-sm text-white/70 mb-1">Winnaar:</p>
+              <p className="text-3xl font-bold text-green-400">{winner}</p>
             </div>
           )}
         </>
