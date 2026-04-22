@@ -3,8 +3,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { hasValidCredentials, supabase } from '@/lib/supabase';
 import { uploadIncidentMedia, uploadMultipleMedia } from '@/lib/storage';
-import type { Incident, IncidentFormData, Friend, IncidentWithFriend, FriendMilestoneGallery, ReachedMilestone, Milestone } from '@/types';
+import { checkAndAwardBadges } from '@/lib/badges';
+import { updateStreaksAfterIncident } from '@/hooks/useStreaks';
+import type { Incident, IncidentFormData, Friend, IncidentWithFriend, FriendMilestoneGallery, ReachedMilestone, Milestone, FriendBadge } from '@/types';
 import { DEFAULT_MILESTONES } from '@/lib/milestones';
+
+// Result type for incident creation with badges
+export interface CreateIncidentResult {
+  incident: Incident;
+  newBadges: FriendBadge[];
+}
 
 // Fetch all incidents
 async function fetchIncidents(): Promise<Incident[]> {
@@ -34,7 +42,7 @@ async function fetchIncidentsByFriend(friendId: string): Promise<Incident[]> {
 }
 
 // Create a new incident
-async function createIncident(formData: IncidentFormData): Promise<Incident> {
+async function createIncident(formData: IncidentFormData): Promise<CreateIncidentResult> {
   if (!hasValidCredentials) {
     throw new Error('Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
   }
@@ -92,7 +100,16 @@ async function createIncident(formData: IncidentFormData): Promise<Incident> {
     .single();
 
   if (error) throw error;
-  return data;
+
+  const incident = data as Incident;
+
+  // Update streaks after incident
+  await updateStreaksAfterIncident(formData.friend_id, incident.id);
+
+  // Check and award badges
+  const newBadges = await checkAndAwardBadges(formData.friend_id, incident);
+
+  return { incident, newBadges };
 }
 
 // Delete an incident
@@ -129,15 +146,23 @@ export function useIncidentsByFriend(friendId: string | null) {
   });
 }
 
-// Hook: Create a new incident
+// Hook: Create a new incident (returns incident + any newly earned badges)
 export function useCreateIncident() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: createIncident,
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['incidents'] });
       queryClient.invalidateQueries({ queryKey: ['friends-with-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['streaks'] });
+      queryClient.invalidateQueries({ queryKey: ['all-streaks'] });
+      // Invalidate badge queries if new badges were earned
+      if (result.newBadges.length > 0) {
+        queryClient.invalidateQueries({ queryKey: ['badges'] });
+        queryClient.invalidateQueries({ queryKey: ['friend-badges'] });
+        queryClient.invalidateQueries({ queryKey: ['all-friend-badges'] });
+      }
     },
   });
 }

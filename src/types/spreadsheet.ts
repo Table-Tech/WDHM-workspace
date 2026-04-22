@@ -1,4 +1,4 @@
-// LateTable 2026 Spreadsheet Types
+// TechTable 2026 Spreadsheet Types
 
 export interface CoFounder {
   id: string;
@@ -18,6 +18,18 @@ export interface Instellingen {
   startdatum: string;
 }
 
+// Pipeline fases
+export const PIPELINE_FASES = [
+  'Lead',
+  'Contact gelegd',
+  'Offerte gestuurd',
+  'In onderhandeling',
+  'Klant',
+  'Afgevallen',
+] as const;
+
+export type PipelineFase = typeof PIPELINE_FASES[number];
+
 export interface Klant {
   id: string;
   klantnaam: string;
@@ -25,8 +37,43 @@ export interface Klant {
   mrrPerMaand: number;
   eenmalig: number;
   salesCommissie: boolean;
+  salesCommissiePercentage: number; // Specifiek percentage voor deze klant (0 = gebruik standaard)
   status: 'Actief' | 'Inactief' | 'Paused';
   maandInkomsten: number[]; // 12 months jan-dec
+  // Extra klant info
+  contactpersoon: string;
+  email: string;
+  telefoon: string;
+  notities: string;
+  // Pipeline tracking
+  pipelineFase: PipelineFase;
+  aantalContacten: number;
+  laatsteContact: string;
+  offerteWaarde: number;
+  verwachteSluitdatum: string;
+  // Datums
+  datumKlantGeworden: string; // Wanneer klant binnenkwam
+  datumOnderhoudStart: string; // Wanneer onderhoudspakket begint
+  onderhoudActief: boolean; // Is het onderhoudspakket actief?
+  // Betalingstermijnen eenmalig
+  eenmaligTermijnen: number; // Aantal termijnen (1 = direct, 2+ = gespreide betaling)
+  eenmaligStartdatum: string; // Wanneer eerste termijn betaald wordt
+}
+
+export interface Lead {
+  id: string;
+  bedrijfsnaam: string;
+  contactpersoon: string;
+  email: string;
+  telefoon: string;
+  productInteresse: string;
+  bron: string;
+  redenAfwijzing: string;
+  notities: string;
+  datumEersteContact: string;
+  datumAfgewezen: string;
+  offerteWaarde: number;
+  aantalContacten: number;
 }
 
 export interface KlantenKPIs {
@@ -69,6 +116,30 @@ export interface EenmaligeInkomst {
   status: 'Open' | 'Gefactureerd' | 'Betaald' | 'Geannuleerd';
 }
 
+export interface EenmaligeKost {
+  id: string;
+  datum: string;
+  leverancier: string;
+  omschrijving: string;
+  categorie: string;
+  bedragExclBTW: number;
+  btw: number;
+  bedragInclBTW: number;
+  status: 'Gepland' | 'Besteld' | 'Betaald' | 'Geannuleerd';
+}
+
+// Categorieen voor eenmalige kosten
+export const EENMALIGE_KOSTEN_CATEGORIEEN = [
+  'Hardware / Apparatuur',
+  'Software licenties',
+  'Kantoorinrichting',
+  'Marketing campagne',
+  'Juridisch / Advies',
+  'Opleiding / Training',
+  'Reiskosten (eenmalig)',
+  'Overig',
+] as const;
+
 export interface DashboardMetrics {
   totaleMRR: number;
   arr: number;
@@ -92,6 +163,7 @@ export interface SpreadsheetData {
   instellingen: Instellingen;
   klanten: Klant[];
   eenmaligeInkomsten: EenmaligeInkomst[];
+  eenmaligeKosten: EenmaligeKost[];
   uitgavenCategorieen: string[];
 }
 
@@ -103,17 +175,17 @@ export const MAAND_LABELS = [
 
 // Default expense categories
 export const UITGAVEN_CATEGORIEEN = [
-  'Hosting & servers',
-  'Software & tools',
+  'Vercel (hosting)',
+  'Resend (email)',
+  'Telefoon',
+  'Moneybird (boekhouding)',
   'Domeinnames',
   'Marketing & advertising',
+  'Software & tools',
   'Kantoor / werkplek',
-  'Telefoon & internet',
   'Verzekeringen (zakelijk)',
-  'Boekhouder / administratie',
   'Reiskosten',
   'Hardware / apparatuur',
-  'Freelancers / inhuur',
   'KVK / juridisch',
   'Overige bedrijfskosten',
 ] as const;
@@ -129,10 +201,28 @@ export const INITIAL_INSTELLINGEN: Instellingen = {
   salesCommissiePercentage: 15,
   salesPersoonNaam: '',
   btwPercentage: 21,
-  bedrijfsnaam: 'LateTable',
+  bedrijfsnaam: 'TechTable',
   kvkNummer: '',
   boekjaar: 2026,
   startdatum: '',
+};
+
+const DEFAULT_KLANT_EXTRA = {
+  contactpersoon: '',
+  email: '',
+  telefoon: '',
+  notities: '',
+  pipelineFase: 'Klant' as PipelineFase,
+  aantalContacten: 0,
+  laatsteContact: '',
+  offerteWaarde: 0,
+  verwachteSluitdatum: '',
+  salesCommissiePercentage: 0,
+  datumKlantGeworden: '',
+  datumOnderhoudStart: '',
+  onderhoudActief: true,
+  eenmaligTermijnen: 1,
+  eenmaligStartdatum: '',
 };
 
 export const INITIAL_KLANTEN: Klant[] = [
@@ -145,6 +235,7 @@ export const INITIAL_KLANTEN: Klant[] = [
     salesCommissie: false,
     status: 'Actief',
     maandInkomsten: Array(12).fill(49),
+    ...DEFAULT_KLANT_EXTRA,
   },
   {
     id: '2',
@@ -155,6 +246,7 @@ export const INITIAL_KLANTEN: Klant[] = [
     salesCommissie: false,
     status: 'Actief',
     maandInkomsten: Array(12).fill(0),
+    ...DEFAULT_KLANT_EXTRA,
   },
   {
     id: '3',
@@ -165,6 +257,7 @@ export const INITIAL_KLANTEN: Klant[] = [
     salesCommissie: true,
     status: 'Actief',
     maandInkomsten: Array(12).fill(0),
+    ...DEFAULT_KLANT_EXTRA,
   },
   {
     id: '4',
@@ -175,6 +268,7 @@ export const INITIAL_KLANTEN: Klant[] = [
     salesCommissie: true,
     status: 'Actief',
     maandInkomsten: Array(12).fill(0),
+    ...DEFAULT_KLANT_EXTRA,
   },
   {
     id: '5',
@@ -185,6 +279,7 @@ export const INITIAL_KLANTEN: Klant[] = [
     salesCommissie: false,
     status: 'Actief',
     maandInkomsten: Array(12).fill(0),
+    ...DEFAULT_KLANT_EXTRA,
   },
   {
     id: '6',
@@ -195,6 +290,7 @@ export const INITIAL_KLANTEN: Klant[] = [
     salesCommissie: false,
     status: 'Actief',
     maandInkomsten: Array(12).fill(0),
+    ...DEFAULT_KLANT_EXTRA,
   },
   {
     id: '7',
@@ -205,21 +301,24 @@ export const INITIAL_KLANTEN: Klant[] = [
     salesCommissie: false,
     status: 'Actief',
     maandInkomsten: Array(12).fill(0),
+    ...DEFAULT_KLANT_EXTRA,
   },
 ];
 
+export const INITIAL_LEADS: Lead[] = [];
+
 export const INITIAL_UITGAVEN: Record<string, number[]> = {
-  'Hosting & servers': Array(12).fill(17),
-  'Software & tools': Array(12).fill(0),
+  'Vercel (hosting)': Array(12).fill(20),
+  'Resend (email)': Array(12).fill(20),
+  'Telefoon': Array(12).fill(7),
+  'Moneybird (boekhouding)': Array(12).fill(22),
   'Domeinnames': Array(12).fill(0),
   'Marketing & advertising': Array(12).fill(0),
+  'Software & tools': Array(12).fill(0),
   'Kantoor / werkplek': Array(12).fill(0),
-  'Telefoon & internet': Array(12).fill(6.5),
   'Verzekeringen (zakelijk)': Array(12).fill(0),
-  'Boekhouder / administratie': Array(12).fill(22),
   'Reiskosten': Array(12).fill(0),
   'Hardware / apparatuur': Array(12).fill(0),
-  'Freelancers / inhuur': Array(12).fill(0),
   'KVK / juridisch': Array(12).fill(0),
   'Overige bedrijfskosten': Array(12).fill(0),
 };

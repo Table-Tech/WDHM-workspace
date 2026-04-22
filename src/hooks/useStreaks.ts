@@ -2,7 +2,14 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { hasValidCredentials, supabase } from '@/lib/supabase';
-import type { Streak, StreakType } from '@/types';
+import { checkAndAwardBadges } from '@/lib/badges';
+import type { Streak, StreakType, FriendBadge } from '@/types';
+
+// Result type for on-time marking
+export interface MarkOnTimeResult {
+  streak: Streak;
+  newBadges: FriendBadge[];
+}
 
 // Fetch streaks for a specific friend
 async function fetchFriendStreaks(friendId: string): Promise<Streak[]> {
@@ -197,4 +204,153 @@ export function getStreakDisplay(streak: Streak | undefined): {
   }
 
   return { emoji: '', color: 'text-white/50', label: '' };
+}
+
+// Mark a friend as "on time" - this increments their on_time streak and resets late streak
+export async function markAsOnTime(friendId: string): Promise<MarkOnTimeResult | null> {
+  if (!hasValidCredentials) return null;
+
+  try {
+    // Get current on_time streak
+    const { data: existing } = await supabase
+      .from('streaks')
+      .select('*')
+      .eq('friend_id', friendId)
+      .eq('streak_type', 'on_time')
+      .single();
+
+    const newCount = (existing?.current_count || 0) + 1;
+    const newBest = Math.max(existing?.best_count || 0, newCount);
+
+    // Update or create on_time streak
+    let onTimeStreak: Streak;
+    if (existing) {
+      const { data, error } = await supabase
+        .from('streaks')
+        .update({
+          current_count: newCount,
+          best_count: newBest,
+          last_updated: new Date().toISOString(),
+        })
+        .eq('id', existing.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      onTimeStreak = data;
+    } else {
+      const { data, error } = await supabase
+        .from('streaks')
+        .insert({
+          friend_id: friendId,
+          streak_type: 'on_time',
+          current_count: newCount,
+          best_count: newBest,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      onTimeStreak = data;
+    }
+
+    // Reset late streak when someone is on time
+    const { data: lateStreak } = await supabase
+      .from('streaks')
+      .select('*')
+      .eq('friend_id', friendId)
+      .eq('streak_type', 'late')
+      .single();
+
+    if (lateStreak && lateStreak.current_count > 0) {
+      await supabase
+        .from('streaks')
+        .update({
+          current_count: 0,
+          last_updated: new Date().toISOString(),
+        })
+        .eq('id', lateStreak.id);
+    }
+
+    // Check and award badges (including on_time_streak badges)
+    const newBadges = await checkAndAwardBadges(friendId);
+
+    return { streak: onTimeStreak, newBadges };
+  } catch (error) {
+    console.error('Failed to mark as on time:', error);
+    return null;
+  }
+}
+
+// Hook: Mark friend as on time (returns streak + any newly earned badges)
+export function useMarkAsOnTime() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: markAsOnTime,
+    onSuccess: (result) => {
+      if (result) {
+        queryClient.invalidateQueries({ queryKey: ['streaks', result.streak.friend_id] });
+        queryClient.invalidateQueries({ queryKey: ['all-streaks'] });
+        queryClient.invalidateQueries({ queryKey: ['friends-with-stats'] });
+        if (result.newBadges.length > 0) {
+          queryClient.invalidateQueries({ queryKey: ['badges'] });
+          queryClient.invalidateQueries({ queryKey: ['friend-badges'] });
+          queryClient.invalidateQueries({ queryKey: ['all-friend-badges'] });
+        }
+      }
+    },
+  });
+}
+
+// Undo the last on-time mark (decrement on_time streak by 1)
+export async function undoOnTime(friendId: string): Promise<Streak | null> {
+  if (!hasValidCredentials) return null;
+
+  try {
+    // Get current on_time streak
+    const { data: existing } = await supabase
+      .from('streaks')
+      .select('*')
+      .eq('friend_id', friendId)
+      .eq('streak_type', 'on_time')
+      .single();
+
+    if (!existing || existing.current_count <= 0) return null;
+
+    const newCount = existing.current_count - 1;
+
+    // Update on_time streak
+    const { data, error } = await supabase
+      .from('streaks')
+      .update({
+        current_count: newCount,
+        last_updated: new Date().toISOString(),
+      })
+      .eq('id', existing.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Failed to undo on time:', error);
+    return null;
+  }
+}
+
+// Hook: Undo the last on-time mark
+export function useUndoOnTime() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: undoOnTime,
+    onSuccess: (result) => {
+      if (result) {
+        queryClient.invalidateQueries({ queryKey: ['streaks', result.friend_id] });
+        queryClient.invalidateQueries({ queryKey: ['all-streaks'] });
+        queryClient.invalidateQueries({ queryKey: ['friends-with-stats'] });
+      }
+    },
+  });
 }
