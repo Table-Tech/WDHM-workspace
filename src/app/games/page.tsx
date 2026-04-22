@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft, Disc3, Coins, Users, Dices, Target } from 'lucide-react';
 import { SpinWheel } from '@/components/games/SpinWheel';
 import { CoinFlip } from '@/components/games/CoinFlip';
@@ -20,18 +20,19 @@ const TABS: { value: GameTab; label: string; icon: React.ReactNode }[] = [
 ];
 
 export default function GamesPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<GameTab>('wheel');
 
   return (
     <main className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 max-w-4xl mx-auto">
       {/* Header */}
       <header className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-        <Link
-          href="/"
+        <button
+          onClick={() => router.back()}
           className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors shrink-0"
         >
           <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-        </Link>
+        </button>
         <div className="flex items-center gap-2 min-w-0">
           <div className="p-1.5 sm:p-2 rounded-xl bg-pink-500/20 border border-pink-500/30 shrink-0">
             <Disc3 className="w-4 h-4 sm:w-5 sm:h-5 text-pink-400" />

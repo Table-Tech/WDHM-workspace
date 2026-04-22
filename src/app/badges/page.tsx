@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Award, ArrowLeft, Plus, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BadgeGrid, CreateBadgeModal } from '@/components/badges';
@@ -10,6 +10,7 @@ import { useAllBadges, useAllFriendBadges, useRevokeFriendBadge } from '@/hooks/
 type FilterType = 'all' | 'earned' | 'unearned' | 'custom';
 
 export default function BadgesPage() {
+  const router = useRouter();
   const [filter, setFilter] = useState<FilterType>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -42,12 +43,12 @@ export default function BadgesPage() {
       {/* Header */}
       <header className="flex items-center justify-between gap-2 sm:gap-4 mb-4 sm:mb-6">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <Link
-            href="/"
+          <button
+            onClick={() => router.back()}
             className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors shrink-0"
           >
             <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-          </Link>
+          </button>
           <div className="flex items-center gap-2 min-w-0">
             <div className="p-1.5 sm:p-2 rounded-xl bg-purple-500/20 border border-purple-500/30 shrink-0">
               <Award className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
