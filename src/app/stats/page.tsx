@@ -30,30 +30,30 @@ export default function StatsPage() {
   const { data: groupStats, isLoading: statsLoading } = useGroupStats();
 
   return (
-    <main className="min-h-screen p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto">
+    <main className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 max-w-4xl mx-auto">
       {/* Header */}
-      <header className="flex items-center gap-3 mb-6">
+      <header className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
         <Link
           href="/"
-          className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+          className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors shrink-0"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </Link>
-        <div className="flex items-center gap-2">
-          <div className="p-2 rounded-xl bg-blue-500/20 border border-blue-500/30">
-            <BarChart3 className="w-5 h-5 text-blue-400" />
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="p-1.5 sm:p-2 rounded-xl bg-blue-500/20 border border-blue-500/30 shrink-0">
+            <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
           </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold">Statistieken</h1>
-            <p className="text-sm text-white/50">Ranglijsten & fun facts</p>
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold truncate">Statistieken</h1>
+            <p className="text-xs sm:text-sm text-white/50 truncate">Ranglijsten & fun facts</p>
           </div>
         </div>
       </header>
 
       {/* Group Stats Overview */}
-      <section className="mb-8">
-        <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-          <Users className="w-5 h-5 text-white/50" />
+      <section className="mb-6 sm:mb-8">
+        <h2 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3 flex items-center gap-2">
+          <Users className="w-4 h-4 sm:w-5 sm:h-5 text-white/50" />
           Groep Overzicht
         </h2>
         {statsLoading ? (
@@ -93,28 +93,28 @@ export default function StatsPage() {
       </section>
 
       {/* Leaderboard Section */}
-      <section className="mb-8">
-        <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-yellow-500" />
+      <section className="mb-6 sm:mb-8">
+        <h2 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3 flex items-center gap-2">
+          <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
           Ranglijsten
         </h2>
 
         {/* Leaderboard Type Tabs */}
-        <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+        <div className="flex gap-1.5 sm:gap-2 mb-3 sm:mb-4 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0">
           {LEADERBOARD_TYPES.map((type) => (
             <button
               key={type.value}
               onClick={() => setLeaderboardType(type.value)}
               className={`
-                flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all
+                flex items-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all border backdrop-blur-md
                 ${leaderboardType === type.value
-                  ? 'bg-white/20 text-white'
-                  : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/70'
+                  ? 'bg-blue-600/80 border-blue-400 text-white'
+                  : 'bg-black/40 border-white/20 text-white hover:bg-black/50 hover:border-white/30'
                 }
               `}
             >
               {type.icon}
-              {type.label}
+              <span className="hidden xs:inline sm:inline">{type.label}</span>
             </button>
           ))}
         </div>
@@ -122,7 +122,7 @@ export default function StatsPage() {
         {/* Period Filter */}
         <div className="flex items-center gap-2 mb-4">
           <Calendar className="w-4 h-4 text-white/50" />
-          <div className="flex gap-1 bg-white/5 rounded-lg p-1">
+          <div className="flex gap-1 bg-black/40 backdrop-blur-md border border-white/20 rounded-lg p-1">
             {PERIODS.map((p) => (
               <button
                 key={p.value}
@@ -130,8 +130,8 @@ export default function StatsPage() {
                 className={`
                   px-3 py-1 rounded-md text-sm transition-all
                   ${period === p.value
-                    ? 'bg-white/20 text-white'
-                    : 'text-white/50 hover:text-white/70'
+                    ? 'bg-blue-600/80 text-white'
+                    : 'text-white/70 hover:bg-black/40 hover:text-white'
                   }
                 `}
               >
@@ -142,7 +142,7 @@ export default function StatsPage() {
         </div>
 
         {/* Leaderboard */}
-        <div className="glass-card rounded-xl p-4">
+        <div className="bg-black/50 backdrop-blur-xl border border-white/15 rounded-xl p-3 sm:p-4 shadow-xl">
           <LeaderboardTable
             entries={leaderboard}
             type={leaderboardType}
