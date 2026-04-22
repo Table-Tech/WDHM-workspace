@@ -197,20 +197,36 @@ export function TaskBoard() {
     e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDrop = async (e: React.DragEvent, columnId: string) => {
+  const handleDrop = async (e: React.DragEvent, columnId: string, targetIndex?: number) => {
     e.preventDefault();
     if (!draggedTask) return;
 
-    if (draggedTask.column_id !== columnId) {
-      const columnTasks = getColumnTasks(columnId);
-      const newPosition = columnTasks.length;
+    const columnTasks = getColumnTasks(columnId);
+    const currentIndex = columnTasks.findIndex(t => t.id === draggedTask.id);
+    const isSameColumn = draggedTask.column_id === columnId;
 
-      await moveTaskMutation.mutateAsync({
-        taskId: draggedTask.id,
-        newColumnId: columnId,
-        newPosition,
-      });
+    // Calculate the new position
+    let newPosition = targetIndex !== undefined ? targetIndex : columnTasks.length;
+
+    // If reordering within the same column, adjust position
+    if (isSameColumn && currentIndex !== -1) {
+      // If moving down, the position needs adjustment since we're removing the item first
+      if (currentIndex < newPosition) {
+        newPosition = Math.max(0, newPosition - 1);
+      }
+
+      // Don't move if dropping in the same position
+      if (currentIndex === newPosition) {
+        setDraggedTask(null);
+        return;
+      }
     }
+
+    await moveTaskMutation.mutateAsync({
+      taskId: draggedTask.id,
+      newColumnId: columnId,
+      newPosition,
+    });
 
     setDraggedTask(null);
   };
@@ -551,6 +567,7 @@ export function TaskBoard() {
                   onColumnDrop={handleColumnDrop}
                   onColumnDragEnd={handleColumnDragEnd}
                   isDraggingColumn={draggedColumn?.id === column.id}
+                  draggedTask={draggedTask}
                 />
               ))}
 
