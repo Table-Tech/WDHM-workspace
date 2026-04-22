@@ -39,9 +39,16 @@ function renderBadgeIcon(iconName: string, className: string) {
   return createElement(IconComponent, { className });
 }
 
+interface BadgeEarner {
+  id: string;
+  name: string;
+  color: string;
+}
+
 interface BadgeCardProps {
   badge: Badge;
   earned?: FriendBadge;
+  earners?: BadgeEarner[];
   onClick?: () => void;
   size?: 'sm' | 'md' | 'lg';
   showDetails?: boolean;
@@ -50,11 +57,12 @@ interface BadgeCardProps {
 export function BadgeCard({
   badge,
   earned,
+  earners = [],
   onClick,
   size = 'md',
   showDetails = true,
 }: BadgeCardProps) {
-  const isEarned = !!earned;
+  const isEarned = !!earned || earners.length > 0;
   const rarityClass = getRarityColor(badge.rarity);
 
   const sizeClasses = {
@@ -69,20 +77,25 @@ export function BadgeCard({
     lg: 'w-12 h-12',
   };
 
+  // Show max 3 names, then "+X meer"
+  const displayedEarners = earners.slice(0, 3);
+  const remainingCount = earners.length - 3;
+
   return (
     <button
       onClick={onClick}
       className={`
         flex flex-col items-center p-3 rounded-xl border transition-all
-        ${isEarned ? rarityClass : 'text-white/30 border-white/10 bg-white/5'}
-        ${onClick ? 'hover:scale-105 cursor-pointer' : 'cursor-default'}
-        ${!isEarned ? 'grayscale opacity-50' : ''}
+        bg-black/70 backdrop-blur-xl
+        ${rarityClass}
+        ${onClick ? 'hover:scale-105 hover:bg-black/80 cursor-pointer' : 'cursor-default'}
+        ${!isEarned ? 'opacity-70' : ''}
       `}
     >
       <div
         className={`
           ${sizeClasses[size]} rounded-full flex items-center justify-center mb-2
-          ${isEarned ? 'bg-white/10' : 'bg-white/5'}
+          bg-black/50
         `}
       >
         {badge.image_url ? (
@@ -107,6 +120,33 @@ export function BadgeCard({
           <span className="text-xs text-white/50 mt-0.5">
             {getRarityLabel(badge.rarity)}
           </span>
+
+          {/* Earners names */}
+          {earners.length > 0 && (
+            <div className="mt-2 flex flex-wrap justify-center gap-1">
+              {displayedEarners.map((earner) => (
+                <span
+                  key={earner.id}
+                  className="text-[10px] px-1.5 py-0.5 rounded-full bg-black/60 border border-white/20"
+                  style={{ color: earner.color }}
+                >
+                  {earner.name}
+                </span>
+              ))}
+              {remainingCount > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-black/60 border border-white/20 text-white/50">
+                  +{remainingCount}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Show "Nog niet verdiend" when no earners */}
+          {earners.length === 0 && (
+            <span className="mt-1 text-[10px] text-white/30">
+              Nog niemand
+            </span>
+          )}
         </>
       )}
     </button>

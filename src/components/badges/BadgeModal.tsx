@@ -2,7 +2,7 @@
 
 import { createElement } from 'react';
 import NextImage from 'next/image';
-import { Award, Star, Heart, Crown, Flame, Zap, Trophy, Medal, Gem, Rocket, Target, Shield, Baby, Ghost, Camera, Repeat, Sparkles, AlarmClockOff, Check, Lock, type LucideIcon } from 'lucide-react';
+import { Award, Star, Heart, Crown, Flame, Zap, Trophy, Medal, Gem, Rocket, Target, Shield, Baby, Ghost, Camera, Repeat, Sparkles, AlarmClockOff, Check, Lock, Trash2, type LucideIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -47,22 +47,32 @@ function renderBadgeIcon(iconName: string, className: string) {
   return createElement(IconComponent, { className });
 }
 
+interface BadgeEarner {
+  id: string;
+  name: string;
+  color: string;
+}
+
 interface BadgeModalProps {
   badge: Badge | null;
   earned?: FriendBadge;
+  earners?: BadgeEarner[];
   isOpen: boolean;
   onClose: () => void;
+  onRevokeBadge?: (friendId: string, badgeId: string) => void;
 }
 
 export function BadgeModal({
   badge,
   earned,
+  earners = [],
   isOpen,
   onClose,
+  onRevokeBadge,
 }: BadgeModalProps) {
   if (!badge) return null;
 
-  const isEarned = !!earned;
+  const isEarned = !!earned || earners.length > 0;
   const rarityClass = getRarityColor(badge.rarity);
 
   const formatDate = (dateString: string) => {
@@ -75,14 +85,15 @@ export function BadgeModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="glass-modal w-[95vw] max-w-sm border-white/10 p-4 sm:p-6 rounded-xl sm:rounded-2xl">
+      <DialogContent className="bg-black/90 backdrop-blur-xl w-[95vw] max-w-sm border border-white/15 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-2xl">
         <DialogHeader>
           <div className="flex flex-col items-center text-center">
             {/* Badge Icon/Image */}
             <div
               className={`
                 w-24 h-24 rounded-full flex items-center justify-center mb-4 border-2
-                ${isEarned ? rarityClass : 'bg-white/5 border-white/10 grayscale opacity-50'}
+                ${rarityClass}
+                ${!isEarned ? 'opacity-70' : ''}
               `}
             >
               {badge.image_url ? (
@@ -95,7 +106,7 @@ export function BadgeModal({
                   />
                 </div>
               ) : (
-                renderBadgeIcon(badge.icon, `w-12 h-12 ${isEarned ? '' : 'text-white/30'}`)
+                renderBadgeIcon(badge.icon, 'w-12 h-12')
               )}
             </div>
 
@@ -115,7 +126,7 @@ export function BadgeModal({
 
           {/* Condition */}
           {badge.condition_type !== 'custom' && (
-            <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+            <div className="p-3 rounded-xl bg-black/60 backdrop-blur-xl border border-white/15">
               <p className="text-sm text-white/70 flex items-center gap-2">
                 <Target className="w-4 h-4 text-white/50" />
                 <span>Voorwaarde:</span>
@@ -126,22 +137,48 @@ export function BadgeModal({
             </div>
           )}
 
-          {/* Earned Info */}
-          {earned && (
-            <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/30">
-              <p className="text-sm text-green-400 flex items-center gap-2">
+          {/* Earners Section */}
+          {earners.length > 0 && (
+            <div className="p-3 rounded-xl bg-black/60 backdrop-blur-xl border border-green-500/40">
+              <p className="text-sm text-green-400 flex items-center gap-2 mb-2">
                 <Check className="w-4 h-4" />
-                Verdiend op {formatDate(earned.earned_at)}
+                Verdiend door {earners.length} {earners.length === 1 ? 'persoon' : 'personen'}
               </p>
+              <div className="flex flex-wrap gap-2">
+                {earners.map((earner) => (
+                  <span
+                    key={earner.id}
+                    className="text-sm px-2 py-1 rounded-full bg-black/50 border border-white/20 flex items-center gap-1.5"
+                    style={{ color: earner.color }}
+                  >
+                    {earner.name}
+                    {onRevokeBadge && badge && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(`Badge "${badge.name}" verwijderen van ${earner.name}?`)) {
+                            onRevokeBadge(earner.id, badge.id);
+                          }
+                        }}
+                        className="p-0.5 rounded hover:bg-red-500/30 transition-colors text-red-400/60 hover:text-red-400"
+                        title={`Badge verwijderen van ${earner.name}`}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    )}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
 
           {/* Not Earned */}
-          {!isEarned && (
-            <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+          {earners.length === 0 && (
+            <div className="p-3 rounded-xl bg-black/60 backdrop-blur-xl border border-white/15">
               <p className="text-sm text-white/50 flex items-center gap-2">
                 <Lock className="w-4 h-4" />
-                Nog niet verdiend
+                Nog niet verdiend door iemand
               </p>
             </div>
           )}
