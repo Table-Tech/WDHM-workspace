@@ -3,7 +3,7 @@
 import { useState, useSyncExternalStore, useCallback, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Plus, Trash2, Edit2, Check, X, RotateCcw } from "lucide-react"
+import { Plus, Trash2, Edit2, Check, X, RotateCcw, Target } from "lucide-react"
 
 // Default punishments - veel creatieve opties!
 const DEFAULT_PUNISHMENTS = [
@@ -197,7 +197,10 @@ export function PunishmentWheel() {
     <div className="flex flex-col items-center gap-6 p-4 sm:p-6">
       {/* Header with toggle */}
       <div className="w-full flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-red-400">🎯 Straf Wiel</h2>
+        <h2 className="text-lg font-semibold text-red-400 flex items-center gap-2">
+          <Target className="w-5 h-5" />
+          Straf Wiel
+        </h2>
         <Button
           variant="outline"
           size="sm"
@@ -394,7 +397,7 @@ export function PunishmentWheel() {
 
                 {/* Center circle */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 bg-gradient-to-br from-red-500 to-red-700 rounded-full shadow-lg border-4 border-white flex items-center justify-center">
-                  <span className="text-xl">🎯</span>
+                  <Target className="w-6 h-6 text-white" />
                 </div>
               </div>
 
@@ -403,9 +406,14 @@ export function PunishmentWheel() {
                 onClick={spinWheel}
                 disabled={isSpinning}
                 size="lg"
-                className="px-8 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500"
+                className="px-8 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 gap-2"
               >
-                {isSpinning ? "Draait..." : "Draai het Straf Wiel! 🎯"}
+                {isSpinning ? "Draait..." : (
+                  <>
+                    <Target className="w-5 h-5" />
+                    Draai het Straf Wiel!
+                  </>
+                )}
               </Button>
 
               {/* Result */}

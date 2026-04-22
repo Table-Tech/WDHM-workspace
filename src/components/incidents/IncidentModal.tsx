@@ -299,12 +299,12 @@ export function IncidentModal({
               ) : gpsCoords ? (
                 <>
                   <Crosshair className="w-5 h-5" />
-                  <span>✓ Locatie vastgelegd</span>
+                  <span>Locatie vastgelegd</span>
                 </>
               ) : (
                 <>
                   <Crosshair className="w-5 h-5" />
-                  <span>📍 Pak Huidige Locatie</span>
+                  <span>Pak Huidige Locatie</span>
                 </>
               )}
             </Button>
