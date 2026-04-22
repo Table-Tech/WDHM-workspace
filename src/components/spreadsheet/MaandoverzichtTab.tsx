@@ -86,17 +86,17 @@ export function MaandoverzichtTab() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-white">Maandoverzicht {instellingen.boekjaar}</h1>
+    <div className="space-y-3 sm:space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
+        <h1 className="text-base sm:text-lg font-semibold text-white">Maandoverzicht {instellingen.boekjaar}</h1>
 
         {/* Zoom control */}
         <button
           onClick={cycleZoom}
-          className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm text-zinc-300"
+          className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-xs sm:text-sm text-zinc-300 w-fit"
         >
-          {zoomLevel === 'large' ? <ZoomOut className="w-4 h-4" /> : <ZoomIn className="w-4 h-4" />}
-          <span className="text-xs">
+          {zoomLevel === 'large' ? <ZoomOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <ZoomIn className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+          <span className="text-[10px] sm:text-xs">
             {zoomLevel === 'small' ? 'Klein' : zoomLevel === 'medium' ? 'Medium' : 'Groot'}
           </span>
         </button>
@@ -225,6 +225,23 @@ export function MaandoverzichtTab() {
                 );
               })}
 
+              {/* Eenmalige kosten row (from Eenmalig tab) */}
+              {totaalEenmaligeKosten > 0 && (
+                <tr className="border-b border-zinc-800/50 hover:bg-zinc-800/30 bg-orange-500/5">
+                  <td className={`${zoom.cell} text-orange-300 sticky left-0 bg-zinc-900/95 z-10`}>
+                    Eenmalige kosten <span className="text-zinc-600 text-[10px]">(zie tab)</span>
+                  </td>
+                  {maandEenmaligeKosten.map((bedrag, i) => (
+                    <td key={i} className={`${zoom.cell} text-right text-orange-300/70`}>
+                      {bedrag > 0 ? formatEuro(bedrag) : '—'}
+                    </td>
+                  ))}
+                  <td className={`${zoom.cell} text-right text-orange-300 font-medium bg-zinc-800/50`}>
+                    {formatEuro(totaalEenmaligeKosten)}
+                  </td>
+                </tr>
+              )}
+
               {/* Add expense category */}
               <tr className="border-b border-zinc-800/50">
                 <td className={`${zoom.cell} sticky left-0 bg-zinc-900/95 z-10`}>
@@ -314,9 +331,9 @@ export function MaandoverzichtTab() {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 text-xs text-zinc-500">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-[10px] sm:text-xs text-zinc-500">
         <span>Klik op &quot;MRR — Recurring&quot; voor detail per klant</span>
-        <span>•</span>
+        <span className="hidden sm:inline">•</span>
         <span>MRR start vanaf de ingestelde startdatum per klant</span>
       </div>
     </div>

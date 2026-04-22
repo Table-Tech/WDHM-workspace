@@ -1,10 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Trash2, RotateCcw, ChevronDown, ChevronUp, Mail, Phone, User } from 'lucide-react';
+import { Plus, Trash2, RotateCcw, ChevronDown, ChevronUp, Mail, Phone } from 'lucide-react';
 import { useSpreadsheet } from '@/contexts/SpreadsheetContext';
 import { formatEuro } from '@/lib/spreadsheet-utils';
-import type { Lead } from '@/types/spreadsheet';
 
 export function OudeLeadsTab() {
   const { leads, addLead, updateLead, deleteLead, restoreLeadToKlant } = useSpreadsheet();
