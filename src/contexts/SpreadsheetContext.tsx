@@ -110,6 +110,7 @@ interface SpreadsheetContextType {
   getKlantenKPIs: () => KlantenKPIs;
   getMaandMRR: () => number[];
   getMaandEenmalig: () => number[];
+  getMaandEenmaligeKosten: () => number[];
   getSalesCommissiePerMaand: () => number[];
   getTotaalUitgavenPerMaand: () => number[];
   getWinstVoorVerdeling: () => number[];
@@ -533,15 +534,34 @@ export function SpreadsheetProvider({ children }: { children: ReactNode }) {
     return maandTotalen;
   }, [eenmaligeInkomsten]);
 
+  // Get eenmalige kosten per month (from Eenmalig tab)
+  const getMaandEenmaligeKosten = useCallback((): number[] => {
+    const maandTotalen = Array(12).fill(0);
+    eenmaligeKosten.forEach(kost => {
+      // Include all non-cancelled costs, not just paid ones (planned costs are known)
+      if (kost.status !== 'Geannuleerd' && kost.datum) {
+        const maand = new Date(kost.datum).getMonth();
+        maandTotalen[maand] += kost.bedragExclBTW;
+      }
+    });
+    return maandTotalen;
+  }, [eenmaligeKosten]);
+
   const getTotaalUitgavenPerMaand = useCallback((): number[] => {
     const maandTotalen = Array(12).fill(0);
+    // Regular expenses
     Object.values(uitgaven).forEach(bedragen => {
       bedragen.forEach((bedrag, i) => {
         maandTotalen[i] += bedrag;
       });
     });
+    // Add eenmalige kosten
+    const eenmaligeKostenPerMaand = getMaandEenmaligeKosten();
+    eenmaligeKostenPerMaand.forEach((bedrag, i) => {
+      maandTotalen[i] += bedrag;
+    });
     return maandTotalen;
-  }, [uitgaven]);
+  }, [uitgaven, getMaandEenmaligeKosten]);
 
   // Calculate sales commission per month (from klanten with assigned salesPersoon)
   const getSalesCommissiePerMaand = useCallback((): number[] => {
