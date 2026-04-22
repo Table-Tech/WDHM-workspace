@@ -20,17 +20,18 @@ export function MaandoverzichtTab() {
     klanten,
     uitgaven,
     uitgavenCategorieen,
+    eenmaligeKosten,
     updateUitgave,
     addUitgaveCategorie,
     deleteUitgaveCategorie,
     getMaandMRR,
     getMaandEenmalig,
+    getMaandEenmaligeKosten,
     getSalesCommissiePerMaand,
     getTotaalUitgavenPerMaand,
     getWinstVoorVerdeling,
     getWinstmarge,
     getMRRBreakdown,
-    getKlantMaandInkomsten,
   } = useSpreadsheet();
 
   const [nieuweCat, setNieuweCat] = useState('');
@@ -42,6 +43,10 @@ export function MaandoverzichtTab() {
 
   const maandMRR = getMaandMRR();
   const maandEenmalig = getMaandEenmalig();
+  const maandEenmaligeKosten = getMaandEenmaligeKosten();
+  const totaalEenmaligeKosten = eenmaligeKosten
+    .filter(k => k.status !== 'Geannuleerd')
+    .reduce((sum, k) => sum + k.bedragExclBTW, 0);
   const overigeInkomsten = Array(12).fill(0);
   const totaalInkomsten = maandMRR.map((m, i) => m + maandEenmalig[i] + overigeInkomsten[i]);
   const salesCommissieAf = getSalesCommissiePerMaand();
