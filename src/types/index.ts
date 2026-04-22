@@ -145,6 +145,7 @@ export interface FriendWithStats extends Friend {
   last_incident: Incident | null;
   badges?: FriendBadge[];
   current_streak?: number;
+  on_time_streak?: number;
 }
 
 // Media item for multiple uploads
@@ -299,4 +300,68 @@ export interface MemoryAlbumFormData {
   description: string;
   event_date: string;
   photos: File[];
+}
+
+// Task Board types
+export type TaskPriority = 'P1' | 'P2' | 'P3';
+
+export interface TaskAttachment {
+  id: string;
+  name: string;
+  url: string;
+  type: string;
+  size: number;
+}
+
+export interface ChecklistItem {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
+export interface TaskComment {
+  id: string;
+  author_id: string;
+  author_name: string;
+  text: string;
+  created_at: string;
+}
+
+export interface TaskColumn {
+  id: string;
+  name: string;
+  color: string;
+  position: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Task {
+  id: string;
+  title: string;
+  description: string | null;
+  column_id: string;
+  priority: TaskPriority;
+  position: number;
+  assignee_ids: string[];
+  attachments: TaskAttachment[];
+  checklist: ChecklistItem[];
+  comments: TaskComment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TaskWithColumn extends Task {
+  column?: TaskColumn;
+}
+
+export interface TaskFormData {
+  title: string;
+  description: string;
+  priority: TaskPriority;
+  column_id: string;
+  assignee_ids: string[];
+  attachments: TaskAttachment[];
+  checklist: ChecklistItem[];
+  comments: TaskComment[];
 }
