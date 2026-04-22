@@ -39,15 +39,25 @@ async function fetchFriendBadges(friendId: string): Promise<FriendBadge[]> {
   }));
 }
 
+// Extended FriendBadge with friend info
+export interface FriendBadgeWithFriend extends FriendBadge {
+  friend?: {
+    id: string;
+    name: string;
+    color: string;
+  };
+}
+
 // Fetch all friend badges (for leaderboards/stats)
-async function fetchAllFriendBadges(): Promise<FriendBadge[]> {
+async function fetchAllFriendBadges(): Promise<FriendBadgeWithFriend[]> {
   if (!hasValidCredentials) return [];
 
   const { data, error } = await supabase
     .from('friend_badges')
     .select(`
       *,
-      badge:badges(*)
+      badge:badges(*),
+      friend:friends(id, name, color)
     `)
     .order('earned_at', { ascending: false });
 
@@ -55,6 +65,7 @@ async function fetchAllFriendBadges(): Promise<FriendBadge[]> {
   return (data || []).map((item) => ({
     ...item,
     badge: item.badge as Badge,
+    friend: item.friend as { id: string; name: string; color: string },
   }));
 }
 
@@ -152,9 +163,9 @@ export function useFriendBadges(friendId: string | null) {
   });
 }
 
-// Hook: Get all friend badges
+// Hook: Get all friend badges with friend info
 export function useAllFriendBadges() {
-  return useQuery({
+  return useQuery<FriendBadgeWithFriend[]>({
     queryKey: ['all-friend-badges'],
     queryFn: fetchAllFriendBadges,
     enabled: hasValidCredentials,
@@ -185,6 +196,39 @@ export function useCreateBadge() {
     mutationFn: createCustomBadge,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['badges'] });
+    },
+  });
+}
+
+// Revoke a badge from a friend
+async function revokeFriendBadge(params: {
+  friendId: string;
+  badgeId: string;
+}): Promise<void> {
+  if (!hasValidCredentials) {
+    throw new Error('Supabase is not configured.');
+  }
+
+  const { error } = await supabase
+    .from('friend_badges')
+    .delete()
+    .eq('friend_id', params.friendId)
+    .eq('badge_id', params.badgeId);
+
+  if (error) throw error;
+}
+
+// Hook: Revoke a badge from a friend
+export function useRevokeFriendBadge() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: revokeFriendBadge,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['badges'] });
+      queryClient.invalidateQueries({ queryKey: ['friend-badges'] });
+      queryClient.invalidateQueries({ queryKey: ['all-friend-badges'] });
+      queryClient.invalidateQueries({ queryKey: ['friends-with-stats'] });
     },
   });
 }

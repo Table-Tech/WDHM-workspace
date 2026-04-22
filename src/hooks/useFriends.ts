@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { hasValidCredentials, supabase } from '@/lib/supabase';
 import { getRandomAvatarColor } from '@/lib/colors';
-import type { Friend, Incident, FriendWithStats } from '@/types';
+import type { Friend, Incident, FriendWithStats, Streak } from '@/types';
 import { calculateMilestoneProgress, convertToMilestones, DEFAULT_MILESTONES } from '@/lib/milestones';
 
 // Fetch all friends
@@ -74,6 +74,25 @@ async function fetchMilestonesForStats() {
   return convertToMilestones(data);
 }
 
+// Fetch on-time streaks for all friends
+async function fetchOnTimeStreaks(): Promise<Record<string, number>> {
+  if (!hasValidCredentials) return {};
+
+  const { data, error } = await supabase
+    .from('streaks')
+    .select('*')
+    .eq('streak_type', 'on_time');
+
+  if (error) return {};
+
+  const streaks: Record<string, number> = {};
+  (data || []).forEach((streak: Streak) => {
+    streaks[streak.friend_id] = streak.current_count;
+  });
+
+  return streaks;
+}
+
 // Add a new friend
 async function addFriend(name: string): Promise<Friend> {
   if (!hasValidCredentials) {
@@ -140,11 +159,12 @@ export function useFriendsWithStats() {
   return useQuery({
     queryKey: ['friends-with-stats'],
     queryFn: async (): Promise<FriendWithStats[]> => {
-      const [friends, incidentCounts, lastIncidents, milestones] = await Promise.all([
+      const [friends, incidentCounts, lastIncidents, milestones, onTimeStreaks] = await Promise.all([
         fetchFriends(),
         fetchIncidentCounts(),
         fetchLastIncidents(),
         fetchMilestonesForStats(),
+        fetchOnTimeStreaks(),
       ]);
 
       return friends.map((friend) => {
@@ -162,6 +182,7 @@ export function useFriendsWithStats() {
           progress_percentage: progress,
           incidents_until_next: remaining,
           last_incident: lastIncidents[friend.id] || null,
+          on_time_streak: onTimeStreaks[friend.id] || 0,
         };
       });
     },
