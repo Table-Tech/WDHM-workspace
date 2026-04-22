@@ -41,11 +41,11 @@ export function StatCard({
   color = 'default',
 }: StatCardProps) {
   const colorClasses = {
-    default: 'bg-white/5 border-white/10',
-    purple: 'bg-purple-500/10 border-purple-500/30',
-    orange: 'bg-orange-500/10 border-orange-500/30',
-    green: 'bg-green-500/10 border-green-500/30',
-    blue: 'bg-blue-500/10 border-blue-500/30',
+    default: 'bg-black/40 backdrop-blur-md border-white/20',
+    purple: 'bg-black/40 backdrop-blur-md border-purple-500/40',
+    orange: 'bg-black/40 backdrop-blur-md border-orange-500/40',
+    green: 'bg-black/40 backdrop-blur-md border-green-500/40',
+    blue: 'bg-black/40 backdrop-blur-md border-blue-500/40',
   };
 
   const iconColors = {
@@ -59,7 +59,7 @@ export function StatCard({
   return (
     <div className={`p-4 rounded-xl border ${colorClasses[color]}`}>
       <div className="flex items-start gap-3">
-        <div className={`p-2 rounded-lg bg-white/5 ${iconColors[color]}`}>
+        <div className={`p-2 rounded-lg bg-black/30 border border-white/15 ${iconColors[color]}`}>
           {renderStatIcon(icon, "w-5 h-5")}
         </div>
         <div className="flex-1 min-w-0">

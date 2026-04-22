@@ -278,6 +278,48 @@ export function SpreadsheetProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const addSalesPersoon = useCallback(() => {
+    const newSalesPersoon: SalesPersoon = {
+      id: `${Date.now()}-${Math.random().toString(36).substring(7)}`,
+      naam: '',
+      commissiePercentage: 15,
+    };
+    setInstellingenState(prev => {
+      const salesPersonen = prev.salesPersonen || [];
+      const updated = { ...prev, salesPersonen: [...salesPersonen, newSalesPersoon] };
+      saveToStorage('instellingen', updated);
+      return updated;
+    });
+  }, []);
+
+  const updateSalesPersoon = useCallback((id: string, data: Partial<SalesPersoon>) => {
+    setInstellingenState(prev => {
+      const salesPersonen = prev.salesPersonen || [];
+      const updated = {
+        ...prev,
+        salesPersonen: salesPersonen.map(sp =>
+          sp.id === id ? { ...sp, ...data } : sp
+        ),
+      };
+      saveToStorage('instellingen', updated);
+      return updated;
+    });
+  }, []);
+
+  const deleteSalesPersoon = useCallback((id: string) => {
+    setInstellingenState(prev => {
+      const salesPersonen = prev.salesPersonen || [];
+      const updated = { ...prev, salesPersonen: salesPersonen.filter(sp => sp.id !== id) };
+      saveToStorage('instellingen', updated);
+      return updated;
+    });
+  }, []);
+
+  const getSalesPersoon = useCallback((id: string): SalesPersoon | undefined => {
+    const salesPersonen = instellingen.salesPersonen || [];
+    return salesPersonen.find(sp => sp.id === id);
+  }, [instellingen.salesPersonen]);
+
   const addUitgaveCategorie = useCallback((naam: string) => {
     if (!naam.trim()) return;
     setUitgavenCategorieenState(prev => {
@@ -465,33 +507,38 @@ export function SpreadsheetProvider({ children }: { children: ReactNode }) {
     return maandTotalen;
   }, [uitgaven]);
 
-  // Calculate sales commission per month (from klanten with salesCommissie=true and eenmaligeInkomsten)
+  // Calculate sales commission per month (from klanten with assigned salesPersoon)
   const getSalesCommissiePerMaand = useCallback((): number[] => {
-    const defaultCommissiePercentage = instellingen.salesCommissiePercentage / 100;
+    const salesPersonen = instellingen.salesPersonen || [];
     const maandTotalen = Array(12).fill(0);
 
-    // Commission from klanten MRR - gebruik klant-specifiek % als ingesteld, anders standaard
+    // Commission from klanten MRR - based on assigned salesPersoon's percentage
     klanten
-      .filter(k => k.status === 'Actief' && k.salesCommissie)
+      .filter(k => k.status === 'Actief' && k.salesPersoonId)
       .forEach(k => {
-        const klantPercentage = k.salesCommissiePercentage > 0
-          ? k.salesCommissiePercentage / 100
-          : defaultCommissiePercentage;
-        k.maandInkomsten.forEach((bedrag, i) => {
-          maandTotalen[i] += bedrag * klantPercentage;
-        });
+        const salesPersoon = salesPersonen.find(sp => sp.id === k.salesPersoonId);
+        if (salesPersoon && salesPersoon.commissiePercentage > 0) {
+          const percentage = salesPersoon.commissiePercentage / 100;
+          k.maandInkomsten.forEach((bedrag, i) => {
+            maandTotalen[i] += bedrag * percentage;
+          });
+        }
       });
 
-    // Commission from eenmalige inkomsten (gebruikt altijd standaard %)
+    // Commission from eenmalige inkomsten - for now use first salesperson's rate if salesCommissie is true
     eenmaligeInkomsten
       .filter(i => i.status === 'Betaald' && i.salesCommissie && i.datum)
       .forEach(inkomst => {
+        // Use average commission or first salesperson's rate
+        const avgCommissie = salesPersonen.length > 0
+          ? salesPersonen.reduce((sum, sp) => sum + sp.commissiePercentage, 0) / salesPersonen.length / 100
+          : 0.15; // Default 15%
         const maand = new Date(inkomst.datum).getMonth();
-        maandTotalen[maand] += inkomst.bedragExclBTW * defaultCommissiePercentage;
+        maandTotalen[maand] += inkomst.bedragExclBTW * avgCommissie;
       });
 
     return maandTotalen;
-  }, [klanten, eenmaligeInkomsten, instellingen.salesCommissiePercentage]);
+  }, [klanten, eenmaligeInkomsten, instellingen.salesPersonen]);
 
   const getWinstVoorVerdeling = useCallback((): number[] => {
     const mrr = getMaandMRR();
@@ -750,6 +797,10 @@ export function SpreadsheetProvider({ children }: { children: ReactNode }) {
         updateUitgave,
         addCoFounder,
         deleteCoFounder,
+        addSalesPersoon,
+        updateSalesPersoon,
+        deleteSalesPersoon,
+        getSalesPersoon,
         addUitgaveCategorie,
         deleteUitgaveCategorie,
         getKlantenKPIs,
