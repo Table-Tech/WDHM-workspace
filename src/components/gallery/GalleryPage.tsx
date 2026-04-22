@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import NextImage from 'next/image';
 import { ArrowLeft, Image as ImageIcon, Video, Play, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { useMilestoneGalleries } from '@/hooks/useIncidents';
 import type { FriendMilestoneGallery, ReachedMilestone, Friend, Milestone, Incident } from '@/types';
 
 export function GalleryPage() {
+  const router = useRouter();
   const { data: galleries = [], isLoading } = useMilestoneGalleries();
   const [selectedSlideshow, setSelectedSlideshow] = useState<{
     friend: Friend;
@@ -50,15 +51,14 @@ export function GalleryPage() {
           <div className="flex items-center justify-between">
             {/* Back button and title */}
             <div className="flex items-center gap-3">
-              <Link href="/">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-10 w-10 rounded-xl bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </Button>
-              </Link>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => router.back()}
+                className="h-10 w-10 rounded-xl bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
               <div>
                 <h1 className="text-xl font-bold text-white">Diavoorstellingen</h1>
                 <p className="text-xs text-muted-foreground">

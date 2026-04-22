@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { MapPin, ArrowLeft, Clock, Users, Locate } from 'lucide-react';
 import { useIncidentLocations } from '@/hooks/useLocations';
 import type { WorldMapHandle } from '@/components/map/WorldMap';
@@ -24,6 +24,7 @@ const WorldMap = dynamic(
 );
 
 export default function MapPage() {
+  const router = useRouter();
   const [mapReady, setMapReady] = useState(false);
   const { data: incidents = [], isLoading } = useIncidentLocations();
   const mapRef = useRef<WorldMapHandle>(null);
@@ -48,12 +49,12 @@ export default function MapPage() {
       {/* Header */}
       <header className="flex items-center justify-between p-3 sm:p-4 bg-black/60 backdrop-blur-xl border-b border-white/10 shadow-lg">
         <div className="flex items-center gap-2 sm:gap-3">
-          <Link
-            href="/"
+          <button
+            onClick={() => router.back()}
             className="p-1.5 sm:p-2 rounded-lg bg-black/40 hover:bg-black/60 border border-white/20 transition-colors backdrop-blur-md"
           >
             <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-          </Link>
+          </button>
           <div className="flex items-center gap-1.5 sm:gap-2">
             <div className="p-1.5 sm:p-2 rounded-xl bg-red-500/20 border border-red-500/30">
               <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-red-400" />

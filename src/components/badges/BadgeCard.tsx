@@ -86,16 +86,16 @@ export function BadgeCard({
       onClick={onClick}
       className={`
         flex flex-col items-center p-3 rounded-xl border transition-all
-        bg-black/70 backdrop-blur-xl
+        bg-zinc-900/95 backdrop-blur-xl
         ${rarityClass}
-        ${onClick ? 'hover:scale-105 hover:bg-black/80 cursor-pointer' : 'cursor-default'}
+        ${onClick ? 'hover:scale-105 hover:bg-zinc-800/95 cursor-pointer' : 'cursor-default'}
         ${!isEarned ? 'opacity-70' : ''}
       `}
     >
       <div
         className={`
           ${sizeClasses[size]} rounded-full flex items-center justify-center mb-2
-          bg-black/50
+          bg-black/70
         `}
       >
         {badge.image_url ? (
@@ -127,14 +127,14 @@ export function BadgeCard({
               {displayedEarners.map((earner) => (
                 <span
                   key={earner.id}
-                  className="text-[10px] px-1.5 py-0.5 rounded-full bg-black/60 border border-white/20"
+                  className="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-800/90 border border-white/20"
                   style={{ color: earner.color }}
                 >
                   {earner.name}
                 </span>
               ))}
               {remainingCount > 0 && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-black/60 border border-white/20 text-white/50">
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-800/90 border border-white/20 text-white/50">
                   +{remainingCount}
                 </span>
               )}

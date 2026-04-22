@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { BarChart3, ArrowLeft, Calendar, Trophy, Users, Flame, Target } from 'lucide-react';
 import { LeaderboardTable } from '@/components/stats/LeaderboardTable';
 import { FunStats } from '@/components/stats/FunStats';
@@ -23,6 +23,7 @@ const PERIODS: { value: LeaderboardPeriod; label: string }[] = [
 ];
 
 export default function StatsPage() {
+  const router = useRouter();
   const [leaderboardType, setLeaderboardType] = useState<LeaderboardType>('most_late');
   const [period, setPeriod] = useState<LeaderboardPeriod>('all_time');
 
@@ -33,12 +34,12 @@ export default function StatsPage() {
     <main className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 max-w-4xl mx-auto">
       {/* Header */}
       <header className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-        <Link
-          href="/"
+        <button
+          onClick={() => router.back()}
           className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors shrink-0"
         >
           <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-        </Link>
+        </button>
         <div className="flex items-center gap-2 min-w-0">
           <div className="p-1.5 sm:p-2 rounded-xl bg-blue-500/20 border border-blue-500/30 shrink-0">
             <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
