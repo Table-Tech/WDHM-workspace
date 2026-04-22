@@ -744,6 +744,21 @@ export function SpreadsheetProvider({ children }: { children: ReactNode }) {
       }
     });
 
+    // Add eenmalige kosten per category
+    const eenmaligePerCategorie: Record<string, number> = {};
+    eenmaligeKosten
+      .filter(k => k.status !== 'Geannuleerd')
+      .forEach(k => {
+        const cat = `Eenmalig: ${k.categorie}`;
+        eenmaligePerCategorie[cat] = (eenmaligePerCategorie[cat] || 0) + k.bedragExclBTW;
+      });
+    Object.entries(eenmaligePerCategorie).forEach(([categorie, bedrag]) => {
+      if (bedrag > 0) {
+        breakdown.push({ categorie, totaal: bedrag, percentage: 0 });
+        totaal += bedrag;
+      }
+    });
+
     // Add sales commission as a cost category
     const commissie = getSalesCommissiePerMaand();
     const commissieTotaal = commissie.reduce((sum, c) => sum + c, 0);
@@ -758,7 +773,7 @@ export function SpreadsheetProvider({ children }: { children: ReactNode }) {
     });
 
     return breakdown.sort((a, b) => b.totaal - a.totaal);
-  }, [uitgaven, getSalesCommissiePerMaand]);
+  }, [uitgaven, eenmaligeKosten, getSalesCommissiePerMaand]);
 
   const getYearSummary = useCallback((): YearSummary => {
     const currentMonthIndex = getCurrentMonthIndex();
@@ -878,6 +893,7 @@ export function SpreadsheetProvider({ children }: { children: ReactNode }) {
         getKlantenKPIs,
         getMaandMRR,
         getMaandEenmalig,
+        getMaandEenmaligeKosten,
         getSalesCommissiePerMaand,
         getTotaalUitgavenPerMaand,
         getWinstVoorVerdeling,
