@@ -7,10 +7,15 @@ export interface CoFounder {
   rol: string;
 }
 
+export interface SalesPersoon {
+  id: string;
+  naam: string;
+  commissiePercentage: number;
+}
+
 export interface Instellingen {
   coFounders: CoFounder[];
-  salesCommissiePercentage: number;
-  salesPersoonNaam: string;
+  salesPersonen: SalesPersoon[];
   btwPercentage: number;
   bedrijfsnaam: string;
   kvkNummer: string;
@@ -36,8 +41,7 @@ export interface Klant {
   productDienst: string;
   mrrPerMaand: number;
   eenmalig: number;
-  salesCommissie: boolean;
-  salesCommissiePercentage: number; // Specifiek percentage voor deze klant (0 = gebruik standaard)
+  salesPersoonId: string; // ID van de salespersoon (leeg = geen commissie)
   status: 'Actief' | 'Inactief' | 'Paused';
   maandInkomsten: number[]; // 12 months jan-dec
   // Extra klant info
@@ -198,8 +202,7 @@ export const INITIAL_INSTELLINGEN: Instellingen = {
     { id: '3', naam: 'Hicham', winstverdelingPercentage: 25, rol: '' },
     { id: '4', naam: 'Mohammad', winstverdelingPercentage: 25, rol: '' },
   ],
-  salesCommissiePercentage: 15,
-  salesPersoonNaam: '',
+  salesPersonen: [],
   btwPercentage: 21,
   bedrijfsnaam: 'TechTable',
   kvkNummer: '',
@@ -217,7 +220,6 @@ const DEFAULT_KLANT_EXTRA = {
   laatsteContact: '',
   offerteWaarde: 0,
   verwachteSluitdatum: '',
-  salesCommissiePercentage: 0,
   datumKlantGeworden: '',
   datumOnderhoudStart: '',
   onderhoudActief: true,
@@ -232,7 +234,7 @@ export const INITIAL_KLANTEN: Klant[] = [
     productDienst: 'Webdesign',
     mrrPerMaand: 49,
     eenmalig: 1500,
-    salesCommissie: false,
+    salesPersoonId: '',
     status: 'Actief',
     maandInkomsten: Array(12).fill(49),
     ...DEFAULT_KLANT_EXTRA,
@@ -243,7 +245,7 @@ export const INITIAL_KLANTEN: Klant[] = [
     productDienst: 'Webdesign',
     mrrPerMaand: 0,
     eenmalig: 0,
-    salesCommissie: false,
+    salesPersoonId: '',
     status: 'Actief',
     maandInkomsten: Array(12).fill(0),
     ...DEFAULT_KLANT_EXTRA,
@@ -254,7 +256,7 @@ export const INITIAL_KLANTEN: Klant[] = [
     productDienst: 'Applicatie',
     mrrPerMaand: 0,
     eenmalig: 0,
-    salesCommissie: true,
+    salesPersoonId: '',
     status: 'Actief',
     maandInkomsten: Array(12).fill(0),
     ...DEFAULT_KLANT_EXTRA,
@@ -265,7 +267,7 @@ export const INITIAL_KLANTEN: Klant[] = [
     productDienst: 'Applicatie',
     mrrPerMaand: 0,
     eenmalig: 0,
-    salesCommissie: true,
+    salesPersoonId: '',
     status: 'Actief',
     maandInkomsten: Array(12).fill(0),
     ...DEFAULT_KLANT_EXTRA,
@@ -276,7 +278,7 @@ export const INITIAL_KLANTEN: Klant[] = [
     productDienst: 'Websites',
     mrrPerMaand: 0,
     eenmalig: 0,
-    salesCommissie: false,
+    salesPersoonId: '',
     status: 'Actief',
     maandInkomsten: Array(12).fill(0),
     ...DEFAULT_KLANT_EXTRA,
@@ -287,7 +289,7 @@ export const INITIAL_KLANTEN: Klant[] = [
     productDienst: 'Rijschool SaaS',
     mrrPerMaand: 0,
     eenmalig: 0,
-    salesCommissie: false,
+    salesPersoonId: '',
     status: 'Actief',
     maandInkomsten: Array(12).fill(0),
     ...DEFAULT_KLANT_EXTRA,
@@ -298,7 +300,7 @@ export const INITIAL_KLANTEN: Klant[] = [
     productDienst: 'Websites',
     mrrPerMaand: 0,
     eenmalig: 0,
-    salesCommissie: false,
+    salesPersoonId: '',
     status: 'Actief',
     maandInkomsten: Array(12).fill(0),
     ...DEFAULT_KLANT_EXTRA,

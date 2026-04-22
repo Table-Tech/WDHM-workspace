@@ -11,6 +11,7 @@ import {
   type DashboardMetrics,
   type FounderVerdeling,
   type CoFounder,
+  type SalesPersoon,
   type PipelineFase,
   INITIAL_INSTELLINGEN,
   INITIAL_KLANTEN,
@@ -98,6 +99,10 @@ interface SpreadsheetContextType {
   updateUitgave: (categorie: string, maandIndex: number, bedrag: number) => void;
   addCoFounder: () => void;
   deleteCoFounder: (id: string) => void;
+  addSalesPersoon: () => void;
+  updateSalesPersoon: (id: string, data: Partial<SalesPersoon>) => void;
+  deleteSalesPersoon: (id: string) => void;
+  getSalesPersoon: (id: string) => SalesPersoon | undefined;
   addUitgaveCategorie: (naam: string) => void;
   deleteUitgaveCategorie: (naam: string) => void;
 
