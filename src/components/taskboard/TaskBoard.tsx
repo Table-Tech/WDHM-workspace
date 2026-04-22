@@ -10,6 +10,7 @@ import { TaskModal } from './TaskModal';
 import { TaskDetailPanel } from './TaskDetailPanel';
 import { ColumnModal } from './ColumnModal';
 import { TaskBoardSettings, type QuickLink } from './TaskBoardSettings';
+import { SalesTeamSection } from './SalesTeamSection';
 import { useTheme } from '@/contexts/ThemeContext';
 import {
   useColumns,
@@ -21,6 +22,7 @@ import {
   useUpdateTask,
   useMoveTask,
   useDeleteTask,
+  useReorderColumns,
 } from '@/hooks/useTasks';
 import { useFriends } from '@/hooks/useFriends';
 import type { Task, TaskColumn as TaskColumnType, TaskPriority, TaskAttachment, ChecklistItem, TaskComment } from '@/types';
@@ -50,6 +52,7 @@ export function TaskBoard() {
   const [editingColumn, setEditingColumn] = useState<TaskColumnType | null>(null);
   const [defaultColumnId, setDefaultColumnId] = useState<string>('');
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
+  const [draggedColumn, setDraggedColumn] = useState<TaskColumnType | null>(null);
   const [customQuickLinks, setCustomQuickLinks] = useState<QuickLink[]>([]);
   const { theme } = useTheme();
 
@@ -97,6 +100,7 @@ export function TaskBoard() {
   const updateTaskMutation = useUpdateTask();
   const moveTaskMutation = useMoveTask();
   const deleteTaskMutation = useDeleteTask();
+  const reorderColumnsMutation = useReorderColumns();
 
   // Get tasks for a specific column
   const getColumnTasks = useCallback(
@@ -209,6 +213,49 @@ export function TaskBoard() {
     }
 
     setDraggedTask(null);
+  };
+
+  // Column drag and drop handlers
+  const handleColumnDragStart = (e: React.DragEvent, column: TaskColumnType) => {
+    setDraggedColumn(column);
+    e.dataTransfer.effectAllowed = 'move';
+    // Add a custom data type to distinguish from task drag
+    e.dataTransfer.setData('text/column', column.id);
+  };
+
+  const handleColumnDragOver = (e: React.DragEvent, targetColumn: TaskColumnType) => {
+    e.preventDefault();
+    if (!draggedColumn || draggedColumn.id === targetColumn.id) return;
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleColumnDrop = async (e: React.DragEvent, targetColumn: TaskColumnType) => {
+    e.preventDefault();
+    if (!draggedColumn || draggedColumn.id === targetColumn.id) {
+      setDraggedColumn(null);
+      return;
+    }
+
+    // Calculate new positions for all columns
+    const currentIndex = columns.findIndex((c) => c.id === draggedColumn.id);
+    const targetIndex = columns.findIndex((c) => c.id === targetColumn.id);
+
+    const newColumns = [...columns];
+    newColumns.splice(currentIndex, 1);
+    newColumns.splice(targetIndex, 0, draggedColumn);
+
+    // Update positions
+    const updates = newColumns.map((col, index) => ({
+      id: col.id,
+      position: index,
+    }));
+
+    await reorderColumnsMutation.mutateAsync(updates);
+    setDraggedColumn(null);
+  };
+
+  const handleColumnDragEnd = () => {
+    setDraggedColumn(null);
   };
 
   // Loading state
@@ -499,6 +546,11 @@ export function TaskBoard() {
                   onDragStart={handleDragStart}
                   onDragOver={handleDragOver}
                   onDrop={handleDrop}
+                  onColumnDragStart={handleColumnDragStart}
+                  onColumnDragOver={handleColumnDragOver}
+                  onColumnDrop={handleColumnDrop}
+                  onColumnDragEnd={handleColumnDragEnd}
+                  isDraggingColumn={draggedColumn?.id === column.id}
                 />
               ))}
 
@@ -526,6 +578,9 @@ export function TaskBoard() {
               </div>
             </div>
           )}
+
+          {/* Sales Team Section */}
+          <SalesTeamSection />
         </main>
 
         {/* Footer */}

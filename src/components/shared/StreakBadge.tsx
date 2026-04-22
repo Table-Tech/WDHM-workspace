@@ -1,6 +1,6 @@
 'use client';
 
-import { Flame } from 'lucide-react';
+import { Flame, Skull, Zap, Thermometer } from 'lucide-react';
 import type { Streak } from '@/types';
 import { getStreakDisplay } from '@/hooks/useStreaks';
 
@@ -11,6 +11,13 @@ interface StreakBadgeProps {
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }
+
+const STREAK_ICONS = {
+  skull: Skull,
+  flame: Flame,
+  zap: Zap,
+  thermometer: Thermometer,
+};
 
 export function StreakBadge({
   streak,
@@ -38,6 +45,8 @@ export function StreakBadge({
     lg: 'w-5 h-5',
   };
 
+  const IconComponent = display.icon ? STREAK_ICONS[display.icon] : Flame;
+
   return (
     <div
       className={`
@@ -49,11 +58,7 @@ export function StreakBadge({
       `}
       title={`${displayCount}x achter elkaar te laat${display.label ? ` - ${display.label}` : ''}`}
     >
-      {display.emoji ? (
-        <span>{display.emoji}</span>
-      ) : (
-        <Flame className={`${iconSizes[size]} text-orange-500`} />
-      )}
+      <IconComponent className={iconSizes[size]} />
       <span>{displayCount}</span>
       {showLabel && display.label && (
         <span className="text-white/70 font-normal ml-1">{display.label}</span>
