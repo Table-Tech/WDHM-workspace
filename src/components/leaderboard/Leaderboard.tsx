@@ -50,7 +50,7 @@ export function Leaderboard({ friends, milestones = DEFAULT_MILESTONES }: Leader
 
   return (
     <aside
-      className="bg-black/50 backdrop-blur-xl border border-white/15 shadow-xl rounded-xl sm:rounded-2xl p-3 sm:p-5 h-fit lg:sticky lg:top-24"
+      className="bg-zinc-900/90 backdrop-blur-xl border border-white/15 shadow-xl rounded-xl sm:rounded-2xl p-3 sm:p-5 h-fit lg:sticky lg:top-24"
       aria-labelledby="leaderboard-heading"
     >
       {/* Header */}

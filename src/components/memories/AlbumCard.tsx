@@ -25,10 +25,10 @@ export function AlbumCard({ album, onClick }: AlbumCardProps) {
   return (
     <button
       onClick={onClick}
-      className="group relative rounded-xl overflow-hidden border border-white/15 hover:border-pink-500/50 transition-all text-left bg-black/40 backdrop-blur-md hover:bg-black/50"
+      className="group relative rounded-xl overflow-hidden border border-white/15 hover:border-pink-500/50 transition-all text-left bg-zinc-900/90 backdrop-blur-md hover:bg-zinc-800/90"
     >
       {/* Cover Image */}
-      <div className="relative aspect-[4/3] bg-black/30">
+      <div className="relative aspect-[4/3] bg-black/50">
         {coverUrl ? (
           <>
             <NextImage
