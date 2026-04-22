@@ -122,6 +122,8 @@ interface SpreadsheetContextType {
   getYearSummary: () => YearSummary;
   getCurrentMonthIndex: () => number;
   getBTWSummary: () => BTWSummary;
+  getKlantMaandInkomsten: (klant: Klant) => number[];
+  getMRRBreakdown: () => { klantId: string; klantnaam: string; maanden: number[]; totaal: number }[];
 }
 
 const SpreadsheetContext = createContext<SpreadsheetContextType | null>(null);
@@ -473,17 +475,52 @@ export function SpreadsheetProvider({ children }: { children: ReactNode }) {
     return { actieveKlanten, totaleMRR, arr, gemOmzetPerKlant };
   }, [klanten]);
 
+  // Helper: get the start month index for a client's MRR (0-11, -1 if not started)
+  const getKlantStartMaand = useCallback((klant: Klant): number => {
+    const boekjaar = instellingen.boekjaar;
+    // Priority: datumOnderhoudStart > datumKlantGeworden > no restriction
+    const startDatum = klant.datumOnderhoudStart || klant.datumKlantGeworden;
+    if (!startDatum) return 0; // If no date set, start from January
+
+    const startDate = new Date(startDatum);
+    const startYear = startDate.getFullYear();
+    const startMonth = startDate.getMonth();
+
+    // If start year is before boekjaar, MRR runs all year
+    if (startYear < boekjaar) return 0;
+    // If start year is after boekjaar, no MRR this year
+    if (startYear > boekjaar) return 12;
+    // Same year - return the start month
+    return startMonth;
+  }, [instellingen.boekjaar]);
+
+  // Get effective maandInkomsten for a client (respects start date and onderhoudActief)
+  const getKlantMaandInkomsten = useCallback((klant: Klant): number[] => {
+    // If onderhoud is not active, no MRR
+    if (klant.onderhoudActief === false) return Array(12).fill(0);
+
+    const startMaand = getKlantStartMaand(klant);
+    const maandInkomsten = Array(12).fill(0);
+
+    for (let i = startMaand; i < 12; i++) {
+      maandInkomsten[i] = klant.mrrPerMaand;
+    }
+
+    return maandInkomsten;
+  }, [getKlantStartMaand]);
+
   const getMaandMRR = useCallback((): number[] => {
     const maandTotalen = Array(12).fill(0);
     klanten
       .filter(k => k.status === 'Actief')
       .forEach(k => {
-        k.maandInkomsten.forEach((bedrag, i) => {
+        const klantMaanden = getKlantMaandInkomsten(k);
+        klantMaanden.forEach((bedrag, i) => {
           maandTotalen[i] += bedrag;
         });
       });
     return maandTotalen;
-  }, [klanten]);
+  }, [klanten, getKlantMaandInkomsten]);
 
   const getMaandEenmalig = useCallback((): number[] => {
     const maandTotalen = Array(12).fill(0);
@@ -518,7 +555,8 @@ export function SpreadsheetProvider({ children }: { children: ReactNode }) {
         const salesPersoon = salesPersonen.find(sp => sp.id === k.salesPersoonId);
         if (salesPersoon && salesPersoon.commissiePercentage > 0) {
           const percentage = salesPersoon.commissiePercentage / 100;
-          k.maandInkomsten.forEach((bedrag, i) => {
+          const klantMaanden = getKlantMaandInkomsten(k);
+          klantMaanden.forEach((bedrag, i) => {
             maandTotalen[i] += bedrag * percentage;
           });
         }
@@ -537,7 +575,7 @@ export function SpreadsheetProvider({ children }: { children: ReactNode }) {
       });
 
     return maandTotalen;
-  }, [klanten, eenmaligeInkomsten, instellingen.salesPersonen]);
+  }, [klanten, eenmaligeInkomsten, instellingen.salesPersonen, getKlantMaandInkomsten]);
 
   const getWinstVoorVerdeling = useCallback((): number[] => {
     const mrr = getMaandMRR();
@@ -734,6 +772,21 @@ export function SpreadsheetProvider({ children }: { children: ReactNode }) {
     };
   }, [getCurrentMonthIndex, getMaandMRR, getMaandEenmalig, getTotaalUitgavenPerMaand, getSalesCommissiePerMaand, klanten, instellingen.boekjaar]);
 
+  const getMRRBreakdown = useCallback(() => {
+    return klanten
+      .filter(k => k.status === 'Actief' && k.mrrPerMaand > 0)
+      .map(k => {
+        const maanden = getKlantMaandInkomsten(k);
+        return {
+          klantId: k.id,
+          klantnaam: k.klantnaam,
+          maanden,
+          totaal: maanden.reduce((sum, m) => sum + m, 0),
+        };
+      })
+      .sort((a, b) => b.totaal - a.totaal);
+  }, [klanten, getKlantMaandInkomsten]);
+
   const getBTWSummary = useCallback((): BTWSummary => {
     const btwPercentage = instellingen.btwPercentage;
     const btwMultiplier = 1 + (btwPercentage / 100);
@@ -817,6 +870,8 @@ export function SpreadsheetProvider({ children }: { children: ReactNode }) {
         getYearSummary,
         getCurrentMonthIndex,
         getBTWSummary,
+        getKlantMaandInkomsten,
+        getMRRBreakdown,
       }}
     >
       {children}
