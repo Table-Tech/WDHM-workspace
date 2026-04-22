@@ -31,11 +31,11 @@ function getRankStyle(rank: number) {
     case 1:
       return 'bg-yellow-500/20 border-yellow-500/40';
     case 2:
-      return 'bg-black/30 border-white/20';
+      return 'bg-zinc-900/80 border-white/20';
     case 3:
       return 'bg-amber-600/20 border-amber-600/40';
     default:
-      return 'bg-black/30 border-white/15';
+      return 'bg-zinc-900/80 border-white/15';
   }
 }
 

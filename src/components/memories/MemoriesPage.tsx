@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft, Heart, Plus, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AlbumCard } from './AlbumCard';
@@ -11,6 +11,7 @@ import { useMemoryAlbums } from '@/hooks/useMemories';
 import type { MemoryAlbumWithPhotos } from '@/types';
 
 export function MemoriesPage() {
+  const router = useRouter();
   const { data: albums = [], isLoading } = useMemoryAlbums();
   const [selectedAlbum, setSelectedAlbum] = useState<MemoryAlbumWithPhotos | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -23,15 +24,14 @@ export function MemoriesPage() {
           <div className="flex items-center justify-between">
             {/* Back button and title */}
             <div className="flex items-center gap-3">
-              <Link href="/">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-10 w-10 rounded-xl bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </Button>
-              </Link>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => router.back()}
+                className="h-10 w-10 rounded-xl bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
               <div>
                 <h1 className="text-xl font-bold text-white flex items-center gap-2">
                   <Heart className="w-5 h-5 text-pink-400" />
