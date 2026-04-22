@@ -187,23 +187,23 @@ export async function updateStreaksAfterIncident(
 
 // Get streak display info
 export function getStreakDisplay(streak: Streak | undefined): {
-  emoji: string;
+  icon: 'skull' | 'flame' | 'zap' | 'thermometer' | null;
   color: string;
   label: string;
 } {
   const count = streak?.current_count || 0;
 
   if (count >= 20) {
-    return { emoji: '💀', color: 'text-red-500', label: 'Chronisch!' };
+    return { icon: 'skull', color: 'text-red-500', label: 'Chronisch!' };
   } else if (count >= 10) {
-    return { emoji: '🔥', color: 'text-orange-500', label: 'On Fire!' };
+    return { icon: 'flame', color: 'text-orange-500', label: 'On Fire!' };
   } else if (count >= 5) {
-    return { emoji: '⚡', color: 'text-yellow-500', label: 'Streak!' };
+    return { icon: 'zap', color: 'text-yellow-500', label: 'Streak!' };
   } else if (count >= 3) {
-    return { emoji: '🌡️', color: 'text-orange-400', label: 'Warming up' };
+    return { icon: 'thermometer', color: 'text-orange-400', label: 'Warming up' };
   }
 
-  return { emoji: '', color: 'text-white/50', label: '' };
+  return { icon: null, color: 'text-white/50', label: '' };
 }
 
 // Mark a friend as "on time" - this increments their on_time streak and resets late streak

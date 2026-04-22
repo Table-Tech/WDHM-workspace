@@ -169,6 +169,31 @@ export interface IncidentFormData {
   longitude: number | null;
 }
 
+// On-time incident type
+export interface OnTimeIncident {
+  id: string;
+  friend_id: string;
+  location: string | null;
+  photo_url: string | null;
+  video_url: string | null;
+  media_type: 'photo' | 'video' | null;
+  note: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  created_at: string;
+}
+
+export interface OnTimeFormData {
+  friend_id: string;
+  location: string;
+  note: string;
+  media: File | null;
+  mediaType: 'photo' | 'video' | null;
+  mediaItems: MediaItem[];
+  latitude: number | null;
+  longitude: number | null;
+}
+
 // Team trip form
 export interface TeamTripFormData {
   name: string;

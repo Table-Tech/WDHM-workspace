@@ -237,6 +237,40 @@ async function reorderTasks(updates: { id: string; position: number }[]): Promis
   }
 }
 
+// Reorder columns
+async function reorderColumns(updates: { id: string; position: number }[]): Promise<void> {
+  if (!hasValidCredentials) {
+    throw new Error('Supabase is not configured.');
+  }
+
+  // Update each column position
+  for (const update of updates) {
+    const { error } = await supabase
+      .from('task_columns')
+      .update({ position: update.position, updated_at: new Date().toISOString() })
+      .eq('id', update.id);
+
+    if (error) throw error;
+  }
+}
+
+// Move column to new position
+async function moveColumn(data: { columnId: string; newPosition: number }): Promise<void> {
+  if (!hasValidCredentials) {
+    throw new Error('Supabase is not configured.');
+  }
+
+  const { error } = await supabase
+    .from('task_columns')
+    .update({
+      position: data.newPosition,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', data.columnId);
+
+  if (error) throw error;
+}
+
 // Delete a task
 async function deleteTask(id: string): Promise<void> {
   if (!hasValidCredentials) {
@@ -352,6 +386,28 @@ export function useDeleteTask() {
     mutationFn: deleteTask,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    },
+  });
+}
+
+export function useReorderColumns() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: reorderColumns,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task-columns'] });
+    },
+  });
+}
+
+export function useMoveColumn() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: moveColumn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task-columns'] });
     },
   });
 }
