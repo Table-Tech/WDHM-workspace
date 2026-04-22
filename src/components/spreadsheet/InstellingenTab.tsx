@@ -37,10 +37,10 @@ export function InstellingenTab() {
   };
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-lg font-semibold text-white">Instellingen</h1>
+    <div className="space-y-3 sm:space-y-4">
+      <h1 className="text-base sm:text-lg font-semibold text-white">Instellingen</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
         {/* Co-founders */}
         <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 overflow-hidden">
           <div className="bg-purple-600/80 px-3 py-2">

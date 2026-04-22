@@ -4,7 +4,7 @@ import { useState, Fragment } from 'react';
 import { Plus, Trash2, ChevronDown, ChevronUp, Mail, Phone, User, Calendar, RotateCcw, Users, Archive } from 'lucide-react';
 import { useSpreadsheet } from '@/contexts/SpreadsheetContext';
 import { formatEuro } from '@/lib/spreadsheet-utils';
-import { MAAND_LABELS, PIPELINE_FASES, type Klant, type PipelineFase } from '@/types/spreadsheet';
+import { type Klant, type PipelineFase } from '@/types/spreadsheet';
 
 // Pipeline fases voor dropdown (alle fases behalve Afgevallen)
 const SELECTABLE_FASES: PipelineFase[] = ['Lead', 'Contact gelegd', 'Offerte gestuurd', 'In onderhandeling', 'Klant'];
@@ -21,7 +21,7 @@ const FASE_STYLES: Record<PipelineFase, string> = {
 type InnerTab = 'klanten' | 'leads';
 
 export function KlantenMRRTab() {
-  const { klanten, leads, addKlant, updateKlant, deleteKlant, deleteLead, getKlantenKPIs, moveKlantToLeads, restoreLeadToKlant, instellingen, getSalesPersoon } = useSpreadsheet();
+  const { klanten, leads, addKlant, updateKlant, deleteKlant, deleteLead, getKlantenKPIs, moveKlantToLeads, restoreLeadToKlant, instellingen } = useSpreadsheet();
   const salesPersonen = instellingen.salesPersonen || [];
   const [innerTab, setInnerTab] = useState<InnerTab>('klanten');
   const [expandedKlant, setExpandedKlant] = useState<string | null>(null);
@@ -76,37 +76,37 @@ export function KlantenMRRTab() {
   return (
     <div className="space-y-4">
       {/* Header with KPIs */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <h1 className="text-xl font-semibold text-white">Klanten & MRR</h1>
-        <div className="flex items-center gap-6 text-sm">
-          <div><span className="text-zinc-500">Klanten:</span> <span className="text-blue-400 font-semibold">{kpis.actieveKlanten}</span></div>
-          <div><span className="text-zinc-500">MRR:</span> <span className="text-teal-400 font-semibold">{formatEuro(kpis.totaleMRR)}</span></div>
-          <div><span className="text-zinc-500">ARR:</span> <span className="text-green-400 font-semibold">{formatEuro(kpis.arr)}</span></div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h1 className="text-lg sm:text-xl font-semibold text-white">Klanten & MRR</h1>
+        <div className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm overflow-x-auto">
+          <div className="whitespace-nowrap"><span className="text-zinc-500">Klanten:</span> <span className="text-blue-400 font-semibold">{kpis.actieveKlanten}</span></div>
+          <div className="whitespace-nowrap"><span className="text-zinc-500">MRR:</span> <span className="text-teal-400 font-semibold">{formatEuro(kpis.totaleMRR)}</span></div>
+          <div className="whitespace-nowrap"><span className="text-zinc-500">ARR:</span> <span className="text-green-400 font-semibold">{formatEuro(kpis.arr)}</span></div>
         </div>
       </div>
 
       {/* Inner Tabs */}
-      <div className="flex gap-1 bg-zinc-800/50 p-1 rounded-lg w-fit">
+      <div className="flex gap-1 bg-zinc-800/50 p-1 rounded-lg w-fit overflow-x-auto">
         <button
           onClick={() => setInnerTab('klanten')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+          className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
             innerTab === 'klanten'
               ? 'bg-teal-600 text-white'
               : 'text-zinc-400 hover:text-white hover:bg-zinc-700'
           }`}
         >
-          <Users className="w-4 h-4" />
+          <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           Klanten ({klanten.length})
         </button>
         <button
           onClick={() => setInnerTab('leads')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+          className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
             innerTab === 'leads'
               ? 'bg-orange-600 text-white'
               : 'text-zinc-400 hover:text-white hover:bg-zinc-700'
           }`}
         >
-          <Archive className="w-4 h-4" />
+          <Archive className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           Oude Leads ({leads.length})
         </button>
       </div>
@@ -114,7 +114,8 @@ export function KlantenMRRTab() {
       {/* Klanten Tab */}
       {innerTab === 'klanten' && (
       <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 overflow-hidden">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full text-xs sm:text-sm min-w-[800px]">
           <thead>
             <tr className="bg-zinc-800 text-zinc-400">
               <th className="w-10 px-2 py-3"></th>
@@ -460,6 +461,7 @@ export function KlantenMRRTab() {
             </tr>
           </tfoot>
         </table>
+        </div>
         <div className="px-4 py-3 border-t border-zinc-800">
           <button onClick={handleAddKlant} className="flex items-center gap-2 text-zinc-500 hover:text-white text-sm">
             <Plus className="w-4 h-4" /> Klant toevoegen
@@ -478,7 +480,8 @@ export function KlantenMRRTab() {
               <p className="text-zinc-600 text-sm mt-1">Afgewezen klanten verschijnen hier</p>
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full text-xs sm:text-sm min-w-[700px]">
               <thead>
                 <tr className="bg-zinc-800 text-zinc-400">
                   <th className="text-left px-4 py-3 font-medium">Bedrijf</th>
@@ -532,6 +535,7 @@ export function KlantenMRRTab() {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       )}
