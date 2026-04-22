@@ -37,6 +37,12 @@ export function EenmaligeInkomstenTab() {
     setEenmaligeInkomsten([...eenmaligeInkomsten, newInkomst]);
   };
 
+  // Calculate average commission percentage from salesPersonen, default to 15%
+  const salesPersonen = instellingen.salesPersonen || [];
+  const avgCommissiePercentage = salesPersonen.length > 0
+    ? salesPersonen.reduce((sum, sp) => sum + sp.commissiePercentage, 0) / salesPersonen.length
+    : 15;
+
   const updateInkomst = (id: string, field: keyof EenmaligeInkomst, value: string | number | boolean) => {
     const updated = eenmaligeInkomsten.map(inkomst => {
       if (inkomst.id !== id) return inkomst;
@@ -50,7 +56,7 @@ export function EenmaligeInkomstenTab() {
         newInkomst.btw = bedragExcl * (instellingen.btwPercentage / 100);
         newInkomst.bedragInclBTW = bedragExcl + newInkomst.btw;
         newInkomst.nettoNaCommissie = hasSalesComm
-          ? bedragExcl * (1 - instellingen.salesCommissiePercentage / 100)
+          ? bedragExcl * (1 - avgCommissiePercentage / 100)
           : bedragExcl;
       }
 

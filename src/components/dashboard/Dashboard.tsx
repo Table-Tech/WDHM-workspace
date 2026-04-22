@@ -2,7 +2,8 @@
 
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
-import { UserPlus, Clock, Zap, Settings, Image as ImageIcon, Award, MapPin, BarChart3, Gamepad2, Crown, Heart } from 'lucide-react';
+import Image from 'next/image';
+import { UserPlus, Clock, Zap, Settings, Image as ImageIcon, Award, MapPin, BarChart3, Gamepad2, Crown, Heart, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FriendCard } from '@/components/friends/FriendCard';
 import { AddFriendModal } from '@/components/friends/AddFriendModal';
@@ -13,11 +14,13 @@ import { MilestoneBanner } from '@/components/shared/MilestoneBanner';
 import { MilestoneGallery } from '@/components/gallery/MilestoneGallery';
 import { SettingsModal } from '@/components/settings/SettingsModal';
 import { InviteButton } from '@/components/invite/InviteButton';
+import { BadgeNotification } from '@/components/badges';
 import { useFriendsWithStats, useAddFriend, useUpdateFriend, useDeleteFriend } from '@/hooks/useFriends';
 import { useCreateIncident, useDeleteIncident } from '@/hooks/useIncidents';
+import { useMarkAsOnTime, useUndoOnTime } from '@/hooks/useStreaks';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { useMilestones } from '@/hooks/useMilestones';
-import type { Friend, IncidentFormData, MilestoneReachedEvent } from '@/types';
+import type { Friend, IncidentFormData, MilestoneReachedEvent, FriendBadge } from '@/types';
 
 export function Dashboard() {
   // State
@@ -32,6 +35,9 @@ export function Dashboard() {
   // Edit friend modal state
   const [editingFriend, setEditingFriend] = useState<Friend | null>(null);
   const [isEditFriendOpen, setIsEditFriendOpen] = useState(false);
+  // Badge notification state
+  const [earnedBadges, setEarnedBadges] = useState<FriendBadge[]>([]);
+  const [badgeFriendName, setBadgeFriendName] = useState<string>('');
 
   // Data hooks
   const { data: friends = [], isLoading, error } = useFriendsWithStats();
@@ -41,6 +47,8 @@ export function Dashboard() {
   const deleteFriendMutation = useDeleteFriend();
   const createIncidentMutation = useCreateIncident();
   const deleteIncidentMutation = useDeleteIncident();
+  const markOnTimeMutation = useMarkAsOnTime();
+  const undoOnTimeMutation = useUndoOnTime();
 
   // Realtime sync with milestone callback
   const handleMilestoneReached = useCallback((event: MilestoneReachedEvent) => {
@@ -96,13 +104,39 @@ export function Dashboard() {
   };
 
   const handleCreateIncident = async (data: IncidentFormData) => {
-    await createIncidentMutation.mutateAsync(data);
+    const result = await createIncidentMutation.mutateAsync(data);
     setIsIncidentModalOpen(false);
+
+    // Show badge notifications if any were earned
+    if (result.newBadges.length > 0) {
+      setBadgeFriendName(selectedFriend?.name || '');
+      setEarnedBadges(result.newBadges);
+    }
+
     setSelectedFriend(null);
 
     // Trigger animation
     setAnimatingFriendId(data.friend_id);
     setTimeout(() => setAnimatingFriendId(null), 1000);
+  };
+
+  // Handler for marking someone as on time
+  const handleMarkOnTime = async (friendId: string) => {
+    const friend = friends.find((f) => f.id === friendId);
+    if (!friend) return;
+
+    const result = await markOnTimeMutation.mutateAsync(friendId);
+
+    // Show badge notifications if any were earned
+    if (result && result.newBadges.length > 0) {
+      setBadgeFriendName(friend.name);
+      setEarnedBadges(result.newBadges);
+    }
+  };
+
+  // Handler for undoing an on-time mark (in case of accidental click)
+  const handleUndoOnTime = async (friendId: string) => {
+    await undoOnTimeMutation.mutateAsync(friendId);
   };
 
   const handleDeleteLastIncident = async (incidentId: string, friendName: string) => {
@@ -145,6 +179,16 @@ export function Dashboard() {
 
   return (
     <>
+      {/* Badge Notification */}
+      <BadgeNotification
+        badges={earnedBadges}
+        friendName={badgeFriendName}
+        onDismiss={() => {
+          setEarnedBadges([]);
+          setBadgeFriendName('');
+        }}
+      />
+
       {/* Milestone Banner */}
       <MilestoneBanner
         event={milestoneEvent}
@@ -169,16 +213,25 @@ export function Dashboard() {
       {/* Main Layout */}
       <div className="min-h-screen">
         {/* Header */}
-        <header className="sticky top-0 z-40 glass border-b border-white/5">
+        <header className="sticky top-0 z-40 bg-black/90 backdrop-blur-xl border-b border-white/10 shadow-lg">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               {/* Logo */}
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl theme-gradient shadow-[0_10px_15px_-3px_rgba(var(--theme-primary),0.25)]">
-                  <Clock className="w-6 h-6 text-white" aria-hidden="true" />
+                <Link href="/" className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 transition-all">
+                  <LayoutGrid className="w-6 h-6 text-purple-400" aria-hidden="true" />
+                </Link>
+                <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg">
+                  <Image
+                    src="/logo.jpeg"
+                    alt="LateTable Logo"
+                    width={40}
+                    height={40}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-white">LateTable</h1>
+                  <h1 className="text-xl font-bold text-white">Te Laat Tracker</h1>
                   <p className="text-xs text-muted-foreground">
                     {friends.length} vrienden
                   </p>
@@ -187,94 +240,99 @@ export function Dashboard() {
 
               {/* Actions */}
               <div className="flex items-center gap-1.5 sm:gap-2">
-                {/* Gallery Button */}
-                <Link href="/gallery">
-                  <Button
-                    variant="ghost"
-                    className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all p-0"
-                    aria-label="Diavoorstellingen bekijken"
-                  >
-                    <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white/70" />
-                  </Button>
-                </Link>
+                {/* Desktop Navigation - Hidden on mobile (shown in bottom nav) */}
+                <div className="hidden md:flex items-center gap-1.5">
+                  {/* Gallery Button */}
+                  <Link href="/gallery">
+                    <Button
+                      variant="ghost"
+                      className="h-10 w-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-600 transition-all p-0"
+                      aria-label="Diavoorstellingen bekijken"
+                    >
+                      <ImageIcon className="w-5 h-5 text-blue-400" />
+                    </Button>
+                  </Link>
 
-                {/* Badges Button */}
-                <Link href="/badges">
-                  <Button
-                    variant="ghost"
-                    className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all p-0"
-                    aria-label="Badges bekijken"
-                  >
-                    <Award className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
-                  </Button>
-                </Link>
+                  {/* Badges Button */}
+                  <Link href="/badges">
+                    <Button
+                      variant="ghost"
+                      className="h-10 w-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-600 transition-all p-0"
+                      aria-label="Badges bekijken"
+                    >
+                      <Award className="w-5 h-5 text-yellow-400" />
+                    </Button>
+                  </Link>
 
-                {/* Map Button */}
-                <Link href="/map">
-                  <Button
-                    variant="ghost"
-                    className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all p-0"
-                    aria-label="Kaart bekijken"
-                  >
-                    <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />
-                  </Button>
-                </Link>
+                  {/* Map Button */}
+                  <Link href="/map">
+                    <Button
+                      variant="ghost"
+                      className="h-10 w-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-600 transition-all p-0"
+                      aria-label="Kaart bekijken"
+                    >
+                      <MapPin className="w-5 h-5 text-green-400" />
+                    </Button>
+                  </Link>
 
-                {/* Stats Button */}
-                <Link href="/stats">
-                  <Button
-                    variant="ghost"
-                    className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all p-0"
-                    aria-label="Statistieken bekijken"
-                  >
-                    <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
-                  </Button>
-                </Link>
+                  {/* Stats Button */}
+                  <Link href="/stats">
+                    <Button
+                      variant="ghost"
+                      className="h-10 w-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-600 transition-all p-0"
+                      aria-label="Statistieken bekijken"
+                    >
+                      <BarChart3 className="w-5 h-5 text-blue-400" />
+                    </Button>
+                  </Link>
 
-                {/* Games Button */}
-                <Link href="/games">
-                  <Button
-                    variant="ghost"
-                    className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all p-0"
-                    aria-label="Games spelen"
-                  >
-                    <Gamepad2 className="w-4 h-4 sm:w-5 sm:h-5 text-pink-400" />
-                  </Button>
-                </Link>
+                  {/* Games Button */}
+                  <Link href="/games">
+                    <Button
+                      variant="ghost"
+                      className="h-10 w-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-600 transition-all p-0"
+                      aria-label="Games spelen"
+                    >
+                      <Gamepad2 className="w-5 h-5 text-pink-400" />
+                    </Button>
+                  </Link>
 
-                {/* Hall of Fame Button */}
-                <Link href="/hall-of-fame">
-                  <Button
-                    variant="ghost"
-                    className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all p-0"
-                    aria-label="Hall of Fame bekijken"
-                  >
-                    <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
-                  </Button>
-                </Link>
+                  {/* Hall of Fame Button */}
+                  <Link href="/hall-of-fame">
+                    <Button
+                      variant="ghost"
+                      className="h-10 w-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-600 transition-all p-0"
+                      aria-label="Hall of Fame bekijken"
+                    >
+                      <Crown className="w-5 h-5 text-yellow-400" />
+                    </Button>
+                  </Link>
 
-                {/* Memories Button */}
-                <Link href="/memories">
-                  <Button
-                    variant="ghost"
-                    className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all p-0"
-                    aria-label="Herinneringen bekijken"
-                  >
-                    <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-pink-400" />
-                  </Button>
-                </Link>
+                  {/* Memories Button */}
+                  <Link href="/memories">
+                    <Button
+                      variant="ghost"
+                      className="h-10 w-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-600 transition-all p-0"
+                      aria-label="Herinneringen bekijken"
+                    >
+                      <Heart className="w-5 h-5 text-pink-400" />
+                    </Button>
+                  </Link>
+                </div>
 
-                {/* Invite Button */}
-                <InviteButton variant="icon" />
+                {/* Invite Button - Hidden on mobile */}
+                <div className="hidden md:block">
+                  <InviteButton variant="icon" />
+                </div>
 
                 {/* Settings Button */}
                 <Button
                   variant="ghost"
                   onClick={() => setIsSettingsOpen(true)}
-                  className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all p-0"
+                  className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-600 transition-all p-0"
                   aria-label="Instellingen openen"
                 >
-                  <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-white/70" />
+                  <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </Button>
 
                 {/* Add Friend Button */}
@@ -330,6 +388,8 @@ export function Dashboard() {
                     key={friend.id}
                     friend={friend}
                     onMarkLate={handleMarkLate}
+                    onMarkOnTime={handleMarkOnTime}
+                    onUndoOnTime={handleUndoOnTime}
                     onEdit={handleEditFriend}
                     onDeleteLastIncident={handleDeleteLastIncident}
                     isAnimating={animatingFriendId === friend.id}
