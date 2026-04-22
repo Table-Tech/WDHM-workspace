@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Providers } from './providers';
+import { MobileNavbar } from '@/components/navigation/MobileNavbar';
+import { AnimatedBackground } from '@/components/background/AnimatedBackground';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -27,7 +29,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  themeColor: '#1a1625',
+  themeColor: '#000000',
 };
 
 export default function RootLayout({
@@ -42,8 +44,8 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        {/* Noise texture overlay for futuristic effect */}
-        <div className="noise-overlay" aria-hidden="true" />
+        {/* Animated gradient background */}
+        <AnimatedBackground />
 
         {/* Skip link for accessibility */}
         <a
@@ -54,7 +56,8 @@ export default function RootLayout({
         </a>
 
         <Providers>
-          <div id="main-content">{children}</div>
+          <div id="main-content" className="pb-20 md:pb-0">{children}</div>
+          <MobileNavbar />
         </Providers>
       </body>
     </html>

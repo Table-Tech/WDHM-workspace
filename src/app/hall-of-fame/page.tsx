@@ -83,37 +83,37 @@ export default function HallOfFamePage() {
   const { data: resets = [], isLoading: resetsLoading } = useResets();
 
   return (
-    <main className="min-h-screen p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto">
+    <main className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 max-w-4xl mx-auto">
       {/* Header */}
-      <header className="flex items-center gap-3 mb-6">
+      <header className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
         <Link
           href="/"
-          className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+          className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors shrink-0"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </Link>
-        <div className="flex items-center gap-2">
-          <div className="p-2 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
-            <Trophy className="w-5 h-5 text-yellow-400" />
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="p-1.5 sm:p-2 rounded-xl bg-yellow-500/20 border border-yellow-500/30 shrink-0">
+            <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
           </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold">Hall of Fame</h1>
-            <p className="text-sm text-white/50">Records, iconen & geschiedenis</p>
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold truncate">Hall of Fame</h1>
+            <p className="text-xs sm:text-sm text-white/50 truncate">Records & geschiedenis</p>
           </div>
         </div>
       </header>
 
       {/* Tab Navigation */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+      <div className="flex gap-1.5 sm:gap-2 mb-4 sm:mb-6 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0">
         {TABS.map((tab) => (
           <button
             key={tab.value}
             onClick={() => setActiveTab(tab.value)}
             className={`
-              flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all
+              flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all border backdrop-blur-md
               ${activeTab === tab.value
-                ? 'bg-white/20 text-white'
-                : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/70'
+                ? 'bg-yellow-600/80 border-yellow-400 text-white'
+                : 'bg-black/40 border-white/20 text-white hover:bg-black/50 hover:border-white/30'
               }
             `}
           >
@@ -124,7 +124,7 @@ export default function HallOfFamePage() {
       </div>
 
       {/* Tab Content */}
-      <div className="glass-card rounded-xl p-6">
+      <div className="bg-black/50 backdrop-blur-xl border border-white/15 rounded-xl p-4 sm:p-6 shadow-xl">
         {/* Records Tab */}
         {activeTab === 'records' && (
           <div>
@@ -147,7 +147,7 @@ export default function HallOfFamePage() {
                 {records.map((record) => (
                   <div
                     key={`${record.type}-${record.friend.id}`}
-                    className="flex items-center gap-4 p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
+                    className="flex items-center gap-4 p-4 bg-black/40 backdrop-blur-md border border-white/15 rounded-lg hover:bg-black/50 transition-colors"
                   >
                     {/* Icon */}
                     <div className="flex-shrink-0">
@@ -209,7 +209,7 @@ export default function HallOfFamePage() {
                 {iconicMoments.map((moment) => (
                   <div
                     key={moment.incident.id}
-                    className="group relative aspect-square bg-white/5 rounded-lg overflow-hidden hover:ring-2 hover:ring-white/20 transition-all"
+                    className="group relative aspect-square bg-black/40 backdrop-blur-md border border-white/15 rounded-lg overflow-hidden hover:ring-2 hover:ring-yellow-500/30 transition-all"
                   >
                     {/* Photo */}
                     {moment.incident.photo_url ? (
@@ -252,7 +252,7 @@ export default function HallOfFamePage() {
 
                     {/* Iconic badge */}
                     <div className="absolute top-2 right-2">
-                      <div className="p-1.5 bg-yellow-500/20 backdrop-blur-sm rounded-full border border-yellow-500/30">
+                      <div className="p-1.5 bg-black/60 backdrop-blur-md rounded-full border border-yellow-500/50">
                         <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
                       </div>
                     </div>
@@ -285,7 +285,7 @@ export default function HallOfFamePage() {
                 {resets.map((reset, index) => (
                   <div
                     key={reset.id}
-                    className="p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
+                    className="p-4 bg-black/40 backdrop-blur-md border border-white/15 rounded-lg hover:bg-black/50 transition-colors"
                   >
                     {/* Header */}
                     <div className="flex items-center justify-between mb-3">
