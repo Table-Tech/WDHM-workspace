@@ -133,43 +133,43 @@ export function EenmaligeInkomstenTab() {
   })).filter(c => c.totaal > 0);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-white">Eenmalig</h1>
+    <div className="space-y-3 sm:space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
+        <h1 className="text-base sm:text-lg font-semibold text-white">Eenmalig</h1>
 
         {/* Inner Tabs */}
-        <div className="flex gap-1 bg-zinc-800/50 p-1 rounded-lg">
+        <div className="flex gap-0.5 sm:gap-1 bg-zinc-800/50 p-0.5 sm:p-1 rounded-lg overflow-x-auto">
           <button
             onClick={() => setInnerTab('inkomsten')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-md text-[10px] sm:text-xs font-medium transition-colors whitespace-nowrap ${
               innerTab === 'inkomsten'
                 ? 'bg-green-600 text-white'
                 : 'text-zinc-400 hover:text-white hover:bg-zinc-700'
             }`}
           >
-            <TrendingUp className="w-3.5 h-3.5" />
+            <TrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             Inkomsten ({eenmaligeInkomsten.length})
           </button>
           <button
             onClick={() => setInnerTab('kosten')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-md text-[10px] sm:text-xs font-medium transition-colors whitespace-nowrap ${
               innerTab === 'kosten'
                 ? 'bg-red-600 text-white'
                 : 'text-zinc-400 hover:text-white hover:bg-zinc-700'
             }`}
           >
-            <TrendingDown className="w-3.5 h-3.5" />
+            <TrendingDown className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             Kosten ({eenmaligeKosten.length})
           </button>
           <button
             onClick={() => setInnerTab('overzicht')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-md text-[10px] sm:text-xs font-medium transition-colors whitespace-nowrap ${
               innerTab === 'overzicht'
                 ? 'bg-blue-600 text-white'
                 : 'text-zinc-400 hover:text-white hover:bg-zinc-700'
             }`}
           >
-            <PieChart className="w-3.5 h-3.5" />
+            <PieChart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             Overzicht
           </button>
         </div>

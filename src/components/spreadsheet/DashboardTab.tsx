@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSpreadsheet } from '@/contexts/SpreadsheetContext';
 import { formatEuro, formatPercentage } from '@/lib/spreadsheet-utils';
 import {
@@ -17,7 +17,7 @@ import {
   AreaChart,
   Area,
 } from 'recharts';
-import { TrendingUp, Users, Wallet, Receipt, PiggyBank, Target, Building2, Info, Calendar, ChevronDown, Percent } from 'lucide-react';
+import { Users, Wallet, Receipt, PiggyBank, Target, Building2, Info, Calendar, ChevronDown, Percent } from 'lucide-react';
 
 const CHART_COLORS = ['#14b8a6', '#22c55e', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4'];
 
@@ -37,9 +37,31 @@ const MAANDEN = [
   { value: 11, label: 'December', kort: 'Dec' },
 ];
 
+// Custom tooltip component for charts (defined outside to avoid recreation on each render)
+function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number; name: string; color: string }[]; label?: string }) {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 shadow-xl">
+        <p className="text-zinc-400 text-xs mb-1">{label}</p>
+        {payload.map((entry, index) => (
+          <p key={index} style={{ color: entry.color }} className="text-sm font-medium">
+            {entry.name}: {formatEuro(entry.value)}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+}
+
 export function DashboardTab() {
   const [selectedMonth, setSelectedMonth] = useState<number>(-1); // -1 = heel jaar
   const [showMonthDropdown, setShowMonthDropdown] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch and chart dimension errors
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { setMounted(true); }, []);
 
   const {
     instellingen,
@@ -90,46 +112,29 @@ export function DashboardTab() {
     ? (displayWinst / displayInkomsten) * 100
     : 0;
 
-  // Custom tooltip for charts
-  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: { value: number; name: string; color: string }[]; label?: string }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 shadow-xl">
-          <p className="text-zinc-400 text-xs mb-1">{label}</p>
-          {payload.map((entry, index) => (
-            <p key={index} style={{ color: entry.color }} className="text-sm font-medium">
-              {entry.name}: {formatEuro(entry.value)}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
     <div className="space-y-6">
       {/* Header with Year and Month Selector */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-white flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-teal-400" />
-            {instellingen.bedrijfsnaam} Dashboard
+          <h1 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-2">
+            <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-teal-400" />
+            <span className="truncate">{instellingen.bedrijfsnaam} Dashboard</span>
           </h1>
-          <p className="text-sm text-zinc-500 mt-1">
+          <p className="text-xs sm:text-sm text-zinc-500 mt-1">
             Financieel overzicht {isYearView ? instellingen.boekjaar : `${selectedMaandLabel} ${instellingen.boekjaar}`}
           </p>
         </div>
         <div className="flex items-center gap-2">
           {/* Month Selector */}
-          <div className="relative">
+          <div className="relative flex-1 sm:flex-none">
             <button
               onClick={() => setShowMonthDropdown(!showMonthDropdown)}
-              className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg px-3 py-2 transition-colors"
+              className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 transition-colors w-full sm:w-auto"
             >
               <Calendar className="w-4 h-4 text-zinc-400" />
-              <span className="text-sm text-white">{selectedMaandLabel}</span>
-              <ChevronDown className="w-4 h-4 text-zinc-400" />
+              <span className="text-xs sm:text-sm text-white truncate">{selectedMaandLabel}</span>
+              <ChevronDown className="w-4 h-4 text-zinc-400 flex-shrink-0" />
             </button>
             {showMonthDropdown && (
               <>
@@ -162,9 +167,9 @@ export function DashboardTab() {
             )}
           </div>
           {/* Year indicator */}
-          <div className="bg-teal-500/10 border border-teal-500/20 rounded-lg px-4 py-2">
-            <p className="text-xs text-teal-400">Boekjaar</p>
-            <p className="text-lg font-bold text-white">{instellingen.boekjaar}</p>
+          <div className="bg-teal-500/10 border border-teal-500/20 rounded-lg px-3 sm:px-4 py-1.5 sm:py-2 flex-shrink-0">
+            <p className="text-[10px] sm:text-xs text-teal-400">Boekjaar</p>
+            <p className="text-base sm:text-lg font-bold text-white">{instellingen.boekjaar}</p>
           </div>
         </div>
       </div>
@@ -236,62 +241,68 @@ export function DashboardTab() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Monthly Revenue vs Expenses - 2/3 width */}
-        <div className="lg:col-span-2 bg-zinc-900/50 rounded-xl border border-zinc-800 p-4">
+        <div className="lg:col-span-2 bg-zinc-900/50 rounded-xl border border-zinc-800 p-3 sm:p-4">
           <h3 className="text-sm font-semibold text-white mb-4">Inkomsten vs Kosten per Maand</h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={monthlyData.map(d => ({
-                  ...d,
-                  inkomsten: d.isFuture ? null : d.inkomsten,
-                  kosten: d.isFuture ? null : d.kosten,
-                }))}
-                margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
-              >
-                <defs>
-                  <linearGradient id="colorInkomsten" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#14b8a6" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorKosten" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                <XAxis dataKey="maandKort" stroke="#71717a" fontSize={11} />
-                <YAxis stroke="#71717a" fontSize={11} tickFormatter={(v) => `€${v}`} />
-                <Tooltip content={<CustomTooltip />} />
-                <Area
-                  type="monotone"
-                  dataKey="inkomsten"
-                  name="Inkomsten"
-                  stroke="#14b8a6"
-                  fillOpacity={1}
-                  fill="url(#colorInkomsten)"
-                  strokeWidth={2}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="kosten"
-                  name="Kosten"
-                  stroke="#ef4444"
-                  fillOpacity={1}
-                  fill="url(#colorKosten)"
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+          <div className="h-48 sm:h-64">
+            {mounted ? (
+              <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={150}>
+                <AreaChart
+                  data={monthlyData.map(d => ({
+                    ...d,
+                    inkomsten: d.isFuture ? null : d.inkomsten,
+                    kosten: d.isFuture ? null : d.kosten,
+                  }))}
+                  margin={{ top: 5, right: 10, left: -10, bottom: 5 }}
+                >
+                  <defs>
+                    <linearGradient id="colorInkomsten" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#14b8a6" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorKosten" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                  <XAxis dataKey="maandKort" stroke="#71717a" fontSize={10} tick={{ fontSize: 9 }} />
+                  <YAxis stroke="#71717a" fontSize={10} tickFormatter={(v) => `€${v}`} width={45} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area
+                    type="monotone"
+                    dataKey="inkomsten"
+                    name="Inkomsten"
+                    stroke="#14b8a6"
+                    fillOpacity={1}
+                    fill="url(#colorInkomsten)"
+                    strokeWidth={2}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="kosten"
+                    name="Kosten"
+                    stroke="#ef4444"
+                    fillOpacity={1}
+                    fill="url(#colorKosten)"
+                    strokeWidth={2}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-zinc-600 text-sm">Laden...</div>
+            )}
           </div>
         </div>
 
         {/* Expense Breakdown Pie Chart - 1/3 width */}
-        <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 p-4">
+        <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 p-3 sm:p-4">
           <h3 className="text-sm font-semibold text-white mb-1">Kosten Verdeling</h3>
           <p className="text-[10px] text-zinc-500 mb-3">Jaarbedragen</p>
-          <div className="h-64">
-            {uitgavenBreakdown.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+          <div className="h-48 sm:h-64">
+            {!mounted ? (
+              <div className="h-full flex items-center justify-center text-zinc-600 text-sm">Laden...</div>
+            ) : uitgavenBreakdown.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%" minWidth={150} minHeight={150}>
                 <PieChart>
                   <Pie
                     data={uitgavenBreakdown}
@@ -299,8 +310,8 @@ export function DashboardTab() {
                     nameKey="categorie"
                     cx="50%"
                     cy="50%"
-                    innerRadius={40}
-                    outerRadius={80}
+                    innerRadius={30}
+                    outerRadius={60}
                     paddingAngle={2}
                     label={({ percent }) => percent ? `${(percent * 100).toFixed(0)}%` : ''}
                     labelLine={false}
@@ -323,17 +334,17 @@ export function DashboardTab() {
             )}
           </div>
           {/* Legend */}
-          <div className="mt-2 space-y-1 max-h-24 overflow-y-auto">
+          <div className="mt-2 space-y-1 max-h-20 sm:max-h-24 overflow-y-auto">
             {uitgavenBreakdown.slice(0, 5).map((item, index) => (
               <div key={item.categorie} className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   <div
-                    className="w-2 h-2 rounded-full"
+                    className="w-2 h-2 rounded-full flex-shrink-0"
                     style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
                   />
-                  <span className="text-zinc-400 truncate max-w-[120px]">{item.categorie}</span>
+                  <span className="text-zinc-400 truncate">{item.categorie}</span>
                 </div>
-                <span className="text-zinc-300">{formatEuro(item.totaal)}</span>
+                <span className="text-zinc-300 flex-shrink-0 ml-2">{formatEuro(item.totaal)}</span>
               </div>
             ))}
           </div>
@@ -341,21 +352,25 @@ export function DashboardTab() {
       </div>
 
       {/* Monthly Profit Chart - alleen verleden/huidige maanden */}
-      <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 p-4">
+      <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 p-3 sm:p-4">
         <h3 className="text-sm font-semibold text-white mb-4">Winst per Maand</h3>
-        <div className="h-48">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={monthlyData.map(d => ({ ...d, winst: d.isFuture ? null : d.winst }))}
-              margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-              <XAxis dataKey="maandKort" stroke="#71717a" fontSize={11} />
-              <YAxis stroke="#71717a" fontSize={11} tickFormatter={(v) => `€${v}`} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="winst" name="Winst" fill="#22c55e" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+        <div className="h-40 sm:h-48">
+          {mounted ? (
+            <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={120}>
+              <BarChart
+                data={monthlyData.map(d => ({ ...d, winst: d.isFuture ? null : d.winst }))}
+                margin={{ top: 5, right: 10, left: -10, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                <XAxis dataKey="maandKort" stroke="#71717a" fontSize={10} tick={{ fontSize: 9 }} />
+                <YAxis stroke="#71717a" fontSize={10} tickFormatter={(v) => `€${v}`} width={45} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="winst" name="Winst" fill="#22c55e" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-full flex items-center justify-center text-zinc-600 text-sm">Laden...</div>
+          )}
         </div>
       </div>
 
@@ -599,13 +614,13 @@ function MetricCard({
   const colors = colorClasses[color] || colorClasses.teal;
 
   return (
-    <div className={`bg-zinc-900/50 rounded-xl border ${highlight ? 'border-green-500/30' : 'border-zinc-800'} p-4`}>
-      <div className="flex items-center gap-2 mb-2">
-        <Icon className={`w-4 h-4 ${colors.icon}`} />
-        <p className="text-xs text-zinc-500">{label}</p>
+    <div className={`bg-zinc-900/50 rounded-xl border ${highlight ? 'border-green-500/30' : 'border-zinc-800'} p-3 sm:p-4`}>
+      <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+        <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${colors.icon}`} />
+        <p className="text-[10px] sm:text-xs text-zinc-500 truncate">{label}</p>
       </div>
-      <p className={`text-lg font-bold ${colors.value}`}>{value}</p>
-      {subValue && <p className="text-xs text-zinc-500 mt-1">{subValue}</p>}
+      <p className={`text-base sm:text-lg font-bold ${colors.value} truncate`}>{value}</p>
+      {subValue && <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">{subValue}</p>}
     </div>
   );
 }
