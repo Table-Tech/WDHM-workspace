@@ -114,7 +114,7 @@ export default function HallOfFamePage() {
               flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all border backdrop-blur-md
               ${activeTab === tab.value
                 ? 'bg-yellow-600/80 border-yellow-400 text-white'
-                : 'bg-black/40 border-white/20 text-white hover:bg-black/50 hover:border-white/30'
+                : 'bg-zinc-900/90 border-white/20 text-white hover:bg-zinc-800/90 hover:border-white/30'
               }
             `}
           >
@@ -125,7 +125,7 @@ export default function HallOfFamePage() {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-black/50 backdrop-blur-xl border border-white/15 rounded-xl p-4 sm:p-6 shadow-xl">
+      <div className="bg-zinc-900/90 backdrop-blur-xl border border-white/15 rounded-xl p-4 sm:p-6 shadow-xl">
         {/* Records Tab */}
         {activeTab === 'records' && (
           <div>
@@ -148,7 +148,7 @@ export default function HallOfFamePage() {
                 {records.map((record) => (
                   <div
                     key={`${record.type}-${record.friend.id}`}
-                    className="flex items-center gap-4 p-4 bg-black/40 backdrop-blur-md border border-white/15 rounded-lg hover:bg-black/50 transition-colors"
+                    className="flex items-center gap-4 p-4 bg-zinc-900/80 backdrop-blur-md border border-white/15 rounded-lg hover:bg-zinc-800/90 transition-colors"
                   >
                     {/* Icon */}
                     <div className="flex-shrink-0">
@@ -210,7 +210,7 @@ export default function HallOfFamePage() {
                 {iconicMoments.map((moment) => (
                   <div
                     key={moment.incident.id}
-                    className="group relative aspect-square bg-black/40 backdrop-blur-md border border-white/15 rounded-lg overflow-hidden hover:ring-2 hover:ring-yellow-500/30 transition-all"
+                    className="group relative aspect-square bg-zinc-900/80 backdrop-blur-md border border-white/15 rounded-lg overflow-hidden hover:ring-2 hover:ring-yellow-500/30 transition-all"
                   >
                     {/* Photo */}
                     {moment.incident.photo_url ? (
@@ -286,7 +286,7 @@ export default function HallOfFamePage() {
                 {resets.map((reset, index) => (
                   <div
                     key={reset.id}
-                    className="p-4 bg-black/40 backdrop-blur-md border border-white/15 rounded-lg hover:bg-black/50 transition-colors"
+                    className="p-4 bg-zinc-900/80 backdrop-blur-md border border-white/15 rounded-lg hover:bg-zinc-800/90 transition-colors"
                   >
                     {/* Header */}
                     <div className="flex items-center justify-between mb-3">

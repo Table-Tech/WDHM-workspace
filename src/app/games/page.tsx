@@ -54,7 +54,7 @@ export default function GamesPage() {
               flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all border backdrop-blur-md
               ${activeTab === tab.value
                 ? 'bg-pink-600/80 border-pink-400 text-white'
-                : 'bg-black/40 border-white/20 text-white hover:bg-black/50 hover:border-white/30'
+                : 'bg-zinc-900/90 border-white/20 text-white hover:bg-zinc-800/90 hover:border-white/30'
               }
             `}
           >
@@ -65,7 +65,7 @@ export default function GamesPage() {
       </div>
 
       {/* Game Content */}
-      <div className="bg-black/50 backdrop-blur-xl border border-white/15 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xl">
+      <div className="bg-zinc-900/90 backdrop-blur-xl border border-white/15 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xl">
         {activeTab === 'wheel' && <SpinWheel />}
         {activeTab === 'punishment' && <PunishmentWheel />}
         {activeTab === 'dice' && <DiceRoll />}

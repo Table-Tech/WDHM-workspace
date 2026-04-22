@@ -82,7 +82,7 @@ export default function BadgesPage() {
               px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all border backdrop-blur-xl
               ${filter === option.value
                 ? 'bg-purple-600 border-purple-400 text-white'
-                : 'bg-black/60 border-white/20 text-white hover:bg-black/70 hover:border-white/30'
+                : 'bg-zinc-900/90 border-white/20 text-white hover:bg-zinc-800/90 hover:border-white/30'
               }
             `}
           >
