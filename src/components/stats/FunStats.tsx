@@ -12,7 +12,7 @@ export function FunStats() {
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="h-24 bg-black/40 backdrop-blur-md border border-white/15 rounded-xl animate-pulse"
+            className="h-24 bg-zinc-900/90 backdrop-blur-md border border-white/15 rounded-xl animate-pulse"
           />
         ))}
       </div>
