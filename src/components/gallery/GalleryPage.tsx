@@ -45,7 +45,7 @@ export function GalleryPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-40 glass border-b border-white/5">
+      <header className="sticky top-0 z-40 bg-black/60 backdrop-blur-xl border-b border-white/10 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             {/* Back button and title */}
@@ -54,7 +54,7 @@ export function GalleryPage() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-10 w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10"
+                  className="h-10 w-10 rounded-xl bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
@@ -112,7 +112,7 @@ export function GalleryPage() {
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="p-6 rounded-full bg-white/5 mb-6">
+      <div className="p-6 rounded-full bg-black/40 backdrop-blur-md border border-white/20 mb-6">
         <ImageIcon className="w-12 h-12 theme-text-light" />
       </div>
       <h2 className="text-2xl font-bold text-white mb-2">
@@ -142,7 +142,7 @@ function FriendGallerySection({ gallery, onOpenSlideshow, formatDate }: FriendGa
   const { friend, totalIncidents, reachedMilestones } = gallery;
 
   return (
-    <section className="glass-card rounded-2xl p-4 sm:p-6">
+    <section className="bg-black/50 backdrop-blur-xl border border-white/15 rounded-2xl p-4 sm:p-6 shadow-xl">
       {/* Friend Header */}
       <div className="flex items-center gap-3 mb-6">
         <FriendAvatar name={friend.name} color={friend.color} size="md" />
@@ -189,15 +189,15 @@ function MilestoneCard({ reached, onOpen, formatDate }: MilestoneCardProps) {
       onClick={onOpen}
       disabled={!hasMedia}
       className={`
-        relative rounded-xl border text-left transition-all overflow-hidden
+        relative rounded-xl border text-left transition-all overflow-hidden backdrop-blur-md
         ${hasMedia
-          ? 'bg-slate-900 border-slate-800 hover:border-[rgba(var(--theme-primary),0.5)] hover:bg-slate-800/80 cursor-pointer'
-          : 'bg-slate-900/50 border-slate-800/50 cursor-not-allowed opacity-60'
+          ? 'bg-black/40 border-white/15 hover:border-[rgba(var(--theme-primary),0.5)] hover:bg-black/50 cursor-pointer'
+          : 'bg-black/30 border-white/10 cursor-not-allowed opacity-60'
         }
       `}
     >
       {/* Thumbnail or placeholder */}
-      <div className="relative h-32 bg-slate-800">
+      <div className="relative h-32 bg-black/30">
         {thumbnailIncident?.photo_url ? (
           <>
             <NextImage
@@ -211,7 +211,7 @@ function MilestoneCard({ reached, onOpen, formatDate }: MilestoneCardProps) {
           </>
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
-            <ImageIcon className="w-10 h-10 text-slate-600" />
+            <ImageIcon className="w-10 h-10 text-white/30" />
           </div>
         )}
 

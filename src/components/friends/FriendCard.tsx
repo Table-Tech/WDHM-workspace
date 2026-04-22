@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MapPin, Clock, Settings, Trash2 } from 'lucide-react';
+import { MapPin, Clock, Settings, Trash2, Check, Undo2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FriendAvatar } from './FriendAvatar';
@@ -11,6 +11,8 @@ import type { FriendWithStats } from '@/types';
 interface FriendCardProps {
   friend: FriendWithStats;
   onMarkLate: (friendId: string) => void;
+  onMarkOnTime?: (friendId: string) => void;
+  onUndoOnTime?: (friendId: string) => void;
   onEdit?: (friendId: string) => void;
   onDeleteLastIncident?: (incidentId: string, friendName: string) => void;
   isAnimating?: boolean;
@@ -19,6 +21,8 @@ interface FriendCardProps {
 export function FriendCard({
   friend,
   onMarkLate,
+  onMarkOnTime,
+  onUndoOnTime,
   onEdit,
   onDeleteLastIncident,
   isAnimating = false,
@@ -37,11 +41,12 @@ export function FriendCard({
   return (
     <article
       className={`
-        glass-card rounded-xl sm:rounded-2xl p-3 sm:p-5
+        bg-black/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-3 sm:p-5
+        border border-white/15 shadow-xl
         transition-all duration-300 ease-out
-        hover:bg-white/6 hover:border-white/15
+        hover:bg-black/60 hover:border-white/25
         ${isAnimating ? 'animate-glow-pulse' : ''}
-        ${friend.progress_percentage >= 80 ? 'border-red-500/30' : ''}
+        ${friend.progress_percentage >= 80 ? 'border-red-500/50' : ''}
       `}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -99,7 +104,7 @@ export function FriendCard({
 
       {/* Last Incident Info */}
       {friend.last_incident && (
-        <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4 p-2 sm:p-3 rounded-lg sm:rounded-xl bg-white/3 border border-white/5">
+        <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4 p-2 sm:p-3 rounded-lg sm:rounded-xl bg-black/40 backdrop-blur-md border border-white/15">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-muted-foreground">
               <Clock className="w-3 h-3 shrink-0" aria-hidden="true" />
@@ -128,21 +133,73 @@ export function FriendCard({
         </div>
       )}
 
-      {/* Action Button */}
-      <Button
-        onClick={() => onMarkLate(friend.id)}
-        className={`
-          w-full h-10 sm:h-12 text-sm sm:text-base font-semibold
-          bg-linear-to-r from-red-600 to-orange-600
-          hover:from-red-500 hover:to-orange-500
-          border-0 shadow-lg shadow-red-900/30
-          transition-all duration-200
-          ${isHovered ? 'shadow-red-600/40 scale-[1.02]' : ''}
-        `}
-        aria-label={`Markeer ${friend.name} als te laat`}
-      >
-        Te Laat!
-      </Button>
+      {/* On-Time Streak Indicator */}
+      {(friend.on_time_streak ?? 0) > 0 && (
+        <div className="flex items-center justify-between mb-3 p-2 sm:p-3 rounded-lg sm:rounded-xl bg-green-500/10 backdrop-blur-md border border-green-500/20">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-green-500/20">
+              <Check className="w-4 h-4 text-green-400" />
+            </div>
+            <div>
+              <span className="text-sm font-medium text-green-400">
+                {friend.on_time_streak}x op tijd
+              </span>
+              <span className="text-xs text-green-400/60 ml-1.5">
+                achter elkaar
+              </span>
+            </div>
+          </div>
+          {onUndoOnTime && (
+            <button
+              type="button"
+              onClick={() => onUndoOnTime(friend.id)}
+              className="p-1.5 sm:p-2 rounded-lg hover:bg-green-500/20 transition-colors text-green-400/60 hover:text-green-300"
+              aria-label={`Laatste op-tijd van ${friend.name} ongedaan maken`}
+              title="Per ongeluk geklikt? Klik hier om ongedaan te maken"
+            >
+              <Undo2 className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      <div className="flex gap-2">
+        {/* On Time Button */}
+        {onMarkOnTime && (
+          <Button
+            onClick={() => onMarkOnTime(friend.id)}
+            className={`
+              flex-1 h-10 sm:h-12 text-sm sm:text-base font-semibold
+              bg-gradient-to-r from-green-600 to-emerald-600
+              hover:from-green-500 hover:to-emerald-500
+              border-0 shadow-lg shadow-green-900/30
+              transition-all duration-200
+              ${isHovered ? 'shadow-green-600/40 scale-[1.02]' : ''}
+            `}
+            aria-label={`Markeer ${friend.name} als op tijd`}
+          >
+            <Check className="w-4 h-4 mr-1.5" />
+            Op Tijd
+          </Button>
+        )}
+
+        {/* Late Button */}
+        <Button
+          onClick={() => onMarkLate(friend.id)}
+          className={`
+            flex-1 h-10 sm:h-12 text-sm sm:text-base font-semibold
+            bg-gradient-to-r from-red-600 to-orange-600
+            hover:from-red-500 hover:to-orange-500
+            border-0 shadow-lg shadow-red-900/30
+            transition-all duration-200
+            ${isHovered ? 'shadow-red-600/40 scale-[1.02]' : ''}
+          `}
+          aria-label={`Markeer ${friend.name} als te laat`}
+        >
+          Te Laat!
+        </Button>
+      </div>
     </article>
   );
 }
