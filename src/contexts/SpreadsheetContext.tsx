@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import {
   type Instellingen,
   type Klant,
@@ -71,6 +71,8 @@ export interface BTWSummary {
 }
 
 interface SpreadsheetContextType {
+  // Hydration state
+  isHydrated: boolean;
   // Data
   instellingen: Instellingen;
   klanten: Klant[];
@@ -130,48 +132,109 @@ interface SpreadsheetContextType {
 const SpreadsheetContext = createContext<SpreadsheetContextType | null>(null);
 
 const STORAGE_KEY = 'techtable-spreadsheet-2026';
+const BACKUP_KEY = 'techtable-spreadsheet-backup';
 
 function loadFromStorage<T>(key: string, defaultValue: T): T {
   if (typeof window === 'undefined') return defaultValue;
   try {
+    // Try main storage first
     const stored = localStorage.getItem(`${STORAGE_KEY}-${key}`);
-    return stored ? JSON.parse(stored) : defaultValue;
-  } catch {
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Verify it's not empty/corrupted
+      if (parsed !== null && parsed !== undefined) {
+        return parsed;
+      }
+    }
+
+    // Try backup if main storage failed
+    const backup = localStorage.getItem(`${BACKUP_KEY}-${key}`);
+    if (backup) {
+      const parsed = JSON.parse(backup);
+      if (parsed !== null && parsed !== undefined) {
+        // Restore to main storage
+        localStorage.setItem(`${STORAGE_KEY}-${key}`, backup);
+        console.log(`[SpreadsheetContext] Restored ${key} from backup`);
+        return parsed;
+      }
+    }
+
+    return defaultValue;
+  } catch (error) {
+    console.error(`[SpreadsheetContext] Error loading ${key}:`, error);
     return defaultValue;
   }
 }
 
-function saveToStorage<T>(key: string, value: T): void {
-  if (typeof window === 'undefined') return;
+function saveToStorage<T>(key: string, value: T): boolean {
+  if (typeof window === 'undefined') return false;
   try {
-    localStorage.setItem(`${STORAGE_KEY}-${key}`, JSON.stringify(value));
-  } catch {
-    // Storage full or unavailable
+    const serialized = JSON.stringify(value);
+
+    // Save to main storage
+    localStorage.setItem(`${STORAGE_KEY}-${key}`, serialized);
+
+    // Also save to backup (with throttle - only backup every 5 saves or important data)
+    const backupKey = `${BACKUP_KEY}-${key}`;
+    const backupCount = parseInt(sessionStorage.getItem(`backup-count-${key}`) || '0');
+    if (backupCount >= 5 || key === 'klanten' || key === 'instellingen') {
+      localStorage.setItem(backupKey, serialized);
+      sessionStorage.setItem(`backup-count-${key}`, '0');
+    } else {
+      sessionStorage.setItem(`backup-count-${key}`, (backupCount + 1).toString());
+    }
+
+    return true;
+  } catch (error) {
+    console.error(`[SpreadsheetContext] Error saving ${key}:`, error);
+
+    // If quota exceeded, try to clear old data and retry
+    if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+      try {
+        // Clear backup data to make room
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith(BACKUP_KEY)) {
+            keysToRemove.push(k);
+          }
+        }
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+
+        // Retry save
+        localStorage.setItem(`${STORAGE_KEY}-${key}`, JSON.stringify(value));
+        console.log(`[SpreadsheetContext] Saved ${key} after clearing backup`);
+        return true;
+      } catch {
+        console.error(`[SpreadsheetContext] Failed to save ${key} even after clearing backup`);
+      }
+    }
+    return false;
   }
 }
 
 export function SpreadsheetProvider({ children }: { children: ReactNode }) {
-  const [instellingen, setInstellingenState] = useState<Instellingen>(() =>
-    loadFromStorage('instellingen', INITIAL_INSTELLINGEN)
-  );
-  const [klanten, setKlantenState] = useState<Klant[]>(() =>
-    loadFromStorage('klanten', INITIAL_KLANTEN)
-  );
-  const [eenmaligeInkomsten, setEenmaligeInkomstenState] = useState<EenmaligeInkomst[]>(() =>
-    loadFromStorage('eenmalig', [])
-  );
-  const [uitgaven, setUitgavenState] = useState<Record<string, number[]>>(() =>
-    loadFromStorage('uitgaven', INITIAL_UITGAVEN)
-  );
-  const [uitgavenCategorieen, setUitgavenCategorieenState] = useState<string[]>(() =>
-    loadFromStorage('uitgavenCategorieen', [...UITGAVEN_CATEGORIEEN])
-  );
-  const [leads, setLeadsState] = useState<Lead[]>(() =>
-    loadFromStorage('leads', INITIAL_LEADS)
-  );
-  const [eenmaligeKosten, setEenmaligeKostenState] = useState<EenmaligeKost[]>(() =>
-    loadFromStorage('eenmaligeKosten', [])
-  );
+  // Start with default values to avoid hydration mismatch
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [instellingen, setInstellingenState] = useState<Instellingen>(INITIAL_INSTELLINGEN);
+  const [klanten, setKlantenState] = useState<Klant[]>(INITIAL_KLANTEN);
+  const [eenmaligeInkomsten, setEenmaligeInkomstenState] = useState<EenmaligeInkomst[]>([]);
+  const [uitgaven, setUitgavenState] = useState<Record<string, number[]>>(INITIAL_UITGAVEN);
+  const [uitgavenCategorieen, setUitgavenCategorieenState] = useState<string[]>([...UITGAVEN_CATEGORIEEN]);
+  const [leads, setLeadsState] = useState<Lead[]>(INITIAL_LEADS);
+  const [eenmaligeKosten, setEenmaligeKostenState] = useState<EenmaligeKost[]>([]);
+
+  // Load from localStorage after hydration (client-side only)
+  useEffect(() => {
+    setInstellingenState(loadFromStorage('instellingen', INITIAL_INSTELLINGEN));
+    setKlantenState(loadFromStorage('klanten', INITIAL_KLANTEN));
+    setEenmaligeInkomstenState(loadFromStorage('eenmalig', []));
+    setUitgavenState(loadFromStorage('uitgaven', INITIAL_UITGAVEN));
+    setUitgavenCategorieenState(loadFromStorage('uitgavenCategorieen', [...UITGAVEN_CATEGORIEEN]));
+    setLeadsState(loadFromStorage('leads', INITIAL_LEADS));
+    setEenmaligeKostenState(loadFromStorage('eenmaligeKosten', []));
+    setIsHydrated(true);
+  }, []);
 
   // Setters with persistence
   const setInstellingen = useCallback((data: Instellingen) => {
@@ -862,6 +925,7 @@ export function SpreadsheetProvider({ children }: { children: ReactNode }) {
   return (
     <SpreadsheetContext.Provider
       value={{
+        isHydrated,
         instellingen,
         klanten,
         leads,

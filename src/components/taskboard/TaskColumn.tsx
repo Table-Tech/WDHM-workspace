@@ -19,12 +19,13 @@ interface TaskColumnProps {
   onDeleteColumn: (columnId: string) => void;
   onDragStart: (e: React.DragEvent, task: Task) => void;
   onDragOver: (e: React.DragEvent) => void;
-  onDrop: (e: React.DragEvent, columnId: string) => void;
+  onDrop: (e: React.DragEvent, columnId: string, targetIndex?: number) => void;
   onColumnDragStart?: (e: React.DragEvent, column: TaskColumnType) => void;
   onColumnDragOver?: (e: React.DragEvent, column: TaskColumnType) => void;
   onColumnDrop?: (e: React.DragEvent, column: TaskColumnType) => void;
   onColumnDragEnd?: () => void;
   isDraggingColumn?: boolean;
+  draggedTask?: Task | null;
 }
 
 export function TaskColumn({
@@ -45,10 +46,12 @@ export function TaskColumn({
   onColumnDrop,
   onColumnDragEnd,
   isDraggingColumn = false,
+  draggedTask,
 }: TaskColumnProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isColumnDragOver, setIsColumnDragOver] = useState(false);
+  const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
   const { theme } = useTheme();
 
   // Column drag handlers
@@ -91,24 +94,47 @@ export function TaskColumn({
 
   const handleDragLeave = () => {
     setIsDragOver(false);
+    setDropTargetIndex(null);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     setIsDragOver(false);
-    onDrop(e, column.id);
+    const targetIndex = dropTargetIndex !== null ? dropTargetIndex : tasks.length;
+    setDropTargetIndex(null);
+    onDrop(e, column.id, targetIndex);
+  };
+
+  // Handle drag over a specific task to determine drop position
+  const handleTaskDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Don't show indicator if dragging over the same task
+    if (draggedTask && tasks[index]?.id === draggedTask.id) {
+      setDropTargetIndex(null);
+      return;
+    }
+
+    // Determine if dropping above or below based on mouse position
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+    const dropIndex = e.clientY < midpoint ? index : index + 1;
+
+    setDropTargetIndex(dropIndex);
+    setIsDragOver(true);
   };
 
   return (
     <div
-      className={`flex flex-col min-w-[280px] max-w-[320px] bg-zinc-900/50 rounded-2xl border transition-all ${
-        isDraggingColumn ? 'opacity-50 scale-95' : ''
+      className={`flex flex-col min-w-[280px] max-w-[320px] bg-zinc-900 rounded-2xl border transition-all ${
+        isDraggingColumn ? 'scale-[0.98] ring-2 ring-blue-500/50' : ''
       }`}
       style={isColumnDragOver ? {
         borderColor: '#22c55e',
-        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+        backgroundColor: 'rgb(24 24 27)', // zinc-900
       } : isDragOver ? {
         borderColor: `rgb(${theme.colors.primary})`,
-        backgroundColor: `rgba(${theme.colors.primary}, 0.05)`,
+        backgroundColor: 'rgb(24 24 27)', // zinc-900
       } : {
         borderColor: 'rgb(39 39 42)', // zinc-800
       }}
@@ -136,10 +162,10 @@ export function TaskColumn({
             draggable
             onDragStart={handleColumnDragStart}
             onDragEnd={onColumnDragEnd}
-            className="cursor-grab active:cursor-grabbing p-1 -ml-1 hover:bg-zinc-800 rounded transition-colors"
+            className="cursor-grab active:cursor-grabbing p-1.5 -ml-1 hover:bg-zinc-700 rounded-lg transition-all group"
             title="Sleep om kolom te verplaatsen"
           >
-            <GripVertical className="w-4 h-4 text-zinc-500" />
+            <GripVertical className="w-5 h-5 text-zinc-400 group-hover:text-white transition-colors" />
           </div>
           <div
             className="w-3 h-3 rounded-full"
@@ -196,19 +222,40 @@ export function TaskColumn({
 
       {/* Tasks */}
       <div className="flex-1 p-3 space-y-2 overflow-y-auto max-h-[calc(100vh-300px)]">
-        {tasks.map((task) => (
-          <TaskCard
-            key={task.id}
-            task={task}
-            friends={friends}
-            onEdit={onEditTask}
-            onView={onViewTask}
-            onDelete={onDeleteTask}
-            onDragStart={onDragStart}
-          />
+        {tasks.map((task, index) => (
+          <div key={task.id}>
+            {/* Drop indicator line - above this task */}
+            {dropTargetIndex === index && draggedTask && draggedTask.id !== task.id && (
+              <div
+                className="h-1 bg-blue-500 rounded-full mb-2 mx-1 animate-pulse"
+                style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.5)' }}
+              />
+            )}
+            <div
+              onDragOver={(e) => handleTaskDragOver(e, index)}
+              onDragLeave={() => setDropTargetIndex(null)}
+            >
+              <TaskCard
+                task={task}
+                friends={friends}
+                onEdit={onEditTask}
+                onView={onViewTask}
+                onDelete={onDeleteTask}
+                onDragStart={onDragStart}
+              />
+            </div>
+          </div>
         ))}
 
-        {tasks.length === 0 && (
+        {/* Drop indicator at the end */}
+        {dropTargetIndex === tasks.length && draggedTask && (
+          <div
+            className="h-1 bg-blue-500 rounded-full mx-1 animate-pulse"
+            style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.5)' }}
+          />
+        )}
+
+        {tasks.length === 0 && !draggedTask && (
           <div className="text-center py-8 text-zinc-500 text-sm">
             Geen taken
           </div>
