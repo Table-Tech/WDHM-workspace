@@ -25,10 +25,10 @@ export function AlbumCard({ album, onClick }: AlbumCardProps) {
   return (
     <button
       onClick={onClick}
-      className="group relative rounded-xl overflow-hidden border border-white/10 hover:border-pink-500/50 transition-all text-left bg-slate-900 hover:bg-slate-800/80"
+      className="group relative rounded-xl overflow-hidden border border-white/15 hover:border-pink-500/50 transition-all text-left bg-black/40 backdrop-blur-md hover:bg-black/50"
     >
       {/* Cover Image */}
-      <div className="relative aspect-[4/3] bg-slate-800">
+      <div className="relative aspect-[4/3] bg-black/30">
         {coverUrl ? (
           <>
             <NextImage
@@ -42,12 +42,12 @@ export function AlbumCard({ album, onClick }: AlbumCardProps) {
           </>
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
-            <ImageIcon className="w-12 h-12 text-slate-600" />
+            <ImageIcon className="w-12 h-12 text-white/30" />
           </div>
         )}
 
         {/* Photo count badge */}
-        <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 text-xs text-white">
+        <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-xs text-white">
           <Images className="w-3 h-3" />
           {album.photo_count}
         </div>

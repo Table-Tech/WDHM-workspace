@@ -55,6 +55,7 @@ interface MapViewProps {
   showIncidents?: boolean;
   showTrips?: boolean;
   onTripClick?: (trip: TeamTrip) => void;
+  worldView?: boolean; // Start with full world view like Risk
 }
 
 // Component to fit bounds
@@ -77,6 +78,7 @@ export function MapView({
   showIncidents = true,
   showTrips = true,
   onTripClick,
+  worldView = true,
 }: MapViewProps) {
   const isMounted = useIsMounted();
 
@@ -103,8 +105,9 @@ export function MapView({
     });
   }
 
-  // Default center (Netherlands)
-  const defaultCenter: [number, number] = [52.1326, 5.2913];
+  // World center for Risk-like view, or Netherlands for local view
+  const defaultCenter: [number, number] = worldView ? [20, 0] : [52.1326, 5.2913];
+  const defaultZoom = worldView ? 2 : 7;
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('nl-NL', {
@@ -117,16 +120,21 @@ export function MapView({
   return (
     <MapContainer
       center={defaultCenter}
-      zoom={7}
+      zoom={defaultZoom}
       className="w-full h-full rounded-xl"
       style={{ background: '#1a1a2e' }}
+      minZoom={2}
+      maxZoom={18}
+      worldCopyJump={true}
     >
+      {/* Risk-style political world map showing all countries and continents */}
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      {allLocations.length > 0 && <FitBounds locations={allLocations} />}
+      {/* Only fit bounds when there are markers and not in world view mode */}
+      {!worldView && allLocations.length > 0 && <FitBounds locations={allLocations} />}
 
       {/* Incident Markers */}
       {showIncidents && incidentLocations.map((loc) => (
