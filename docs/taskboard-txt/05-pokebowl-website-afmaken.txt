@@ -1,0 +1,32 @@
+TASK: Pokebowl Website Afmaken
+Status: In Progress
+Priority: P1
+Created: 23 apr, 00:35
+Assignees
+- Hicham
+- Mohammad
+
+Description
+- Website en systeem voor Pokebowl restaurant afronden.
+- Afhaalfunctie, dashboard en printer integratie.
+
+Checklist (4/7 voltooid)
+Done
+- Website maken
+- Website afhaal functie maken
+- Dashboard maken
+- Printer bestellen
+
+Open
+- Printer koppelen
+- Mollie account aanmaken
+- Alles goed testen
+
+Comments
+- 0 comments
+
+Reaction options shown
+- Wishant
+- Damian
+- Hicham
+- Mohammad
