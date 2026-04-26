@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef, type ReactElement } from 'react';
-import { useSpreadsheet } from '@/contexts/SpreadsheetContext';
+import { useCompanySettings } from '@/hooks/useCompanySettings';
+import { useLeadsDB } from '@/hooks/useLeadsDB';
+import { useFinancialMetrics } from '@/hooks/useFinancialMetrics';
 import { formatEuro, formatPercentage } from '@/lib/spreadsheet-utils';
 import {
   BarChart,
@@ -123,9 +125,9 @@ export function DashboardTab() {
   // Prevent hydration mismatch and chart dimension errors
   useEffect(() => { setMounted(true); }, []);
 
+  const { settings, isLoading: settingsLoading } = useCompanySettings();
+  const { leads, isLoading: leadsLoading } = useLeadsDB();
   const {
-    isHydrated,
-    instellingen,
     getDashboardMetrics,
     getFounderVerdelingen,
     getMonthlyChartData,
@@ -134,18 +136,18 @@ export function DashboardTab() {
     getPipelineStats,
     getCurrentMonthIndex,
     getBTWSummary,
-    leads,
-  } = useSpreadsheet();
+  } = useFinancialMetrics();
 
+  const isHydrated = !settingsLoading && !leadsLoading;
   const currentMonthIndex = getCurrentMonthIndex();
 
-  const metrics = getDashboardMetrics();
-  const founderVerdelingen = getFounderVerdelingen();
-  const monthlyData = getMonthlyChartData();
-  const uitgavenBreakdown = getUitgavenBreakdown();
-  const yearSummary = getYearSummary();
-  const pipelineStats = getPipelineStats();
-  const btwSummary = getBTWSummary();
+  const metrics = getDashboardMetrics;
+  const founderVerdelingen = getFounderVerdelingen;
+  const monthlyData = getMonthlyChartData;
+  const uitgavenBreakdown = getUitgavenBreakdown;
+  const yearSummary = getYearSummary;
+  const pipelineStats = getPipelineStats;
+  const btwSummary = getBTWSummary;
 
   // Calculate month-specific or year data based on selection
   const isYearView = selectedMonth === -1;
@@ -173,7 +175,7 @@ export function DashboardTab() {
     ? (displayWinst / displayInkomsten) * 100
     : 0;
 
-  // Show loading skeleton until data is hydrated from localStorage
+  // Show loading skeleton until data is hydrated
   if (!isHydrated) {
     return (
       <div className="space-y-6 animate-pulse">
@@ -198,10 +200,10 @@ export function DashboardTab() {
         <div>
           <h1 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-2">
             <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-teal-400" />
-            <span className="truncate">{instellingen.bedrijfsnaam} Dashboard</span>
+            <span className="truncate">{settings?.bedrijfsnaam ?? 'Dashboard'} Dashboard</span>
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 mt-1">
-            Financieel overzicht {isYearView ? instellingen.boekjaar : `${selectedMaandLabel} ${instellingen.boekjaar}`}
+            Financieel overzicht {isYearView ? settings?.boekjaar ?? 2026 : `${selectedMaandLabel} ${settings?.boekjaar ?? 2026}`}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -248,7 +250,7 @@ export function DashboardTab() {
           {/* Year indicator */}
           <div className="bg-teal-500/10 border border-teal-500/20 rounded-lg px-3 sm:px-4 py-1.5 sm:py-2 shrink-0">
             <p className="text-[10px] sm:text-xs text-teal-400">Boekjaar</p>
-            <p className="text-base sm:text-lg font-bold text-white">{instellingen.boekjaar}</p>
+            <p className="text-base sm:text-lg font-bold text-white">{settings?.boekjaar ?? 2026}</p>
           </div>
         </div>
       </div>
@@ -268,7 +270,7 @@ export function DashboardTab() {
         <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg px-4 py-3 flex items-start gap-3">
           <Calendar className="w-4 h-4 text-purple-400 mt-0.5 shrink-0" />
           <p className="text-xs text-purple-300/80">
-            <span className="font-medium text-purple-300">Je bekijkt {selectedMaandLabel} {instellingen.boekjaar}.</span>{' '}
+            <span className="font-medium text-purple-300">Je bekijkt {selectedMaandLabel} {settings?.boekjaar ?? 2026}.</span>{' '}
             Selecteer &quot;Heel jaar&quot; om het volledige jaaroverzicht te zien.
           </p>
         </div>
@@ -278,7 +280,7 @@ export function DashboardTab() {
         <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg px-4 py-3 flex items-start gap-3">
           <Calendar className="w-4 h-4 text-orange-400 mt-0.5 shrink-0" />
           <p className="text-xs text-orange-300/80">
-            <span className="font-medium text-orange-300">{selectedMaandLabel} {instellingen.boekjaar} is nog niet begonnen.</span>{' '}
+            <span className="font-medium text-orange-300">{selectedMaandLabel} {settings?.boekjaar ?? 2026} is nog niet begonnen.</span>{' '}
             Kosten zijn al wel bekend, maar inkomsten worden pas getoond na afloop van de maand.
           </p>
         </div>
@@ -538,7 +540,7 @@ export function DashboardTab() {
       <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 p-4">
         <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
           <Target className="w-4 h-4 text-teal-400" />
-          {isYearView ? `Jaar ${instellingen.boekjaar} Samenvatting` : `${selectedMaandLabel} ${instellingen.boekjaar} Details`}
+          {isYearView ? `Jaar ${settings?.boekjaar ?? 2026} Samenvatting` : `${selectedMaandLabel} ${settings?.boekjaar ?? 2026} Details`}
         </h3>
         {isYearView ? (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-center">

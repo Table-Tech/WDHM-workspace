@@ -1,0 +1,287 @@
+MASTER OVERZICHT - TASKBOARD EN FINANCE
+Generated on: 2026-04-26
+Source: samengestelde notities uit screenshots
+
+============================================================
+SECTIE 1 - BOARD OVERVIEW
+============================================================
+
+TASKBOARD OVERVIEW
+Date captured: 2026-04-26
+Source: screenshots provided by user
+
+COLUMNS
+- Backlog: 3
+- To Do: 1
+- In Progress: 3
+- Review: 0
+
+BACKLOG
+1) IRI Service
+   Priority: P1
+   Assignees: (not shown)
+   Checklist: (not shown)
+   Attachments: 1
+   Notes: only card-level info visible
+
+2) Ontstoppingsdienst Website
+   Priority: P1
+   Assignees: (not shown)
+   Description: Website bouwen voor ontstoppingsdienst bedrijf.
+   Checklist: 0/4
+   Attachments: 1
+
+3) Rijschool Planning Systeem
+   Priority: P2
+   Assignees: (not shown on board card)
+   Description: Planning systeem bouwen voor rijschool.
+   Checklist: 0/5
+   Attachments: (not shown)
+
+TO DO
+1) Nishani website vader
+   Priority: P2
+   Assignee: Wishant
+   Checklist: 0/4
+
+IN PROGRESS
+1) Pokebowl Website Afmaken
+   Priority: P1
+   Assignees: Hicham, Mohammad
+   Description: Website en systeem voor Pokebowl restaurant afronden. Afhaalfunctie, dashboard en printer integratie.
+   Checklist: 4/7
+
+2) Cherani Nails Website
+   Priority: P2
+   Assignee: Wishant
+   Description: Website bouwen voor Cherani Nails. Start na afspraken zijn gemaakt.
+   Checklist: 0/4
+
+3) Lori Events Website
+   Priority: P2
+   Assignee: Wishant
+   Description: Website maken voor Lori Events. Wachten op antwoord van klant.
+   Checklist: 0/4
+
+REVIEW
+- Geen taken
+
+============================================================
+SECTIE 2 - TAAKDETAILS
+============================================================
+
+TASK: IRI Service
+Status: Backlog
+Priority: P1
+Created: (not shown)
+Assignees: (not shown)
+
+Description
+- (not shown)
+
+Checklist
+- (not shown)
+
+Attachments
+- 1 attachment shown on board card
+
+Comments
+- Not visible in screenshots
+
+Remark
+- This task had only card-level summary in the provided image.
+
+------------------------------------------------------------
+
+TASK: Ontstoppingsdienst Website
+Status: Backlog
+Priority: P1
+Created: 23 apr, 00:35
+Assignees: (none shown)
+
+Description
+- Website bouwen voor ontstoppingsdienst bedrijf.
+
+Checklist (0/4)
+- Offerte aanmaken
+- Plan maken
+- Systeem gaan bouwen
+- Taken verdelen
+
+Attachments (1)
+- Ontstoppingsdienst.nl Case .pdf (238.3 KB)
+
+Comments
+- 0 comments
+
+Reaction options shown
+- Wishant
+- Damian
+- Hicham
+- Mohammad
+
+------------------------------------------------------------
+
+TASK: Rijschool Planning Systeem
+Status: Backlog
+Priority: P2
+Created: 23 apr, 00:35
+Assignees: (none shown)
+
+Description
+- Planning systeem bouwen voor rijschool.
+
+Checklist (0/5)
+- Requirements verzamelen
+- Offerte aanmaken
+- Plan maken
+- Systeem bouwen
+- Testen met klant
+
+Comments
+- 0 comments
+
+Reaction options shown
+- Wishant
+- Damian
+- Hicham
+- Mohammad
+
+------------------------------------------------------------
+
+TASK: Nishani website vader
+Status: To Do
+Priority: P2
+Created: 23 apr, 00:38
+Assignee
+- Wishant
+
+Description
+- (no separate notes section visible)
+
+Checklist (0/4)
+- Vragen aan haar
+- wachten op antwoord
+- offerte opstellen
+- website maken
+
+Comments
+- 0 comments
+
+Reaction options shown
+- Wishant
+- Damian
+- Hicham
+- Mohammad
+
+------------------------------------------------------------
+
+TASK: Pokebowl Website Afmaken
+Status: In Progress
+Priority: P1
+Created: 23 apr, 00:35
+Assignees
+- Hicham
+- Mohammad
+
+Description
+- Website en systeem voor Pokebowl restaurant afronden.
+- Afhaalfunctie, dashboard en printer integratie.
+
+Checklist (4/7 voltooid)
+Done
+- Website maken
+- Website afhaal functie maken
+- Dashboard maken
+- Printer bestellen
+
+Open
+- Printer koppelen
+- Mollie account aanmaken
+- Alles goed testen
+
+Comments
+- 0 comments
+
+Reaction options shown
+- Wishant
+- Damian
+- Hicham
+- Mohammad
+
+------------------------------------------------------------
+
+TASK: Cherani Nails Website
+Status: In Progress
+Priority: P2
+Created: 23 apr, 00:35
+Assignee
+- Wishant
+
+Description
+- Website bouwen voor Cherani Nails.
+- Start na afspraken zijn gemaakt.
+
+Checklist (0/4)
+- Offerte aanmaken
+- Plan maken
+- Systeem gaan bouwen
+- Taken verdelen
+
+Comments
+- 0 comments
+
+Reaction options shown
+- Wishant
+- Damian
+- Hicham
+- Mohammad
+
+------------------------------------------------------------
+
+TASK: Lori Events Website
+Status: In Progress
+Priority: P2
+Created: 23 apr, 00:35
+Assignee
+- Wishant
+
+Description
+- Website maken voor Lori Events.
+- Wachten op antwoord van klant.
+
+Checklist (0/4)
+- Wachten op antwoord
+- Offerte aanmaken
+- Plan maken
+- Website bouwen
+
+Comments
+- 0 comments
+
+Reaction options shown
+- Wishant
+- Damian
+- Hicham
+- Mohammad
+
+============================================================
+SECTIE 3 - FINANCE SNAPSHOT
+============================================================
+
+FINANCE SNAPSHOT: Klanten & MRR
+Date captured: 2026-04-26
+Source: screenshot provided by user
+
+Visible tab state
+- Klanten (0)
+- Oude Leads (0)
+
+Table total row
+- TOTAAL (0 actief)
+- MRR: EUR 0
+- Jaar: EUR 0
+- Eenmalig: EUR 0
+
+General note
+- Geen klantrecords zichtbaar in de screenshot.
