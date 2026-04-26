@@ -2,9 +2,15 @@
 
 import { useState } from 'react';
 import { Plus, Trash2, ZoomIn, ZoomOut, ChevronDown, ChevronUp } from 'lucide-react';
-import { useSpreadsheet } from '@/contexts/SpreadsheetContext';
+import { useCompanySettings } from '@/hooks/useCompanySettings';
+import { useCoFounders } from '@/hooks/useCoFounders';
+import { useCustomers } from '@/hooks/useCustomers';
+import { useMonthlyExpenses } from '@/hooks/useMonthlyExpenses';
+import { useExpenseCategories } from '@/hooks/useExpenseCategories';
+import { useOneTimeExpenses } from '@/hooks/useOneTimeExpenses';
+import { useFinancialMetrics } from '@/hooks/useFinancialMetrics';
 import { formatEuro, formatPercentage, sum } from '@/lib/spreadsheet-utils';
-import { MAAND_LABELS } from '@/types/spreadsheet';
+import { MAAND_LABELS } from '@/types/financial';
 
 type ZoomLevel = 'small' | 'medium' | 'large';
 
@@ -15,16 +21,13 @@ const ZOOM_STYLES: Record<ZoomLevel, { text: string; cell: string; header: strin
 };
 
 export function MaandoverzichtTab() {
+  const { settings, isLoading: settingsLoading } = useCompanySettings();
+  const { coFounders } = useCoFounders();
+  const { customers, isLoading: customersLoading } = useCustomers();
+  const { uitgaven, updateExpense } = useMonthlyExpenses();
+  const { categoryNames, addCategoryAsync, deleteCategory } = useExpenseCategories();
+  const { oneTimeExpenses } = useOneTimeExpenses();
   const {
-    isHydrated,
-    instellingen,
-    klanten,
-    uitgaven,
-    uitgavenCategorieen,
-    eenmaligeKosten,
-    updateUitgave,
-    addUitgaveCategorie,
-    deleteUitgaveCategorie,
     getMaandMRR,
     getMaandEenmalig,
     getMaandEenmaligeKosten,
@@ -33,39 +36,40 @@ export function MaandoverzichtTab() {
     getWinstVoorVerdeling,
     getWinstmarge,
     getMRRBreakdown,
-  } = useSpreadsheet();
+  } = useFinancialMetrics();
 
   const [nieuweCat, setNieuweCat] = useState('');
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>('small');
   const [showMRRDetail, setShowMRRDetail] = useState(false);
 
+  const isHydrated = !settingsLoading && !customersLoading;
   const zoom = ZOOM_STYLES[zoomLevel];
-  const mrrBreakdown = getMRRBreakdown();
+  const mrrBreakdown = getMRRBreakdown;
 
-  const maandMRR = getMaandMRR();
-  const maandEenmalig = getMaandEenmalig();
-  const maandEenmaligeKosten = getMaandEenmaligeKosten();
-  const totaalEenmaligeKosten = eenmaligeKosten
+  const maandMRR = getMaandMRR;
+  const maandEenmalig = getMaandEenmalig;
+  const maandEenmaligeKosten = getMaandEenmaligeKosten;
+  const totaalEenmaligeKosten = oneTimeExpenses
     .filter(k => k.status !== 'Geannuleerd')
-    .reduce((sum, k) => sum + k.bedragExclBTW, 0);
+    .reduce((total, k) => total + k.bedrag_excl_btw, 0);
   const overigeInkomsten = Array(12).fill(0);
   const totaalInkomsten = maandMRR.map((m, i) => m + maandEenmalig[i] + overigeInkomsten[i]);
-  const salesCommissieAf = getSalesCommissiePerMaand();
-  const totaalUitgaven = getTotaalUitgavenPerMaand();
-  const winstVoorVerdeling = getWinstVoorVerdeling();
-  const winstmarge = getWinstmarge();
+  const salesCommissieAf = getSalesCommissiePerMaand;
+  const totaalUitgaven = getTotaalUitgavenPerMaand;
+  const winstVoorVerdeling = getWinstVoorVerdeling;
+  const winstmarge = getWinstmarge;
 
-  const founderVerdelingen = instellingen.coFounders.map(founder => ({
+  const founderVerdelingen = coFounders.map((founder) => ({
     naam: founder.naam,
-    percentage: founder.winstverdelingPercentage,
-    maandBedragen: winstVoorVerdeling.map(w => w * (founder.winstverdelingPercentage / 100)),
+    percentage: founder.winstverdeling_percentage,
+    maandBedragen: winstVoorVerdeling.map((w: number) => w * (founder.winstverdeling_percentage / 100)),
   }));
 
   const totaalVerdeeld = winstVoorVerdeling;
 
-  const handleAddCategorie = () => {
+  const handleAddCategorie = async () => {
     if (nieuweCat.trim()) {
-      addUitgaveCategorie(nieuweCat.trim());
+      await addCategoryAsync({ naam: nieuweCat.trim() });
       setNieuweCat('');
     }
   };
@@ -78,15 +82,15 @@ export function MaandoverzichtTab() {
 
   // Get klant start info for display
   const getKlantStartInfo = (klantId: string) => {
-    const klant = klanten.find(k => k.id === klantId);
+    const klant = customers.find(k => k.id === klantId);
     if (!klant) return null;
-    const startDatum = klant.datumOnderhoudStart || klant.datumKlantGeworden;
+    const startDatum = klant.datum_onderhoud_start || klant.datum_klant_geworden;
     if (!startDatum) return 'Heel jaar';
     const date = new Date(startDatum);
     return `Vanaf ${date.toLocaleDateString('nl-NL', { month: 'short', year: 'numeric' })}`;
   };
 
-  // Show loading skeleton until data is hydrated from localStorage
+  // Show loading skeleton until data is hydrated
   if (!isHydrated) {
     return (
       <div className="space-y-4 animate-pulse">
@@ -99,7 +103,7 @@ export function MaandoverzichtTab() {
   return (
     <div className="space-y-3 sm:space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
-        <h1 className="text-base sm:text-lg font-semibold text-white">Maandoverzicht {instellingen.boekjaar}</h1>
+        <h1 className="text-base sm:text-lg font-semibold text-white">Maandoverzicht {settings?.boekjaar ?? 2026}</h1>
 
         {/* Zoom control */}
         <button
@@ -206,14 +210,14 @@ export function MaandoverzichtTab() {
                 <td colSpan={14} className={`${zoom.cell} text-white font-semibold text-[10px] uppercase tracking-wide sticky left-0 bg-red-600/80 z-10`}>Uitgaven</td>
               </tr>
 
-              {uitgavenCategorieen.map((categorie) => {
+              {categoryNames.map((categorie) => {
                 const bedragen = uitgaven[categorie] || Array(12).fill(0);
                 return (
                   <tr key={categorie} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 group">
                     <td className={`${zoom.cell} text-zinc-300 sticky left-0 bg-zinc-900/95 z-10 flex items-center gap-1`}>
                       <span className="flex-1">{categorie}</span>
                       <button
-                        onClick={() => deleteUitgaveCategorie(categorie)}
+                        onClick={() => deleteCategory(categorie)}
                         className="p-0.5 hover:bg-red-500/20 rounded text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100"
                       >
                         <Trash2 className="w-2.5 h-2.5" />
@@ -224,7 +228,7 @@ export function MaandoverzichtTab() {
                         <input
                           type="number"
                           value={bedrag || ''}
-                          onChange={(e) => updateUitgave(categorie, i, parseFloat(e.target.value) || 0)}
+                          onChange={(e) => updateExpense({ categorie, maandIndex: i, bedrag: parseFloat(e.target.value) || 0 })}
                           placeholder="0"
                           className={`bg-transparent text-zinc-400 w-12 text-right focus:outline-none focus:bg-zinc-800 px-0.5 py-0.5 rounded ${zoom.text}`}
                           step="0.01"

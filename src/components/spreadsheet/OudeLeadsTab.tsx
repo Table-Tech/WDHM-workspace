@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { Plus, Trash2, RotateCcw, ChevronDown, ChevronUp, Mail, Phone } from 'lucide-react';
-import { useSpreadsheet } from '@/contexts/SpreadsheetContext';
+import { useLeadsDB } from '@/hooks/useLeadsDB';
 import { formatEuro } from '@/lib/spreadsheet-utils';
 
 export function OudeLeadsTab() {
-  const { leads, addLead, updateLead, deleteLead, restoreLeadToKlant } = useSpreadsheet();
+  const { leads, addLead, updateLead, deleteLead, restoreToCustomer } = useLeadsDB();
   const [expandedLead, setExpandedLead] = useState<string | null>(null);
 
   const handleAddLead = () => {
@@ -15,18 +15,18 @@ export function OudeLeadsTab() {
       contactpersoon: '',
       email: '',
       telefoon: '',
-      productInteresse: '',
+      product_interesse: '',
       bron: '',
-      redenAfwijzing: '',
+      reden_afwijzing: '',
       notities: '',
-      datumEersteContact: '',
-      datumAfgewezen: new Date().toISOString().split('T')[0],
-      offerteWaarde: 0,
-      aantalContacten: 0,
+      datum_eerste_contact: null,
+      datum_afgewezen: new Date().toISOString().split('T')[0],
+      offerte_waarde: 0,
+      aantal_contacten: 0,
     });
   };
 
-  const totaalWaarde = leads.reduce((s, l) => s + (l.offerteWaarde || 0), 0);
+  const totaalWaarde = leads.reduce((s, l) => s + (l.offerte_waarde || 0), 0);
 
   return (
     <div className="space-y-4">
@@ -61,13 +61,13 @@ export function OudeLeadsTab() {
                 <thead>
                   <tr className="bg-zinc-800 text-zinc-400">
                     <th className="w-8"></th>
-                    <th className="text-left px-3 py-3 font-medium min-w-[160px]">Bedrijf</th>
-                    <th className="text-left px-3 py-3 font-medium min-w-[140px]">Contact</th>
-                    <th className="text-left px-3 py-3 font-medium min-w-[120px]">Product</th>
-                    <th className="text-left px-3 py-3 font-medium min-w-[180px]">Reden afwijzing</th>
-                    <th className="text-center px-3 py-3 font-medium min-w-[100px]">Afgewezen</th>
-                    <th className="text-right px-3 py-3 font-medium min-w-[100px]">Waarde</th>
-                    <th className="text-center px-3 py-3 font-medium min-w-[80px]">Contacten</th>
+                    <th className="text-left px-3 py-3 font-medium min-w-40">Bedrijf</th>
+                    <th className="text-left px-3 py-3 font-medium min-w-35">Contact</th>
+                    <th className="text-left px-3 py-3 font-medium min-w-30">Product</th>
+                    <th className="text-left px-3 py-3 font-medium min-w-45">Reden afwijzing</th>
+                    <th className="text-center px-3 py-3 font-medium min-w-25">Afgewezen</th>
+                    <th className="text-right px-3 py-3 font-medium min-w-25">Waarde</th>
+                    <th className="text-center px-3 py-3 font-medium min-w-20">Contacten</th>
                     <th className="w-20"></th>
                   </tr>
                 </thead>
@@ -78,6 +78,8 @@ export function OudeLeadsTab() {
                         <td className="px-2 py-2">
                           <button
                             onClick={() => setExpandedLead(expandedLead === lead.id ? null : lead.id)}
+                            aria-label={expandedLead === lead.id ? 'Details inklappen' : 'Details uitklappen'}
+                            title={expandedLead === lead.id ? 'Details inklappen' : 'Details uitklappen'}
                             className="p-1 hover:bg-zinc-700 rounded text-zinc-500 hover:text-white"
                           >
                             {expandedLead === lead.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -87,7 +89,7 @@ export function OudeLeadsTab() {
                           <input
                             type="text"
                             value={lead.bedrijfsnaam}
-                            onChange={(e) => updateLead(lead.id, { bedrijfsnaam: e.target.value })}
+                            onChange={(e) => updateLead({ id: lead.id, bedrijfsnaam: e.target.value })}
                             placeholder="Bedrijfsnaam..."
                             className="bg-transparent text-white w-full focus:outline-none focus:bg-zinc-800 px-2 py-1 rounded text-sm font-medium"
                           />
@@ -96,7 +98,7 @@ export function OudeLeadsTab() {
                           <input
                             type="text"
                             value={lead.contactpersoon}
-                            onChange={(e) => updateLead(lead.id, { contactpersoon: e.target.value })}
+                            onChange={(e) => updateLead({ id: lead.id, contactpersoon: e.target.value })}
                             placeholder="Naam..."
                             className="bg-transparent text-zinc-400 w-full focus:outline-none focus:bg-zinc-800 px-2 py-1 rounded text-sm"
                           />
@@ -104,8 +106,8 @@ export function OudeLeadsTab() {
                         <td className="px-3 py-2">
                           <input
                             type="text"
-                            value={lead.productInteresse}
-                            onChange={(e) => updateLead(lead.id, { productInteresse: e.target.value })}
+                            value={lead.product_interesse}
+                            onChange={(e) => updateLead({ id: lead.id, product_interesse: e.target.value })}
                             placeholder="Product..."
                             className="bg-transparent text-zinc-400 w-full focus:outline-none focus:bg-zinc-800 px-2 py-1 rounded text-sm"
                           />
@@ -113,8 +115,8 @@ export function OudeLeadsTab() {
                         <td className="px-3 py-2">
                           <input
                             type="text"
-                            value={lead.redenAfwijzing}
-                            onChange={(e) => updateLead(lead.id, { redenAfwijzing: e.target.value })}
+                            value={lead.reden_afwijzing}
+                            onChange={(e) => updateLead({ id: lead.id, reden_afwijzing: e.target.value })}
                             placeholder="Reden..."
                             className="bg-transparent text-red-400/80 w-full focus:outline-none focus:bg-zinc-800 px-2 py-1 rounded text-sm"
                           />
@@ -122,27 +124,29 @@ export function OudeLeadsTab() {
                         <td className="px-3 py-2 text-center">
                           <input
                             type="date"
-                            value={lead.datumAfgewezen}
-                            onChange={(e) => updateLead(lead.id, { datumAfgewezen: e.target.value })}
+                            value={lead.datum_afgewezen || ''}
+                            onChange={(e) => updateLead({ id: lead.id, datum_afgewezen: e.target.value || null })}
+                            aria-label="Datum afgewezen"
+                            title="Datum afgewezen"
                             className="bg-transparent text-zinc-400 focus:outline-none focus:bg-zinc-800 px-2 py-1 rounded text-sm"
                           />
                         </td>
                         <td className="px-3 py-2 text-right">
                           <input
                             type="number"
-                            value={lead.offerteWaarde || ''}
-                            onChange={(e) => updateLead(lead.id, { offerteWaarde: parseFloat(e.target.value) || 0 })}
+                            value={lead.offerte_waarde || ''}
+                            onChange={(e) => updateLead({ id: lead.id, offerte_waarde: parseFloat(e.target.value) || 0 })}
                             placeholder="€ 0"
                             className="bg-transparent text-zinc-400 w-20 text-right focus:outline-none focus:bg-zinc-800 px-2 py-1 rounded text-sm"
                           />
                         </td>
                         <td className="px-3 py-2 text-center text-zinc-400">
-                          {lead.aantalContacten || 0}
+                          {lead.aantal_contacten || 0}
                         </td>
                         <td className="px-2 py-2">
                           <div className="flex items-center gap-1">
                             <button
-                              onClick={() => restoreLeadToKlant(lead.id)}
+                              onClick={() => restoreToCustomer(lead.id)}
                               className="p-1.5 hover:bg-green-500/20 rounded text-zinc-600 hover:text-green-400"
                               title="Terugzetten naar klanten"
                             >
@@ -160,7 +164,7 @@ export function OudeLeadsTab() {
                       </tr>
                       {/* Expanded details */}
                       {expandedLead === lead.id && (
-                        <tr className="bg-zinc-800/20 border-b border-zinc-800/50">
+                        <tr key={`${lead.id}-expanded`} className="bg-zinc-800/20 border-b border-zinc-800/50">
                           <td colSpan={9} className="px-4 py-4">
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                               <div>
@@ -170,7 +174,7 @@ export function OudeLeadsTab() {
                                 <input
                                   type="email"
                                   value={lead.email || ''}
-                                  onChange={(e) => updateLead(lead.id, { email: e.target.value })}
+                                  onChange={(e) => updateLead({ id: lead.id, email: e.target.value })}
                                   placeholder="email@..."
                                   className="bg-zinc-800 text-white w-full px-3 py-2 rounded text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
                                 />
@@ -182,7 +186,7 @@ export function OudeLeadsTab() {
                                 <input
                                   type="tel"
                                   value={lead.telefoon || ''}
-                                  onChange={(e) => updateLead(lead.id, { telefoon: e.target.value })}
+                                  onChange={(e) => updateLead({ id: lead.id, telefoon: e.target.value })}
                                   placeholder="06..."
                                   className="bg-zinc-800 text-white w-full px-3 py-2 rounded text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
                                 />
@@ -192,7 +196,7 @@ export function OudeLeadsTab() {
                                 <input
                                   type="text"
                                   value={lead.bron || ''}
-                                  onChange={(e) => updateLead(lead.id, { bron: e.target.value })}
+                                  onChange={(e) => updateLead({ id: lead.id, bron: e.target.value })}
                                   placeholder="Waar kwam deze lead vandaan..."
                                   className="bg-zinc-800 text-white w-full px-3 py-2 rounded text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
                                 />
@@ -201,8 +205,10 @@ export function OudeLeadsTab() {
                                 <label className="text-xs text-zinc-500 mb-1 block">Eerste contact</label>
                                 <input
                                   type="date"
-                                  value={lead.datumEersteContact || ''}
-                                  onChange={(e) => updateLead(lead.id, { datumEersteContact: e.target.value })}
+                                  value={lead.datum_eerste_contact || ''}
+                                  onChange={(e) => updateLead({ id: lead.id, datum_eerste_contact: e.target.value || null })}
+                                  aria-label="Datum eerste contact"
+                                  title="Datum eerste contact"
                                   className="bg-zinc-800 text-white w-full px-3 py-2 rounded text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
                                 />
                               </div>
@@ -210,7 +216,7 @@ export function OudeLeadsTab() {
                                 <label className="text-xs text-zinc-500 mb-1 block">Notities</label>
                                 <textarea
                                   value={lead.notities || ''}
-                                  onChange={(e) => updateLead(lead.id, { notities: e.target.value })}
+                                  onChange={(e) => updateLead({ id: lead.id, notities: e.target.value })}
                                   placeholder="Extra informatie over deze lead..."
                                   rows={2}
                                   className="bg-zinc-800 text-white w-full px-3 py-2 rounded text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 resize-none"
