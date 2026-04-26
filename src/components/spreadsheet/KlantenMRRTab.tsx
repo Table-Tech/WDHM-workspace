@@ -2,9 +2,12 @@
 
 import { useState, Fragment } from 'react';
 import { Plus, Trash2, ChevronDown, ChevronUp, Mail, Phone, User, Calendar, RotateCcw, Users, Archive } from 'lucide-react';
-import { useSpreadsheet } from '@/contexts/SpreadsheetContext';
+import { useCustomers } from '@/hooks/useCustomers';
+import { useLeadsDB } from '@/hooks/useLeadsDB';
+import { useSalesPersons } from '@/hooks/useSalesPersons';
+import { useFinancialMetrics } from '@/hooks/useFinancialMetrics';
 import { formatEuro } from '@/lib/spreadsheet-utils';
-import { type Klant, type PipelineFase } from '@/types/spreadsheet';
+import { type Customer, type PipelineFase } from '@/types/financial';
 
 // Pipeline fases voor dropdown (alle fases behalve Afgevallen)
 const SELECTABLE_FASES: PipelineFase[] = ['Lead', 'Contact gelegd', 'Offerte gestuurd', 'In onderhandeling', 'Klant'];
@@ -21,59 +24,65 @@ const FASE_STYLES: Record<PipelineFase, string> = {
 type InnerTab = 'klanten' | 'leads';
 
 export function KlantenMRRTab() {
-  const { isHydrated, klanten, leads, addKlant, updateKlant, deleteKlant, deleteLead, getKlantenKPIs, moveKlantToLeads, restoreLeadToKlant, instellingen } = useSpreadsheet();
-  const salesPersonen = instellingen.salesPersonen || [];
+  const { customers, isLoading: customersLoading, addCustomer, updateCustomer, deleteCustomer, moveToLeads } = useCustomers();
+  const { leads, isLoading: leadsLoading, deleteLead, restoreToCustomer } = useLeadsDB();
+  const { salesPersons } = useSalesPersons();
+  const { getKlantenKPIs } = useFinancialMetrics();
+
   const [innerTab, setInnerTab] = useState<InnerTab>('klanten');
   const [expandedKlant, setExpandedKlant] = useState<string | null>(null);
   const [showAfwijsModal, setShowAfwijsModal] = useState<string | null>(null);
   const [afwijsReden, setAfwijsReden] = useState('');
   const [showFaseDropdown, setShowFaseDropdown] = useState<string | null>(null);
-  const kpis = getKlantenKPIs();
 
-  const totaalMRR = klanten.filter(k => k.status === 'Actief').reduce((s, k) => s + k.mrrPerMaand, 0);
-  const totaalEenmalig = klanten.reduce((s, k) => s + k.eenmalig, 0);
-  const totaalJaar = klanten.filter(k => k.status === 'Actief').reduce((s, k) => s + (k.mrrPerMaand * 12), 0);
+  const isHydrated = !customersLoading && !leadsLoading;
+  const kpis = getKlantenKPIs;
+
+  const totaalMRR = customers.filter(k => k.status === 'Actief').reduce((s, k) => s + k.mrr_per_maand, 0);
+  const totaalEenmalig = customers.reduce((s, k) => s + k.eenmalig, 0);
+  const totaalJaar = customers.filter(k => k.status === 'Actief').reduce((s, k) => s + (k.mrr_per_maand * 12), 0);
 
   const handleAddKlant = () => {
-    addKlant({
+    addCustomer({
       klantnaam: '',
-      productDienst: '',
-      mrrPerMaand: 0,
+      product_dienst: '',
+      mrr_per_maand: 0,
       eenmalig: 0,
-      salesPersoonId: '',
+      sales_persoon_id: null,
       status: 'Actief',
-      maandInkomsten: Array(12).fill(0),
+      maand_inkomsten: Array(12).fill(0),
       contactpersoon: '',
       email: '',
       telefoon: '',
       notities: '',
-      pipelineFase: 'Lead',
-      aantalContacten: 0,
-      laatsteContact: '',
-      offerteWaarde: 0,
-      verwachteSluitdatum: '',
-      datumKlantGeworden: '',
-      datumOnderhoudStart: '',
-      onderhoudActief: true,
-      eenmaligTermijnen: 1,
-      eenmaligStartdatum: '',
+      pipeline_fase: 'Lead',
+      aantal_contacten: 0,
+      laatste_contact: null,
+      offerte_waarde: 0,
+      verwachte_sluitdatum: null,
+      datum_klant_geworden: null,
+      datum_onderhoud_start: null,
+      onderhoud_actief: true,
+      eenmalig_termijnen: 1,
+      eenmalig_startdatum: null,
     });
   };
 
-  const handleMRRChange = (klant: Klant, value: number) => {
-    updateKlant(klant.id, {
-      mrrPerMaand: value,
-      maandInkomsten: Array(12).fill(value),
+  const handleMRRChange = (klant: Customer, value: number) => {
+    updateCustomer({
+      id: klant.id,
+      mrr_per_maand: value,
+      maand_inkomsten: Array(12).fill(value),
     });
   };
 
   const handleAfwijzen = (id: string) => {
-    moveKlantToLeads(id, afwijsReden.trim() || 'Geen reden opgegeven');
+    moveToLeads({ customerId: id, redenAfwijzing: afwijsReden.trim() || 'Geen reden opgegeven' });
     setShowAfwijsModal(null);
     setAfwijsReden('');
   };
 
-  // Show loading skeleton until data is hydrated from localStorage
+  // Show loading skeleton until data is hydrated
   if (!isHydrated) {
     return (
       <div className="space-y-4 animate-pulse">
@@ -106,7 +115,7 @@ export function KlantenMRRTab() {
           }`}
         >
           <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          Klanten ({klanten.length})
+          Klanten ({customers.length})
         </button>
         <button
           onClick={() => setInnerTab('leads')}
@@ -141,9 +150,9 @@ export function KlantenMRRTab() {
             </tr>
           </thead>
           <tbody>
-            {klanten.map((klant, index) => {
+            {customers.map((klant, index) => {
               // Dropdown boven tonen voor laatste 3 rijen
-              const showDropdownAbove = index >= klanten.length - 3;
+              const showDropdownAbove = index >= customers.length - 3;
               return (
               <Fragment key={klant.id}>
                 <tr className="border-b border-zinc-800/50 hover:bg-zinc-800/30">
@@ -159,7 +168,7 @@ export function KlantenMRRTab() {
                     <input
                       type="text"
                       value={klant.klantnaam}
-                      onChange={(e) => updateKlant(klant.id, { klantnaam: e.target.value })}
+                      onChange={(e) => updateCustomer({ id: klant.id, klantnaam: e.target.value })}
                       placeholder="Naam..."
                       className="bg-transparent text-white w-full focus:outline-none focus:bg-zinc-800 px-2 py-1 rounded font-medium"
                     />
@@ -167,8 +176,8 @@ export function KlantenMRRTab() {
                   <td className="px-4 py-3">
                     <input
                       type="text"
-                      value={klant.productDienst}
-                      onChange={(e) => updateKlant(klant.id, { productDienst: e.target.value })}
+                      value={klant.product_dienst || ''}
+                      onChange={(e) => updateCustomer({ id: klant.id, product_dienst: e.target.value })}
                       placeholder="—"
                       className="bg-transparent text-zinc-300 w-full focus:outline-none focus:bg-zinc-800 px-2 py-1 rounded"
                     />
@@ -176,9 +185,9 @@ export function KlantenMRRTab() {
                   <td className="px-4 py-3 relative">
                     <button
                       onClick={() => setShowFaseDropdown(showFaseDropdown === klant.id ? null : klant.id)}
-                      className={`text-xs px-3 py-1.5 rounded font-medium w-full text-left ${FASE_STYLES[klant.pipelineFase] || FASE_STYLES['Lead']}`}
+                      className={`text-xs px-3 py-1.5 rounded font-medium w-full text-left ${FASE_STYLES[klant.pipeline_fase] || FASE_STYLES['Lead']}`}
                     >
-                      {klant.pipelineFase || 'Lead'}
+                      {klant.pipeline_fase || 'Lead'}
                     </button>
                     {showFaseDropdown === klant.id && (
                       <div className={`absolute left-4 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-20 min-w-[160px] ${
@@ -188,11 +197,11 @@ export function KlantenMRRTab() {
                           <button
                             key={fase}
                             onClick={() => {
-                              updateKlant(klant.id, { pipelineFase: fase });
+                              updateCustomer({ id: klant.id, pipeline_fase: fase });
                               setShowFaseDropdown(null);
                             }}
                             className={`w-full text-left px-3 py-2 text-sm hover:bg-zinc-700 first:rounded-t-lg last:rounded-b-lg ${
-                              klant.pipelineFase === fase ? 'bg-zinc-700' : ''
+                              klant.pipeline_fase === fase ? 'bg-zinc-700' : ''
                             } text-white`}
                           >
                             <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
@@ -212,13 +221,13 @@ export function KlantenMRRTab() {
                     <div className="flex items-center justify-end gap-1.5">
                       <span
                         className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                          klant.onderhoudActief !== false ? 'bg-green-500' : 'bg-red-500'
+                          klant.onderhoud_actief !== false ? 'bg-green-500' : 'bg-red-500'
                         }`}
-                        title={klant.onderhoudActief !== false ? 'Onderhoud actief' : 'Onderhoud inactief'}
+                        title={klant.onderhoud_actief !== false ? 'Onderhoud actief' : 'Onderhoud inactief'}
                       />
                       <input
                         type="number"
-                        value={klant.mrrPerMaand || ''}
+                        value={klant.mrr_per_maand || ''}
                         onChange={(e) => handleMRRChange(klant, parseFloat(e.target.value) || 0)}
                         placeholder="€ 0"
                         className="bg-transparent text-teal-400 w-20 text-right focus:outline-none focus:bg-zinc-800 px-2 py-1 rounded font-medium"
@@ -226,32 +235,32 @@ export function KlantenMRRTab() {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-right text-zinc-400">
-                    {formatEuro(klant.status === 'Actief' ? klant.mrrPerMaand * 12 : 0)}
+                    {formatEuro(klant.status === 'Actief' ? klant.mrr_per_maand * 12 : 0)}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <input
                       type="number"
                       value={klant.eenmalig || ''}
-                      onChange={(e) => updateKlant(klant.id, { eenmalig: parseFloat(e.target.value) || 0 })}
+                      onChange={(e) => updateCustomer({ id: klant.id, eenmalig: parseFloat(e.target.value) || 0 })}
                       placeholder="€ 0"
                       className="bg-transparent text-orange-400 w-20 text-right focus:outline-none focus:bg-zinc-800 px-2 py-1 rounded"
                     />
                   </td>
                   <td className="px-4 py-3 text-center">
-                    {salesPersonen.length === 0 ? (
+                    {salesPersons.length === 0 ? (
                       <span className="text-zinc-600 text-xs">—</span>
                     ) : (
                       <select
-                        value={klant.salesPersoonId || ''}
-                        onChange={(e) => updateKlant(klant.id, { salesPersoonId: e.target.value })}
+                        value={klant.sales_persoon_id || ''}
+                        onChange={(e) => updateCustomer({ id: klant.id, sales_persoon_id: e.target.value || null })}
                         className={`text-xs px-2 py-1 rounded bg-zinc-800 border-0 ${
-                          klant.salesPersoonId ? 'text-orange-400' : 'text-zinc-500'
+                          klant.sales_persoon_id ? 'text-orange-400' : 'text-zinc-500'
                         }`}
                       >
                         <option value="">—</option>
-                        {salesPersonen.map(sp => (
+                        {salesPersons.map(sp => (
                           <option key={sp.id} value={sp.id}>
-                            {sp.naam} ({sp.commissiePercentage}%)
+                            {sp.naam} ({sp.commissie_percentage}%)
                           </option>
                         ))}
                       </select>
@@ -260,10 +269,10 @@ export function KlantenMRRTab() {
                   <td className="px-4 py-3 text-center">
                     <button
                       onClick={() => {
-                        const statuses: Klant['status'][] = ['Actief', 'Paused', 'Inactief'];
+                        const statuses: Customer['status'][] = ['Actief', 'Paused', 'Inactief'];
                         const currentIndex = statuses.indexOf(klant.status);
                         const nextIndex = (currentIndex + 1) % statuses.length;
-                        updateKlant(klant.id, { status: statuses[nextIndex] });
+                        updateCustomer({ id: klant.id, status: statuses[nextIndex] });
                       }}
                       className={`text-xs px-3 py-1 rounded font-medium ${
                         klant.status === 'Actief' ? 'bg-green-600 text-white' :
@@ -296,7 +305,7 @@ export function KlantenMRRTab() {
                           <input
                             type="text"
                             value={klant.contactpersoon || ''}
-                            onChange={(e) => updateKlant(klant.id, { contactpersoon: e.target.value })}
+                            onChange={(e) => updateCustomer({ id: klant.id, contactpersoon: e.target.value })}
                             placeholder="Naam..."
                             className="bg-zinc-800 text-white w-full px-3 py-2 rounded text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
                           />
@@ -308,7 +317,7 @@ export function KlantenMRRTab() {
                           <input
                             type="email"
                             value={klant.email || ''}
-                            onChange={(e) => updateKlant(klant.id, { email: e.target.value })}
+                            onChange={(e) => updateCustomer({ id: klant.id, email: e.target.value })}
                             placeholder="email@..."
                             className="bg-zinc-800 text-white w-full px-3 py-2 rounded text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
                           />
@@ -320,7 +329,7 @@ export function KlantenMRRTab() {
                           <input
                             type="tel"
                             value={klant.telefoon || ''}
-                            onChange={(e) => updateKlant(klant.id, { telefoon: e.target.value })}
+                            onChange={(e) => updateCustomer({ id: klant.id, telefoon: e.target.value })}
                             placeholder="06..."
                             className="bg-zinc-800 text-white w-full px-3 py-2 rounded text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
                           />
@@ -331,8 +340,8 @@ export function KlantenMRRTab() {
                           </label>
                           <input
                             type="date"
-                            value={klant.laatsteContact || ''}
-                            onChange={(e) => updateKlant(klant.id, { laatsteContact: e.target.value })}
+                            value={klant.laatste_contact || ''}
+                            onChange={(e) => updateCustomer({ id: klant.id, laatste_contact: e.target.value || null })}
                             className="bg-zinc-800 text-white w-full px-3 py-2 rounded text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
                           />
                         </div>
@@ -340,14 +349,14 @@ export function KlantenMRRTab() {
                           <label className="text-xs text-zinc-500 mb-1 block">Offerte waarde incl BTW</label>
                           <input
                             type="number"
-                            value={klant.offerteWaarde || ''}
-                            onChange={(e) => updateKlant(klant.id, { offerteWaarde: parseFloat(e.target.value) || 0 })}
+                            value={klant.offerte_waarde || ''}
+                            onChange={(e) => updateCustomer({ id: klant.id, offerte_waarde: parseFloat(e.target.value) || 0 })}
                             placeholder="€ 0"
                             className="bg-zinc-800 text-white w-full px-3 py-2 rounded text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
                           />
-                          {klant.offerteWaarde > 0 && (
+                          {klant.offerte_waarde > 0 && (
                             <p className="text-[10px] text-zinc-500 mt-1">
-                              Excl BTW: {formatEuro(klant.offerteWaarde / 1.21)} · BTW: {formatEuro(klant.offerteWaarde - (klant.offerteWaarde / 1.21))}
+                              Excl BTW: {formatEuro(klant.offerte_waarde / 1.21)} · BTW: {formatEuro(klant.offerte_waarde - (klant.offerte_waarde / 1.21))}
                             </p>
                           )}
                         </div>
@@ -355,8 +364,8 @@ export function KlantenMRRTab() {
                           <label className="text-xs text-zinc-500 mb-1 block">Aantal contacten</label>
                           <input
                             type="number"
-                            value={klant.aantalContacten || ''}
-                            onChange={(e) => updateKlant(klant.id, { aantalContacten: parseInt(e.target.value) || 0 })}
+                            value={klant.aantal_contacten || ''}
+                            onChange={(e) => updateCustomer({ id: klant.id, aantal_contacten: parseInt(e.target.value) || 0 })}
                             className="bg-zinc-800 text-white w-full px-3 py-2 rounded text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
                           />
                         </div>
@@ -364,8 +373,8 @@ export function KlantenMRRTab() {
                           <label className="text-xs text-zinc-500 mb-1 block">Verwachte sluitdatum</label>
                           <input
                             type="date"
-                            value={klant.verwachteSluitdatum || ''}
-                            onChange={(e) => updateKlant(klant.id, { verwachteSluitdatum: e.target.value })}
+                            value={klant.verwachte_sluitdatum || ''}
+                            onChange={(e) => updateCustomer({ id: klant.id, verwachte_sluitdatum: e.target.value || null })}
                             className="bg-zinc-800 text-white w-full px-3 py-2 rounded text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
                           />
                         </div>
@@ -375,8 +384,8 @@ export function KlantenMRRTab() {
                           </label>
                           <input
                             type="date"
-                            value={klant.datumKlantGeworden || ''}
-                            onChange={(e) => updateKlant(klant.id, { datumKlantGeworden: e.target.value })}
+                            value={klant.datum_klant_geworden || ''}
+                            onChange={(e) => updateCustomer({ id: klant.id, datum_klant_geworden: e.target.value || null })}
                             className="bg-zinc-800 text-white w-full px-3 py-2 rounded text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
                           />
                         </div>
@@ -387,22 +396,22 @@ export function KlantenMRRTab() {
                           <div className="flex gap-2">
                             <input
                               type="date"
-                              value={klant.datumOnderhoudStart || ''}
-                              onChange={(e) => updateKlant(klant.id, { datumOnderhoudStart: e.target.value })}
+                              value={klant.datum_onderhoud_start || ''}
+                              onChange={(e) => updateCustomer({ id: klant.id, datum_onderhoud_start: e.target.value || null })}
                               className="bg-zinc-800 text-white flex-1 px-3 py-2 rounded text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
                             />
                             <button
-                              onClick={() => updateKlant(klant.id, { onderhoudActief: !klant.onderhoudActief })}
+                              onClick={() => updateCustomer({ id: klant.id, onderhoud_actief: !klant.onderhoud_actief })}
                               className={`px-3 py-2 rounded text-xs font-medium flex items-center gap-1.5 ${
-                                klant.onderhoudActief !== false
+                                klant.onderhoud_actief !== false
                                   ? 'bg-green-600 hover:bg-green-700 text-white'
                                   : 'bg-red-600 hover:bg-red-700 text-white'
                               }`}
                             >
                               <span className={`w-2 h-2 rounded-full ${
-                                klant.onderhoudActief !== false ? 'bg-green-300' : 'bg-red-300'
+                                klant.onderhoud_actief !== false ? 'bg-green-300' : 'bg-red-300'
                               }`} />
-                              {klant.onderhoudActief !== false ? 'Actief' : 'Inactief'}
+                              {klant.onderhoud_actief !== false ? 'Actief' : 'Inactief'}
                             </button>
                           </div>
                         </div>
@@ -412,8 +421,8 @@ export function KlantenMRRTab() {
                             <div>
                               <label className="text-xs text-zinc-500 mb-1 block">Aantal termijnen</label>
                               <select
-                                value={klant.eenmaligTermijnen || 1}
-                                onChange={(e) => updateKlant(klant.id, { eenmaligTermijnen: parseInt(e.target.value) || 1 })}
+                                value={klant.eenmalig_termijnen || 1}
+                                onChange={(e) => updateCustomer({ id: klant.id, eenmalig_termijnen: parseInt(e.target.value) || 1 })}
                                 className="bg-zinc-800 text-white w-full px-3 py-2 rounded text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
                               >
                                 <option value={1}>1x (direct)</option>
@@ -423,9 +432,9 @@ export function KlantenMRRTab() {
                                 <option value={6}>6 termijnen</option>
                                 <option value={12}>12 termijnen</option>
                               </select>
-                              {(klant.eenmaligTermijnen || 1) > 1 && (
+                              {(klant.eenmalig_termijnen || 1) > 1 && (
                                 <p className="text-[10px] text-orange-400 mt-1">
-                                  {formatEuro(klant.eenmalig / (klant.eenmaligTermijnen || 1))} per termijn
+                                  {formatEuro(klant.eenmalig / (klant.eenmalig_termijnen || 1))} per termijn
                                 </p>
                               )}
                             </div>
@@ -435,8 +444,8 @@ export function KlantenMRRTab() {
                               </label>
                               <input
                                 type="date"
-                                value={klant.eenmaligStartdatum || ''}
-                                onChange={(e) => updateKlant(klant.id, { eenmaligStartdatum: e.target.value })}
+                                value={klant.eenmalig_startdatum || ''}
+                                onChange={(e) => updateCustomer({ id: klant.id, eenmalig_startdatum: e.target.value || null })}
                                 className="bg-zinc-800 text-white w-full px-3 py-2 rounded text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
                               />
                             </div>
@@ -446,7 +455,7 @@ export function KlantenMRRTab() {
                           <label className="text-xs text-zinc-500 mb-1 block">Notities</label>
                           <textarea
                             value={klant.notities || ''}
-                            onChange={(e) => updateKlant(klant.id, { notities: e.target.value })}
+                            onChange={(e) => updateCustomer({ id: klant.id, notities: e.target.value })}
                             placeholder="Notities..."
                             rows={2}
                             className="bg-zinc-800 text-white w-full px-3 py-2 rounded text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 resize-none"
@@ -463,7 +472,7 @@ export function KlantenMRRTab() {
           <tfoot>
             <tr className="bg-teal-600/90 text-white font-medium">
               <td></td>
-              <td colSpan={3} className="px-4 py-3">TOTAAL ({klanten.filter(k => k.status === 'Actief').length} actief)</td>
+              <td colSpan={3} className="px-4 py-3">TOTAAL ({customers.filter(k => k.status === 'Actief').length} actief)</td>
               <td className="px-4 py-3 text-right font-bold">{formatEuro(totaalMRR)}</td>
               <td className="px-4 py-3 text-right font-bold">{formatEuro(totaalJaar)}</td>
               <td className="px-4 py-3 text-right">{formatEuro(totaalEenmalig)}</td>
@@ -511,22 +520,22 @@ export function KlantenMRRTab() {
                       {lead.email && <p className="text-zinc-500 text-xs">{lead.email}</p>}
                     </td>
                     <td className="px-4 py-3 text-zinc-300">{lead.contactpersoon || '—'}</td>
-                    <td className="px-4 py-3 text-zinc-400">{lead.productInteresse || '—'}</td>
+                    <td className="px-4 py-3 text-zinc-400">{lead.product_interesse || '—'}</td>
                     <td className="px-4 py-3">
                       <span className="text-red-400 text-xs bg-red-500/10 px-2 py-1 rounded">
-                        {lead.redenAfwijzing || 'Geen reden'}
+                        {lead.reden_afwijzing || 'Geen reden'}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-zinc-500 text-xs">
-                      {lead.datumAfgewezen ? new Date(lead.datumAfgewezen).toLocaleDateString('nl-NL') : '—'}
+                      {lead.datum_afgewezen ? new Date(lead.datum_afgewezen).toLocaleDateString('nl-NL') : '—'}
                     </td>
                     <td className="px-4 py-3 text-right text-orange-400">
-                      {lead.offerteWaarde > 0 ? formatEuro(lead.offerteWaarde) : '—'}
+                      {lead.offerte_waarde > 0 ? formatEuro(lead.offerte_waarde) : '—'}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2 justify-end">
                         <button
-                          onClick={() => restoreLeadToKlant(lead.id)}
+                          onClick={() => restoreToCustomer(lead.id)}
                           className="p-1.5 hover:bg-green-500/20 rounded text-zinc-500 hover:text-green-400"
                           title="Terughalen als klant"
                         >
@@ -594,7 +603,7 @@ export function KlantenMRRTab() {
               </p>
               <button
                 onClick={() => {
-                  deleteKlant(showAfwijsModal);
+                  deleteCustomer(showAfwijsModal);
                   setShowAfwijsModal(null);
                   setAfwijsReden('');
                 }}

@@ -1,39 +1,27 @@
 'use client';
 
 import { AlertTriangle, Plus, Trash2 } from 'lucide-react';
-import { useSpreadsheet } from '@/contexts/SpreadsheetContext';
+import { useCompanySettings } from '@/hooks/useCompanySettings';
+import { useCoFounders } from '@/hooks/useCoFounders';
+import { useSalesPersons } from '@/hooks/useSalesPersons';
 import { formatPercentage } from '@/lib/spreadsheet-utils';
 
 export function InstellingenTab() {
-  const {
-    instellingen,
-    setInstellingen,
-    addCoFounder,
-    deleteCoFounder,
-    addSalesPersoon,
-    updateSalesPersoon,
-    deleteSalesPersoon,
-  } = useSpreadsheet();
+  const { settings, updateSettings } = useCompanySettings();
+  const { coFounders, addCoFounder, updateCoFounder, deleteCoFounder } = useCoFounders();
+  const { salesPersons, addSalesPerson, updateSalesPerson, deleteSalesPerson } = useSalesPersons();
 
-  const salesPersonen = instellingen.salesPersonen || [];
-
-  const totaalVerdeling = instellingen.coFounders.reduce(
-    (sum, f) => sum + f.winstverdelingPercentage, 0
+  const totaalVerdeling = coFounders.reduce(
+    (sum, f) => sum + f.winstverdeling_percentage, 0
   );
   const isVerdelingCorrect = Math.abs(totaalVerdeling - 100) < 0.01;
 
-  const updateFounder = (id: string, field: string, value: string | number) => {
-    const updated = {
-      ...instellingen,
-      coFounders: instellingen.coFounders.map(f =>
-        f.id === id ? { ...f, [field]: value } : f
-      ),
-    };
-    setInstellingen(updated);
+  const handleUpdateFounder = (id: string, field: string, value: string | number) => {
+    updateCoFounder({ id, [field]: value });
   };
 
-  const updateField = (field: keyof typeof instellingen, value: string | number) => {
-    setInstellingen({ ...instellingen, [field]: value });
+  const handleUpdateField = (field: string, value: string | number) => {
+    updateSettings({ [field]: value });
   };
 
   return (
@@ -57,13 +45,13 @@ export function InstellingenTab() {
                 </tr>
               </thead>
               <tbody>
-                {instellingen.coFounders.map((f) => (
+                {coFounders.map((f) => (
                   <tr key={f.id} className="border-b border-zinc-800/50">
                     <td className="py-1.5">
                       <input
                         type="text"
                         value={f.naam}
-                        onChange={(e) => updateFounder(f.id, 'naam', e.target.value)}
+                        onChange={(e) => handleUpdateFounder(f.id, 'naam', e.target.value)}
                         placeholder="Naam..."
                         className="bg-transparent text-white w-full focus:outline-none focus:bg-zinc-800 px-1 py-0.5 rounded text-xs"
                       />
@@ -71,8 +59,8 @@ export function InstellingenTab() {
                     <td className="py-1.5 text-right">
                       <input
                         type="number"
-                        value={f.winstverdelingPercentage}
-                        onChange={(e) => updateFounder(f.id, 'winstverdelingPercentage', parseFloat(e.target.value) || 0)}
+                        value={f.winstverdeling_percentage}
+                        onChange={(e) => handleUpdateFounder(f.id, 'winstverdeling_percentage', parseFloat(e.target.value) || 0)}
                         className="bg-transparent text-white w-12 text-right focus:outline-none focus:bg-zinc-800 px-1 py-0.5 rounded text-xs"
                         step="0.1"
                       />
@@ -81,8 +69,8 @@ export function InstellingenTab() {
                     <td className="py-1.5 pl-3">
                       <input
                         type="text"
-                        value={f.rol}
-                        onChange={(e) => updateFounder(f.id, 'rol', e.target.value)}
+                        value={f.rol || ''}
+                        onChange={(e) => handleUpdateFounder(f.id, 'rol', e.target.value)}
                         placeholder="—"
                         className="bg-transparent text-zinc-400 w-full focus:outline-none focus:bg-zinc-800 px-1 py-0.5 rounded text-xs"
                       />
@@ -115,7 +103,7 @@ export function InstellingenTab() {
               </div>
             )}
             <div className="mt-2 pt-2 border-t border-zinc-800">
-              <button onClick={addCoFounder} className="flex items-center gap-1 text-zinc-500 hover:text-white text-xs">
+              <button onClick={() => addCoFounder({ naam: '', winstverdeling_percentage: 0, rol: '' })} className="flex items-center gap-1 text-zinc-500 hover:text-white text-xs">
                 <Plus className="w-3 h-3" /> Co-founder toevoegen
               </button>
             </div>
@@ -130,7 +118,7 @@ export function InstellingenTab() {
               <h2 className="text-xs font-semibold text-white uppercase tracking-wide">Salespersonen</h2>
             </div>
             <div className="p-3">
-              {salesPersonen.length === 0 ? (
+              {salesPersons.length === 0 ? (
                 <p className="text-zinc-500 text-xs mb-2">Nog geen salespersonen toegevoegd.</p>
               ) : (
                 <table className="w-full text-xs mb-2">
@@ -142,13 +130,13 @@ export function InstellingenTab() {
                     </tr>
                   </thead>
                   <tbody>
-                    {salesPersonen.map((sp) => (
+                    {salesPersons.map((sp) => (
                       <tr key={sp.id} className="border-b border-zinc-800/50">
                         <td className="py-1.5">
                           <input
                             type="text"
                             value={sp.naam}
-                            onChange={(e) => updateSalesPersoon(sp.id, { naam: e.target.value })}
+                            onChange={(e) => updateSalesPerson({ id: sp.id, naam: e.target.value })}
                             placeholder="Naam..."
                             className="bg-transparent text-white w-full focus:outline-none focus:bg-zinc-800 px-1 py-0.5 rounded text-xs"
                           />
@@ -156,8 +144,8 @@ export function InstellingenTab() {
                         <td className="py-1.5 text-right">
                           <input
                             type="number"
-                            value={sp.commissiePercentage}
-                            onChange={(e) => updateSalesPersoon(sp.id, { commissiePercentage: parseFloat(e.target.value) || 0 })}
+                            value={sp.commissie_percentage}
+                            onChange={(e) => updateSalesPerson({ id: sp.id, commissie_percentage: parseFloat(e.target.value) || 0 })}
                             className="bg-transparent text-white w-12 text-right focus:outline-none focus:bg-zinc-800 px-1 py-0.5 rounded text-xs"
                             step="0.1"
                           />
@@ -165,7 +153,7 @@ export function InstellingenTab() {
                         </td>
                         <td className="py-1.5">
                           <button
-                            onClick={() => deleteSalesPersoon(sp.id)}
+                            onClick={() => deleteSalesPerson(sp.id)}
                             className="p-0.5 hover:bg-red-500/20 rounded text-zinc-600 hover:text-red-400"
                           >
                             <Trash2 className="w-3 h-3" />
@@ -176,7 +164,7 @@ export function InstellingenTab() {
                   </tbody>
                 </table>
               )}
-              <button onClick={addSalesPersoon} className="flex items-center gap-1 text-zinc-500 hover:text-white text-xs">
+              <button onClick={() => addSalesPerson({ naam: '', commissie_percentage: 10 })} className="flex items-center gap-1 text-zinc-500 hover:text-white text-xs">
                 <Plus className="w-3 h-3" /> Salespersoon toevoegen
               </button>
             </div>
@@ -193,8 +181,8 @@ export function InstellingenTab() {
                 <div className="flex items-center">
                   <input
                     type="number"
-                    value={instellingen.btwPercentage}
-                    onChange={(e) => updateField('btwPercentage', parseFloat(e.target.value) || 0)}
+                    value={settings?.btw_percentage ?? 21}
+                    onChange={(e) => handleUpdateField('btw_percentage', parseFloat(e.target.value) || 0)}
                     className="bg-zinc-800 text-white w-14 px-2 py-1 rounded text-right text-xs"
                     step="0.1"
                   />
@@ -214,8 +202,8 @@ export function InstellingenTab() {
                 <span className="text-zinc-400">Bedrijfsnaam</span>
                 <input
                   type="text"
-                  value={instellingen.bedrijfsnaam}
-                  onChange={(e) => updateField('bedrijfsnaam', e.target.value)}
+                  value={settings?.bedrijfsnaam ?? ''}
+                  onChange={(e) => handleUpdateField('bedrijfsnaam', e.target.value)}
                   className="bg-zinc-800 text-white w-28 px-2 py-1 rounded text-xs"
                 />
               </div>
@@ -223,8 +211,8 @@ export function InstellingenTab() {
                 <span className="text-zinc-400">KVK nummer</span>
                 <input
                   type="text"
-                  value={instellingen.kvkNummer}
-                  onChange={(e) => updateField('kvkNummer', e.target.value)}
+                  value={settings?.kvk_nummer ?? ''}
+                  onChange={(e) => handleUpdateField('kvk_nummer', e.target.value)}
                   placeholder="—"
                   className="bg-zinc-800 text-white w-28 px-2 py-1 rounded text-xs"
                 />
@@ -233,8 +221,8 @@ export function InstellingenTab() {
                 <span className="text-zinc-400">Boekjaar</span>
                 <input
                   type="number"
-                  value={instellingen.boekjaar}
-                  onChange={(e) => updateField('boekjaar', parseInt(e.target.value) || 2026)}
+                  value={settings?.boekjaar ?? 2026}
+                  onChange={(e) => handleUpdateField('boekjaar', parseInt(e.target.value) || 2026)}
                   className="bg-zinc-800 text-white w-20 px-2 py-1 rounded text-right text-xs"
                 />
               </div>

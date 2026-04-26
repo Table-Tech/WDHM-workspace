@@ -1,135 +1,115 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Plus, Trash2, TrendingUp, TrendingDown, PieChart, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { useSpreadsheet } from '@/contexts/SpreadsheetContext';
+import { useOneTimeIncome } from '@/hooks/useOneTimeIncome';
+import { useOneTimeExpenses } from '@/hooks/useOneTimeExpenses';
+import { useCompanySettings } from '@/hooks/useCompanySettings';
+import { useSalesPersons } from '@/hooks/useSalesPersons';
 import { formatEuro } from '@/lib/spreadsheet-utils';
-import type { EenmaligeInkomst, EenmaligeKost } from '@/types/spreadsheet';
-import { EENMALIGE_KOSTEN_CATEGORIEEN } from '@/types/spreadsheet';
+
+const EENMALIGE_KOSTEN_CATEGORIEEN = [
+  'Hardware',
+  'Software',
+  'Marketing',
+  'Juridisch',
+  'Advies',
+  'Overig',
+];
 
 type InnerTab = 'inkomsten' | 'kosten' | 'overzicht';
 
 export function EenmaligeInkomstenTab() {
-  const {
-    eenmaligeInkomsten,
-    setEenmaligeInkomsten,
-    eenmaligeKosten,
-    setEenmaligeKosten,
-    instellingen,
-  } = useSpreadsheet();
+  const { oneTimeIncome, addIncome, updateIncome, deleteIncome } = useOneTimeIncome();
+  const { oneTimeExpenses, addExpense, updateExpense, deleteExpense } = useOneTimeExpenses();
+  const { settings } = useCompanySettings();
+  const { salesPersons } = useSalesPersons();
 
   const [innerTab, setInnerTab] = useState<InnerTab>('inkomsten');
 
-  // === INKOMSTEN HANDLERS ===
-  const addInkomst = () => {
-    const newInkomst: EenmaligeInkomst = {
-      id: `${Date.now()}-${Math.random().toString(36).substring(7)}`,
-      datum: '',
-      klantnaam: '',
-      omschrijving: '',
-      bedragExclBTW: 0,
-      btw: 0,
-      bedragInclBTW: 0,
-      salesCommissie: false,
-      nettoNaCommissie: 0,
-      status: 'Open',
-    };
-    setEenmaligeInkomsten([...eenmaligeInkomsten, newInkomst]);
-  };
+  const btwPercentage = settings?.btw_percentage ?? 21;
 
   // Calculate average commission percentage from salesPersonen, default to 15%
-  const salesPersonen = instellingen.salesPersonen || [];
-  const avgCommissiePercentage = salesPersonen.length > 0
-    ? salesPersonen.reduce((sum, sp) => sum + sp.commissiePercentage, 0) / salesPersonen.length
-    : 15;
+  const avgCommissiePercentage = useMemo(() => {
+    return salesPersons.length > 0
+      ? salesPersons.reduce((sum, sp) => sum + sp.commissie_percentage, 0) / salesPersons.length
+      : 15;
+  }, [salesPersons]);
 
-  const updateInkomst = (id: string, field: keyof EenmaligeInkomst, value: string | number | boolean) => {
-    const updated = eenmaligeInkomsten.map(inkomst => {
-      if (inkomst.id !== id) return inkomst;
-
-      const newInkomst = { ...inkomst, [field]: value };
-
-      if (field === 'bedragExclBTW' || field === 'salesCommissie') {
-        const bedragExcl = field === 'bedragExclBTW' ? (value as number) : inkomst.bedragExclBTW;
-        const hasSalesComm = field === 'salesCommissie' ? (value as boolean) : inkomst.salesCommissie;
-
-        newInkomst.btw = bedragExcl * (instellingen.btwPercentage / 100);
-        newInkomst.bedragInclBTW = bedragExcl + newInkomst.btw;
-        newInkomst.nettoNaCommissie = hasSalesComm
-          ? bedragExcl * (1 - avgCommissiePercentage / 100)
-          : bedragExcl;
-      }
-
-      return newInkomst;
+  // Computed values for income
+  const computedIncome = useMemo(() => {
+    return oneTimeIncome.map(inkomst => {
+      const btw = inkomst.bedrag_excl_btw * (btwPercentage / 100);
+      const bedragInclBTW = inkomst.bedrag_excl_btw + btw;
+      const nettoNaCommissie = inkomst.sales_commissie
+        ? inkomst.bedrag_excl_btw * (1 - avgCommissiePercentage / 100)
+        : inkomst.bedrag_excl_btw;
+      return { ...inkomst, btw, bedragInclBTW, nettoNaCommissie };
     });
-    setEenmaligeInkomsten(updated);
-  };
+  }, [oneTimeIncome, btwPercentage, avgCommissiePercentage]);
 
-  const deleteInkomst = (id: string) => {
-    setEenmaligeInkomsten(eenmaligeInkomsten.filter(i => i.id !== id));
+  // Computed values for expenses
+  const computedExpenses = useMemo(() => {
+    return oneTimeExpenses.map(kost => {
+      const btw = kost.bedrag_excl_btw * (btwPercentage / 100);
+      const bedragInclBTW = kost.bedrag_excl_btw + btw;
+      return { ...kost, btw, bedragInclBTW };
+    });
+  }, [oneTimeExpenses, btwPercentage]);
+
+  // === INKOMSTEN HANDLERS ===
+  const handleAddInkomst = () => {
+    addIncome({
+      datum: new Date().toISOString().split('T')[0],
+      klantnaam: '',
+      omschrijving: '',
+      bedrag_excl_btw: 0,
+      btw: 0,
+      bedrag_incl_btw: 0,
+      sales_commissie: false,
+      netto_na_commissie: 0,
+      status: 'Open',
+    });
   };
 
   // === KOSTEN HANDLERS ===
-  const addKost = () => {
-    const newKost: EenmaligeKost = {
-      id: `${Date.now()}-${Math.random().toString(36).substring(7)}`,
-      datum: '',
+  const handleAddKost = () => {
+    addExpense({
+      datum: new Date().toISOString().split('T')[0],
       leverancier: '',
       omschrijving: '',
       categorie: EENMALIGE_KOSTEN_CATEGORIEEN[0],
-      bedragExclBTW: 0,
+      bedrag_excl_btw: 0,
       btw: 0,
-      bedragInclBTW: 0,
+      bedrag_incl_btw: 0,
       status: 'Gepland',
-    };
-    setEenmaligeKosten([...eenmaligeKosten, newKost]);
-  };
-
-  const updateKost = (id: string, field: keyof EenmaligeKost, value: string | number) => {
-    const updated = eenmaligeKosten.map(kost => {
-      if (kost.id !== id) return kost;
-
-      const newKost = { ...kost, [field]: value };
-
-      if (field === 'bedragExclBTW') {
-        const bedragExcl = value as number;
-        newKost.btw = bedragExcl * (instellingen.btwPercentage / 100);
-        newKost.bedragInclBTW = bedragExcl + newKost.btw;
-      }
-
-      return newKost;
     });
-    setEenmaligeKosten(updated);
-  };
-
-  const deleteKost = (id: string) => {
-    setEenmaligeKosten(eenmaligeKosten.filter(k => k.id !== id));
   };
 
   // === TOTALEN BEREKENEN ===
-  const totaalInkomstenExclBTW = eenmaligeInkomsten.reduce((s, i) => s + i.bedragExclBTW, 0);
-  const totaalInkomstenBTW = eenmaligeInkomsten.reduce((s, i) => s + i.btw, 0);
-  const totaalInkomstenInclBTW = eenmaligeInkomsten.reduce((s, i) => s + i.bedragInclBTW, 0);
-  const totaalInkomstenNetto = eenmaligeInkomsten.reduce((s, i) => s + i.nettoNaCommissie, 0);
-  const totaalInkomstenBetaald = eenmaligeInkomsten
+  const totaalInkomstenExclBTW = computedIncome.reduce((s, i) => s + i.bedrag_excl_btw, 0);
+  const totaalInkomstenBTW = computedIncome.reduce((s, i) => s + i.btw, 0);
+  const totaalInkomstenInclBTW = computedIncome.reduce((s, i) => s + i.bedragInclBTW, 0);
+  const totaalInkomstenNetto = computedIncome.reduce((s, i) => s + i.nettoNaCommissie, 0);
+  const totaalInkomstenBetaald = computedIncome
     .filter(i => i.status === 'Betaald')
     .reduce((s, i) => s + i.nettoNaCommissie, 0);
 
-  const totaalKostenExclBTW = eenmaligeKosten.reduce((s, k) => s + k.bedragExclBTW, 0);
-  const totaalKostenBTW = eenmaligeKosten.reduce((s, k) => s + k.btw, 0);
-  const totaalKostenInclBTW = eenmaligeKosten.reduce((s, k) => s + k.bedragInclBTW, 0);
-  const totaalKostenBetaald = eenmaligeKosten
+  const totaalKostenExclBTW = computedExpenses.reduce((s, k) => s + k.bedrag_excl_btw, 0);
+  const totaalKostenBTW = computedExpenses.reduce((s, k) => s + k.btw, 0);
+  const totaalKostenInclBTW = computedExpenses.reduce((s, k) => s + k.bedragInclBTW, 0);
+  const totaalKostenBetaald = computedExpenses
     .filter(k => k.status === 'Betaald')
-    .reduce((s, k) => s + k.bedragExclBTW, 0);
+    .reduce((s, k) => s + k.bedrag_excl_btw, 0);
 
   const nettoResultaat = totaalInkomstenNetto - totaalKostenExclBTW;
 
   // Kosten per categorie
   const kostenPerCategorie = EENMALIGE_KOSTEN_CATEGORIEEN.map(cat => ({
     categorie: cat,
-    totaal: eenmaligeKosten
+    totaal: computedExpenses
       .filter(k => k.categorie === cat)
-      .reduce((s, k) => s + k.bedragExclBTW, 0),
+      .reduce((s, k) => s + k.bedrag_excl_btw, 0),
   })).filter(c => c.totaal > 0);
 
   return (
@@ -148,7 +128,7 @@ export function EenmaligeInkomstenTab() {
             }`}
           >
             <TrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-            Inkomsten ({eenmaligeInkomsten.length})
+            Inkomsten ({oneTimeIncome.length})
           </button>
           <button
             onClick={() => setInnerTab('kosten')}
@@ -159,7 +139,7 @@ export function EenmaligeInkomstenTab() {
             }`}
           >
             <TrendingDown className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-            Kosten ({eenmaligeKosten.length})
+            Kosten ({oneTimeExpenses.length})
           </button>
           <button
             onClick={() => setInnerTab('overzicht')}
@@ -182,25 +162,25 @@ export function EenmaligeInkomstenTab() {
             <table className="w-full text-[11px]">
               <thead>
                 <tr className="bg-green-600/80 text-white">
-                  <th className="text-left font-medium px-2 py-1.5 min-w-[90px]">Datum</th>
-                  <th className="text-left font-medium px-2 py-1.5 min-w-[100px]">Klant</th>
-                  <th className="text-left font-medium px-2 py-1.5 min-w-[120px]">Omschrijving</th>
-                  <th className="text-right font-medium px-2 py-1.5 min-w-[80px]">Excl. BTW</th>
-                  <th className="text-right font-medium px-2 py-1.5 min-w-[60px]">BTW</th>
-                  <th className="text-right font-medium px-2 py-1.5 min-w-[80px]">Incl. BTW</th>
-                  <th className="text-center font-medium px-2 py-1.5 min-w-[50px]">Comm.</th>
-                  <th className="text-right font-medium px-2 py-1.5 min-w-[80px]">Netto</th>
-                  <th className="text-center font-medium px-2 py-1.5 min-w-[70px]">Status</th>
+                  <th className="text-left font-medium px-2 py-1.5 min-w-22.5">Datum</th>
+                  <th className="text-left font-medium px-2 py-1.5 min-w-25">Klant</th>
+                  <th className="text-left font-medium px-2 py-1.5 min-w-30">Omschrijving</th>
+                  <th className="text-right font-medium px-2 py-1.5 min-w-20">Excl. BTW</th>
+                  <th className="text-right font-medium px-2 py-1.5 min-w-15">BTW</th>
+                  <th className="text-right font-medium px-2 py-1.5 min-w-20">Incl. BTW</th>
+                  <th className="text-center font-medium px-2 py-1.5 min-w-12.5">Comm.</th>
+                  <th className="text-right font-medium px-2 py-1.5 min-w-20">Netto</th>
+                  <th className="text-center font-medium px-2 py-1.5 min-w-17.5">Status</th>
                   <th className="w-8"></th>
                 </tr>
               </thead>
               <tbody>
-                {eenmaligeInkomsten.length === 0 ? (
+                {computedIncome.length === 0 ? (
                   <tr>
                     <td colSpan={10} className="px-3 py-8 text-center text-zinc-500 text-xs">
                       Nog geen eenmalige inkomsten.
                       <button
-                        onClick={addInkomst}
+                        onClick={handleAddInkomst}
                         className="ml-2 text-green-400 hover:text-green-300"
                       >
                         + Toevoegen
@@ -208,13 +188,15 @@ export function EenmaligeInkomstenTab() {
                     </td>
                   </tr>
                 ) : (
-                  eenmaligeInkomsten.map((inkomst) => (
+                  computedIncome.map((inkomst) => (
                     <tr key={inkomst.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30">
                       <td className="px-2 py-1">
                         <input
                           type="date"
                           value={inkomst.datum}
-                          onChange={(e) => updateInkomst(inkomst.id, 'datum', e.target.value)}
+                          onChange={(e) => updateIncome({ id: inkomst.id, datum: e.target.value })}
+                          aria-label="Datum van inkomst"
+                          title="Datum van inkomst"
                           className="bg-transparent text-white w-full focus:outline-none text-[11px]"
                         />
                       </td>
@@ -222,8 +204,10 @@ export function EenmaligeInkomstenTab() {
                         <input
                           type="text"
                           value={inkomst.klantnaam}
-                          onChange={(e) => updateInkomst(inkomst.id, 'klantnaam', e.target.value)}
+                          onChange={(e) => updateIncome({ id: inkomst.id, klantnaam: e.target.value })}
                           placeholder="Naam..."
+                          aria-label="Klantnaam"
+                          title="Klantnaam"
                           className="bg-transparent text-white w-full focus:outline-none text-[11px]"
                         />
                       </td>
@@ -231,17 +215,21 @@ export function EenmaligeInkomstenTab() {
                         <input
                           type="text"
                           value={inkomst.omschrijving}
-                          onChange={(e) => updateInkomst(inkomst.id, 'omschrijving', e.target.value)}
+                          onChange={(e) => updateIncome({ id: inkomst.id, omschrijving: e.target.value })}
                           placeholder="—"
+                          aria-label="Omschrijving van inkomst"
+                          title="Omschrijving van inkomst"
                           className="bg-transparent text-zinc-400 w-full focus:outline-none text-[11px]"
                         />
                       </td>
                       <td className="px-2 py-1 text-right">
                         <input
                           type="number"
-                          value={inkomst.bedragExclBTW || ''}
-                          onChange={(e) => updateInkomst(inkomst.id, 'bedragExclBTW', parseFloat(e.target.value) || 0)}
+                          value={inkomst.bedrag_excl_btw || ''}
+                          onChange={(e) => updateIncome({ id: inkomst.id, bedrag_excl_btw: parseFloat(e.target.value) || 0 })}
                           placeholder="0"
+                          aria-label="Bedrag exclusief BTW"
+                          title="Bedrag exclusief BTW"
                           className="bg-transparent text-white w-16 text-right focus:outline-none text-[11px]"
                           step="0.01"
                         />
@@ -254,10 +242,12 @@ export function EenmaligeInkomstenTab() {
                       </td>
                       <td className="px-2 py-1 text-center">
                         <button
-                          onClick={() => updateInkomst(inkomst.id, 'salesCommissie', !inkomst.salesCommissie)}
-                          className={`text-[10px] px-1.5 py-0.5 rounded ${inkomst.salesCommissie ? 'bg-orange-500/20 text-orange-400' : 'text-zinc-600'}`}
+                          onClick={() => updateIncome({ id: inkomst.id, sales_commissie: !inkomst.sales_commissie })}
+                          aria-label="Sales commissie in- of uitschakelen"
+                          title="Sales commissie in- of uitschakelen"
+                          className={`text-[10px] px-1.5 py-0.5 rounded ${inkomst.sales_commissie ? 'bg-orange-500/20 text-orange-400' : 'text-zinc-600'}`}
                         >
-                          {inkomst.salesCommissie ? 'Ja' : '—'}
+                          {inkomst.sales_commissie ? 'Ja' : '—'}
                         </button>
                       </td>
                       <td className="px-2 py-1 text-right text-green-400 font-medium">
@@ -266,7 +256,9 @@ export function EenmaligeInkomstenTab() {
                       <td className="px-2 py-1 text-center">
                         <select
                           value={inkomst.status}
-                          onChange={(e) => updateInkomst(inkomst.id, 'status', e.target.value)}
+                          onChange={(e) => updateIncome({ id: inkomst.id, status: e.target.value as 'Open' | 'Gefactureerd' | 'Betaald' | 'Geannuleerd' })}
+                          aria-label="Status van inkomst"
+                          title="Status van inkomst"
                           className={`text-[10px] px-1.5 py-0.5 rounded border-0 bg-zinc-800 ${
                             inkomst.status === 'Betaald' ? 'text-green-400' :
                             inkomst.status === 'Gefactureerd' ? 'text-blue-400' :
@@ -282,7 +274,9 @@ export function EenmaligeInkomstenTab() {
                       </td>
                       <td className="px-1 py-1">
                         <button
-                          onClick={() => deleteInkomst(inkomst.id)}
+                          onClick={() => deleteIncome(inkomst.id)}
+                          aria-label="Verwijder inkomst"
+                          title="Verwijder inkomst"
                           className="p-0.5 hover:bg-red-500/20 rounded text-zinc-600 hover:text-red-400"
                         >
                           <Trash2 className="w-3 h-3" />
@@ -293,7 +287,7 @@ export function EenmaligeInkomstenTab() {
                 )}
               </tbody>
 
-              {eenmaligeInkomsten.length > 0 && (
+              {computedIncome.length > 0 && (
                 <tfoot>
                   <tr className="bg-green-600/80 text-white font-medium">
                     <td colSpan={3} className="px-2 py-1.5">TOTAAL</td>
@@ -308,9 +302,9 @@ export function EenmaligeInkomstenTab() {
               )}
             </table>
           </div>
-          {eenmaligeInkomsten.length > 0 && (
+          {computedIncome.length > 0 && (
             <div className="px-3 py-2 border-t border-zinc-800">
-              <button onClick={addInkomst} className="flex items-center gap-1 text-zinc-500 hover:text-white text-xs">
+              <button onClick={handleAddInkomst} className="flex items-center gap-1 text-zinc-500 hover:text-white text-xs">
                 <Plus className="w-3 h-3" /> Inkomst toevoegen
               </button>
             </div>
@@ -325,24 +319,24 @@ export function EenmaligeInkomstenTab() {
             <table className="w-full text-[11px]">
               <thead>
                 <tr className="bg-red-600/80 text-white">
-                  <th className="text-left font-medium px-2 py-1.5 min-w-[90px]">Datum</th>
-                  <th className="text-left font-medium px-2 py-1.5 min-w-[100px]">Leverancier</th>
-                  <th className="text-left font-medium px-2 py-1.5 min-w-[120px]">Omschrijving</th>
-                  <th className="text-left font-medium px-2 py-1.5 min-w-[100px]">Categorie</th>
-                  <th className="text-right font-medium px-2 py-1.5 min-w-[80px]">Excl. BTW</th>
-                  <th className="text-right font-medium px-2 py-1.5 min-w-[60px]">BTW</th>
-                  <th className="text-right font-medium px-2 py-1.5 min-w-[80px]">Incl. BTW</th>
-                  <th className="text-center font-medium px-2 py-1.5 min-w-[70px]">Status</th>
+                  <th className="text-left font-medium px-2 py-1.5 min-w-22.5">Datum</th>
+                  <th className="text-left font-medium px-2 py-1.5 min-w-25">Leverancier</th>
+                  <th className="text-left font-medium px-2 py-1.5 min-w-30">Omschrijving</th>
+                  <th className="text-left font-medium px-2 py-1.5 min-w-25">Categorie</th>
+                  <th className="text-right font-medium px-2 py-1.5 min-w-20">Excl. BTW</th>
+                  <th className="text-right font-medium px-2 py-1.5 min-w-15">BTW</th>
+                  <th className="text-right font-medium px-2 py-1.5 min-w-20">Incl. BTW</th>
+                  <th className="text-center font-medium px-2 py-1.5 min-w-17.5">Status</th>
                   <th className="w-8"></th>
                 </tr>
               </thead>
               <tbody>
-                {eenmaligeKosten.length === 0 ? (
+                {computedExpenses.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="px-3 py-8 text-center text-zinc-500 text-xs">
                       Nog geen eenmalige kosten.
                       <button
-                        onClick={addKost}
+                        onClick={handleAddKost}
                         className="ml-2 text-red-400 hover:text-red-300"
                       >
                         + Toevoegen
@@ -350,13 +344,15 @@ export function EenmaligeInkomstenTab() {
                     </td>
                   </tr>
                 ) : (
-                  eenmaligeKosten.map((kost) => (
+                  computedExpenses.map((kost) => (
                     <tr key={kost.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30">
                       <td className="px-2 py-1">
                         <input
                           type="date"
                           value={kost.datum}
-                          onChange={(e) => updateKost(kost.id, 'datum', e.target.value)}
+                          onChange={(e) => updateExpense({ id: kost.id, datum: e.target.value })}
+                          aria-label="Datum van kost"
+                          title="Datum van kost"
                           className="bg-transparent text-white w-full focus:outline-none text-[11px]"
                         />
                       </td>
@@ -364,8 +360,10 @@ export function EenmaligeInkomstenTab() {
                         <input
                           type="text"
                           value={kost.leverancier}
-                          onChange={(e) => updateKost(kost.id, 'leverancier', e.target.value)}
+                          onChange={(e) => updateExpense({ id: kost.id, leverancier: e.target.value })}
                           placeholder="Naam..."
+                          aria-label="Naam van leverancier"
+                          title="Naam van leverancier"
                           className="bg-transparent text-white w-full focus:outline-none text-[11px]"
                         />
                       </td>
@@ -373,15 +371,19 @@ export function EenmaligeInkomstenTab() {
                         <input
                           type="text"
                           value={kost.omschrijving}
-                          onChange={(e) => updateKost(kost.id, 'omschrijving', e.target.value)}
+                          onChange={(e) => updateExpense({ id: kost.id, omschrijving: e.target.value })}
                           placeholder="—"
+                          aria-label="Omschrijving van kost"
+                          title="Omschrijving van kost"
                           className="bg-transparent text-zinc-400 w-full focus:outline-none text-[11px]"
                         />
                       </td>
                       <td className="px-2 py-1">
                         <select
                           value={kost.categorie}
-                          onChange={(e) => updateKost(kost.id, 'categorie', e.target.value)}
+                          onChange={(e) => updateExpense({ id: kost.id, categorie: e.target.value })}
+                          aria-label="Categorie van kost"
+                          title="Categorie van kost"
                           className="bg-zinc-800 text-zinc-300 text-[10px] px-1.5 py-0.5 rounded border-0 w-full"
                         >
                           {EENMALIGE_KOSTEN_CATEGORIEEN.map(cat => (
@@ -392,9 +394,11 @@ export function EenmaligeInkomstenTab() {
                       <td className="px-2 py-1 text-right">
                         <input
                           type="number"
-                          value={kost.bedragExclBTW || ''}
-                          onChange={(e) => updateKost(kost.id, 'bedragExclBTW', parseFloat(e.target.value) || 0)}
+                          value={kost.bedrag_excl_btw || ''}
+                          onChange={(e) => updateExpense({ id: kost.id, bedrag_excl_btw: parseFloat(e.target.value) || 0 })}
                           placeholder="0"
+                          aria-label="Bedrag exclusief BTW"
+                          title="Bedrag exclusief BTW"
                           className="bg-transparent text-white w-16 text-right focus:outline-none text-[11px]"
                           step="0.01"
                         />
@@ -408,7 +412,9 @@ export function EenmaligeInkomstenTab() {
                       <td className="px-2 py-1 text-center">
                         <select
                           value={kost.status}
-                          onChange={(e) => updateKost(kost.id, 'status', e.target.value)}
+                          onChange={(e) => updateExpense({ id: kost.id, status: e.target.value as 'Gepland' | 'Besteld' | 'Betaald' | 'Geannuleerd' })}
+                          aria-label="Status van kost"
+                          title="Status van kost"
                           className={`text-[10px] px-1.5 py-0.5 rounded border-0 bg-zinc-800 ${
                             kost.status === 'Betaald' ? 'text-green-400' :
                             kost.status === 'Besteld' ? 'text-blue-400' :
@@ -424,7 +430,9 @@ export function EenmaligeInkomstenTab() {
                       </td>
                       <td className="px-1 py-1">
                         <button
-                          onClick={() => deleteKost(kost.id)}
+                          onClick={() => deleteExpense(kost.id)}
+                          aria-label="Verwijder kost"
+                          title="Verwijder kost"
                           className="p-0.5 hover:bg-red-500/20 rounded text-zinc-600 hover:text-red-400"
                         >
                           <Trash2 className="w-3 h-3" />
@@ -435,7 +443,7 @@ export function EenmaligeInkomstenTab() {
                 )}
               </tbody>
 
-              {eenmaligeKosten.length > 0 && (
+              {computedExpenses.length > 0 && (
                 <tfoot>
                   <tr className="bg-red-600/80 text-white font-medium">
                     <td colSpan={4} className="px-2 py-1.5">TOTAAL</td>
@@ -448,9 +456,9 @@ export function EenmaligeInkomstenTab() {
               )}
             </table>
           </div>
-          {eenmaligeKosten.length > 0 && (
+          {computedExpenses.length > 0 && (
             <div className="px-3 py-2 border-t border-zinc-800">
-              <button onClick={addKost} className="flex items-center gap-1 text-zinc-500 hover:text-white text-xs">
+              <button onClick={handleAddKost} className="flex items-center gap-1 text-zinc-500 hover:text-white text-xs">
                 <Plus className="w-3 h-3" /> Kost toevoegen
               </button>
             </div>
@@ -563,9 +571,11 @@ export function EenmaligeInkomstenTab() {
                         <span className="text-white">{formatEuro(cat.totaal)}</span>
                       </div>
                       <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-red-500 rounded-full"
-                          style={{ width: `${totaalKostenExclBTW > 0 ? (cat.totaal / totaalKostenExclBTW) * 100 : 0}%` }}
+                        <progress
+                          className="h-full w-full appearance-none rounded-full bg-zinc-800 [&::-webkit-progress-bar]:bg-zinc-800 [&::-webkit-progress-value]:bg-red-500 [&::-webkit-progress-value]:rounded-full [&::-moz-progress-bar]:bg-red-500 [&::-moz-progress-bar]:rounded-full"
+                          value={cat.totaal}
+                          max={totaalKostenExclBTW > 0 ? totaalKostenExclBTW : 1}
+                          aria-label={`Kostenaandeel voor categorie ${cat.categorie}`}
                         />
                       </div>
                     </div>
@@ -583,11 +593,11 @@ export function EenmaligeInkomstenTab() {
             {/* Recent Inkomsten */}
             <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 p-4">
               <h3 className="text-sm font-medium text-white mb-3">Recente Inkomsten</h3>
-              {eenmaligeInkomsten.length === 0 ? (
+              {computedIncome.length === 0 ? (
                 <p className="text-xs text-zinc-500">Geen inkomsten</p>
               ) : (
                 <div className="space-y-2">
-                  {eenmaligeInkomsten.slice(-5).reverse().map(inkomst => (
+                  {computedIncome.slice(-5).reverse().map(inkomst => (
                     <div key={inkomst.id} className="flex justify-between items-center text-xs">
                       <div className="flex-1 min-w-0">
                         <span className="text-white truncate block">{inkomst.klantnaam || 'Geen naam'}</span>
@@ -610,18 +620,18 @@ export function EenmaligeInkomstenTab() {
             {/* Recent Kosten */}
             <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 p-4">
               <h3 className="text-sm font-medium text-white mb-3">Recente Kosten</h3>
-              {eenmaligeKosten.length === 0 ? (
+              {computedExpenses.length === 0 ? (
                 <p className="text-xs text-zinc-500">Geen kosten</p>
               ) : (
                 <div className="space-y-2">
-                  {eenmaligeKosten.slice(-5).reverse().map(kost => (
+                  {computedExpenses.slice(-5).reverse().map(kost => (
                     <div key={kost.id} className="flex justify-between items-center text-xs">
                       <div className="flex-1 min-w-0">
                         <span className="text-white truncate block">{kost.leverancier || 'Geen naam'}</span>
                         <span className="text-zinc-500">{kost.categorie}</span>
                       </div>
                       <div className="text-right ml-2">
-                        <span className="text-red-400 font-medium">{formatEuro(kost.bedragExclBTW)}</span>
+                        <span className="text-red-400 font-medium">{formatEuro(kost.bedrag_excl_btw)}</span>
                         <span className={`block text-[10px] ${
                           kost.status === 'Betaald' ? 'text-green-400' :
                           kost.status === 'Besteld' ? 'text-blue-400' :
