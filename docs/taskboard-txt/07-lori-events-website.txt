@@ -1,0 +1,25 @@
+TASK: Lori Events Website
+Status: In Progress
+Priority: P2
+Created: 23 apr, 00:35
+Assignee
+- Wishant
+
+Description
+- Website maken voor Lori Events.
+- Wachten op antwoord van klant.
+
+Checklist (0/4)
+- Wachten op antwoord
+- Offerte aanmaken
+- Plan maken
+- Website bouwen
+
+Comments
+- 0 comments
+
+Reaction options shown
+- Wishant
+- Damian
+- Hicham
+- Mohammad

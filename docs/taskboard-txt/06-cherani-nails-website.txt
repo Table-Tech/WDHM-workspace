@@ -1,0 +1,25 @@
+TASK: Cherani Nails Website
+Status: In Progress
+Priority: P2
+Created: 23 apr, 00:35
+Assignee
+- Wishant
+
+Description
+- Website bouwen voor Cherani Nails.
+- Start na afspraken zijn gemaakt.
+
+Checklist (0/4)
+- Offerte aanmaken
+- Plan maken
+- Systeem gaan bouwen
+- Taken verdelen
+
+Comments
+- 0 comments
+
+Reaction options shown
+- Wishant
+- Damian
+- Hicham
+- Mohammad
