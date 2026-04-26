@@ -1,0 +1,20 @@
+TASK: IRI Service
+Status: Backlog
+Priority: P1
+Created: (not shown)
+Assignees: (not shown)
+
+Description
+- (not shown)
+
+Checklist
+- (not shown)
+
+Attachments
+- 1 attachment shown on board card
+
+Comments
+- Not visible in screenshots
+
+Remark
+- This task had only card-level summary in the provided image.

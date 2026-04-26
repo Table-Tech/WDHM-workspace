@@ -1,0 +1,26 @@
+TASK: Ontstoppingsdienst Website
+Status: Backlog
+Priority: P1
+Created: 23 apr, 00:35
+Assignees: (none shown)
+
+Description
+- Website bouwen voor ontstoppingsdienst bedrijf.
+
+Checklist (0/4)
+- Offerte aanmaken
+- Plan maken
+- Systeem gaan bouwen
+- Taken verdelen
+
+Attachments (1)
+- Ontstoppingsdienst.nl Case .pdf (238.3 KB)
+
+Comments
+- 0 comments
+
+Reaction options shown
+- Wishant
+- Damian
+- Hicham
+- Mohammad

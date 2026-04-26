@@ -1,0 +1,59 @@
+TASKBOARD OVERVIEW
+Date captured: 2026-04-26
+Source: screenshots provided by user
+
+COLUMNS
+- Backlog: 3
+- To Do: 1
+- In Progress: 3
+- Review: 0
+
+BACKLOG
+1) IRI Service
+   Priority: P1
+   Assignees: (not shown)
+   Checklist: (not shown)
+   Attachments: 1
+   Notes: only card-level info visible
+
+2) Ontstoppingsdienst Website
+   Priority: P1
+   Assignees: (not shown)
+   Description: Website bouwen voor ontstoppingsdienst bedrijf.
+   Checklist: 0/4
+   Attachments: 1
+
+3) Rijschool Planning Systeem
+   Priority: P2
+   Assignees: (not shown on board card)
+   Description: Planning systeem bouwen voor rijschool.
+   Checklist: 0/5
+   Attachments: (not shown)
+
+TO DO
+1) Nishani website vader
+   Priority: P2
+   Assignee: Wishant
+   Checklist: 0/4
+
+IN PROGRESS
+1) Pokebowl Website Afmaken
+   Priority: P1
+   Assignees: Hicham, Mohammad
+   Description: Website en systeem voor Pokebowl restaurant afronden. Afhaalfunctie, dashboard en printer integratie.
+   Checklist: 4/7
+
+2) Cherani Nails Website
+   Priority: P2
+   Assignee: Wishant
+   Description: Website bouwen voor Cherani Nails. Start na afspraken zijn gemaakt.
+   Checklist: 0/4
+
+3) Lori Events Website
+   Priority: P2
+   Assignee: Wishant
+   Description: Website maken voor Lori Events. Wachten op antwoord van klant.
+   Checklist: 0/4
+
+REVIEW
+- Geen taken
