@@ -1,0 +1,24 @@
+TASK: Rijschool Planning Systeem
+Status: Backlog
+Priority: P2
+Created: 23 apr, 00:35
+Assignees: (none shown)
+
+Description
+- Planning systeem bouwen voor rijschool.
+
+Checklist (0/5)
+- Requirements verzamelen
+- Offerte aanmaken
+- Plan maken
+- Systeem bouwen
+- Testen met klant
+
+Comments
+- 0 comments
+
+Reaction options shown
+- Wishant
+- Damian
+- Hicham
+- Mohammad
