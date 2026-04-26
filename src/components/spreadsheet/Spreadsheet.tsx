@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { SpreadsheetProvider } from '@/contexts/SpreadsheetContext';
 import { InstellingenTab } from './InstellingenTab';
 import { KlantenMRRTab } from './KlantenMRRTab';
 import { MaandoverzichtTab } from './MaandoverzichtTab';
@@ -106,9 +105,5 @@ function SpreadsheetContent() {
 }
 
 export function Spreadsheet() {
-  return (
-    <SpreadsheetProvider>
-      <SpreadsheetContent />
-    </SpreadsheetProvider>
-  );
+  return <SpreadsheetContent />;
 }
