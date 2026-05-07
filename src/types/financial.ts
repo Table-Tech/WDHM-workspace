@@ -118,6 +118,27 @@ export interface ExpenseCategory {
   created_at: string;
 }
 
+export type AppStatus = 'Actief' | 'Inactief' | 'In ontwikkeling';
+export type AppPlatform = 'iOS' | 'Android' | 'Web';
+
+export interface App {
+  id: string;
+  naam: string;
+  beschrijving: string;
+  platform: AppPlatform[];
+  status: AppStatus;
+  mrr_per_maand: number;
+  aantal_gebruikers: number;
+  aantal_abonnees: number;
+  maand_inkomsten: number[];
+  maand_gebruikers: number[];
+  launch_datum: string | null;
+  url: string;
+  notities: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // Form data types (without id and timestamps)
 export type CompanySettingsFormData = Omit<CompanySettings, 'id' | 'created_at' | 'updated_at'>;
 export type CoFounderFormData = Omit<CoFounder, 'id' | 'created_at'>;
@@ -128,6 +149,7 @@ export type OneTimeIncomeFormData = Omit<OneTimeIncome, 'id' | 'created_at'>;
 export type OneTimeExpenseFormData = Omit<OneTimeExpense, 'id' | 'created_at'>;
 export type MonthlyExpenseFormData = Omit<MonthlyExpense, 'id' | 'created_at' | 'updated_at'>;
 export type ExpenseCategoryFormData = Omit<ExpenseCategory, 'id' | 'created_at'>;
+export type AppFormData = Omit<App, 'id' | 'created_at' | 'updated_at'>;
 
 // Calculated types
 export interface KlantenKPIs {
@@ -135,6 +157,14 @@ export interface KlantenKPIs {
   totaleMRR: number;
   arr: number;
   gemOmzetPerKlant: number;
+}
+
+export interface AppsKPIs {
+  actieveApps: number;
+  totaleMRR: number;
+  arr: number;
+  totaalGebruikers: number;
+  totaalAbonnees: number;
 }
 
 export interface DashboardMetrics {
@@ -215,6 +245,8 @@ export const MAAND_LABELS = [
 export const MAAND_LABELS_KORT = [
   'J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'
 ] as const;
+
+export const APP_PLATFORMS: AppPlatform[] = ['iOS', 'Android', 'Web'];
 
 export const PIPELINE_FASES: PipelineFase[] = [
   'Lead',

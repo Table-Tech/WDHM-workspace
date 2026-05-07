@@ -5,11 +5,13 @@ import { useCompanySettings } from './useCompanySettings';
 import { useCoFounders } from './useCoFounders';
 import { useSalesPersons } from './useSalesPersons';
 import { useCustomers } from './useCustomers';
+import { useApps } from './useApps';
 import { useOneTimeIncome } from './useOneTimeIncome';
 import { useOneTimeExpenses } from './useOneTimeExpenses';
 import { useMonthlyExpenses } from './useMonthlyExpenses';
 import type {
   KlantenKPIs,
+  AppsKPIs,
   DashboardMetrics,
   FounderVerdeling,
   PipelineStats,
@@ -32,6 +34,7 @@ export function useFinancialMetrics() {
   const { coFounders } = useCoFounders();
   const { salesPersons } = useSalesPersons();
   const { customers } = useCustomers();
+  const { apps } = useApps();
   const { oneTimeIncome } = useOneTimeIncome();
   const { oneTimeExpenses } = useOneTimeExpenses();
   const { uitgaven } = useMonthlyExpenses();
@@ -50,6 +53,11 @@ export function useFinancialMetrics() {
     return customers.filter((k) => k.status === 'Actief');
   }, [customers]);
 
+  // Active apps
+  const activeApps = useMemo(() => {
+    return apps.filter((a) => a.status === 'Actief');
+  }, [apps]);
+
   // KPIs
   const getKlantenKPIs = useMemo((): KlantenKPIs => {
     const actieveKlanten = activeCustomers.length;
@@ -60,7 +68,18 @@ export function useFinancialMetrics() {
     return { actieveKlanten, totaleMRR, arr, gemOmzetPerKlant };
   }, [activeCustomers]);
 
-  // MRR per month
+  // Apps KPIs
+  const getAppsKPIs = useMemo((): AppsKPIs => {
+    const actieveApps = activeApps.length;
+    const totaleMRR = activeApps.reduce((sum, a) => sum + a.mrr_per_maand, 0);
+    const arr = totaleMRR * 12;
+    const totaalGebruikers = activeApps.reduce((sum, a) => sum + a.aantal_gebruikers, 0);
+    const totaalAbonnees = activeApps.reduce((sum, a) => sum + a.aantal_abonnees, 0);
+
+    return { actieveApps, totaleMRR, arr, totaalGebruikers, totaalAbonnees };
+  }, [activeApps]);
+
+  // MRR per month (klanten only — used for breakdown rows)
   const getMaandMRR = useMemo((): number[] => {
     const result = Array(12).fill(0);
     for (const klant of activeCustomers) {
@@ -70,6 +89,17 @@ export function useFinancialMetrics() {
     }
     return result;
   }, [activeCustomers]);
+
+  // Apps MRR per month
+  const getMaandAppsMRR = useMemo((): number[] => {
+    const result = Array(12).fill(0);
+    for (const app of activeApps) {
+      for (let i = 0; i < 12; i++) {
+        result[i] += app.maand_inkomsten[i] ?? 0;
+      }
+    }
+    return result;
+  }, [activeApps]);
 
   // One-time income per month
   const getMaandEenmalig = useMemo((): number[] => {
@@ -144,14 +174,15 @@ export function useFinancialMetrics() {
   // Profit before distribution
   const getWinstVoorVerdeling = useMemo((): number[] => {
     const mrr = getMaandMRR;
+    const appsMrr = getMaandAppsMRR;
     const eenmalig = getMaandEenmalig;
     const commissie = getSalesCommissiePerMaand;
     const uitgavenTotaal = getTotaalUitgavenPerMaand;
 
     return Array(12).fill(0).map((_, i) => {
-      return mrr[i] + eenmalig[i] - commissie[i] - uitgavenTotaal[i];
+      return mrr[i] + appsMrr[i] + eenmalig[i] - commissie[i] - uitgavenTotaal[i];
     });
-  }, [getMaandMRR, getMaandEenmalig, getSalesCommissiePerMaand, getTotaalUitgavenPerMaand]);
+  }, [getMaandMRR, getMaandAppsMRR, getMaandEenmalig, getSalesCommissiePerMaand, getTotaalUitgavenPerMaand]);
 
   // Founder distributions
   const getFounderVerdelingen = useMemo((): FounderVerdeling[] => {
@@ -173,13 +204,14 @@ export function useFinancialMetrics() {
   // Dashboard metrics
   const getDashboardMetrics = useMemo((): DashboardMetrics => {
     const mrr = getMaandMRR;
+    const appsMrr = getMaandAppsMRR;
     const eenmalig = getMaandEenmalig;
     const commissie = getSalesCommissiePerMaand;
     const uitgavenTotaal = getTotaalUitgavenPerMaand;
 
-    const totaleMRR = getKlantenKPIs.totaleMRR;
+    const totaleMRR = getKlantenKPIs.totaleMRR + getAppsKPIs.totaleMRR;
     const arr = totaleMRR * 12;
-    const totaleJaaromzetRecurring = mrr.reduce((a, b) => a + b, 0);
+    const totaleJaaromzetRecurring = mrr.reduce((a, b) => a + b, 0) + appsMrr.reduce((a, b) => a + b, 0);
     const totaleEenmaligeInkomsten = eenmalig.reduce((a, b) => a + b, 0);
     const totaleJaaruitgaven = uitgavenTotaal.reduce((a, b) => a + b, 0);
     const totaleSalesCommissie = commissie.reduce((a, b) => a + b, 0);
@@ -198,19 +230,20 @@ export function useFinancialMetrics() {
       totaleSalesCommissie,
       winstmarge,
     };
-  }, [getMaandMRR, getMaandEenmalig, getSalesCommissiePerMaand, getTotaalUitgavenPerMaand, getKlantenKPIs]);
+  }, [getMaandMRR, getMaandAppsMRR, getMaandEenmalig, getSalesCommissiePerMaand, getTotaalUitgavenPerMaand, getKlantenKPIs, getAppsKPIs]);
 
   // Profit margin per month
   const getWinstmarge = useMemo((): number[] => {
     const mrr = getMaandMRR;
+    const appsMrr = getMaandAppsMRR;
     const eenmalig = getMaandEenmalig;
     const winst = getWinstVoorVerdeling;
 
     return Array(12).fill(0).map((_, i) => {
-      const totaalInkomsten = mrr[i] + eenmalig[i];
+      const totaalInkomsten = mrr[i] + appsMrr[i] + eenmalig[i];
       return totaalInkomsten > 0 ? (winst[i] / totaalInkomsten) * 100 : 0;
     });
-  }, [getMaandMRR, getMaandEenmalig, getWinstVoorVerdeling]);
+  }, [getMaandMRR, getMaandAppsMRR, getMaandEenmalig, getWinstVoorVerdeling]);
 
   // Pipeline stats
   const getPipelineStats = useMemo((): PipelineStats => {
@@ -240,13 +273,15 @@ export function useFinancialMetrics() {
   // Monthly chart data
   const getMonthlyChartData = useMemo((): MonthlyChartData[] => {
     const mrr = getMaandMRR;
+    const appsMrr = getMaandAppsMRR;
     const eenmalig = getMaandEenmalig;
     const commissie = getSalesCommissiePerMaand;
     const uitgavenTotaal = getTotaalUitgavenPerMaand;
     const currentMonth = getCurrentMonthIndex();
 
     return Array(12).fill(0).map((_, i) => {
-      const inkomsten = mrr[i] + eenmalig[i];
+      const totaalMrr = mrr[i] + appsMrr[i];
+      const inkomsten = totaalMrr + eenmalig[i];
       const kosten = uitgavenTotaal[i] + commissie[i];
       return {
         maand: MAAND_LABELS_ARRAY[i],
@@ -256,12 +291,12 @@ export function useFinancialMetrics() {
         commissie: commissie[i],
         kosten,
         winst: inkomsten - kosten,
-        mrr: mrr[i],
+        mrr: totaalMrr,
         eenmalig: eenmalig[i],
         isFuture: i > currentMonth,
       };
     });
-  }, [getMaandMRR, getMaandEenmalig, getSalesCommissiePerMaand, getTotaalUitgavenPerMaand]);
+  }, [getMaandMRR, getMaandAppsMRR, getMaandEenmalig, getSalesCommissiePerMaand, getTotaalUitgavenPerMaand]);
 
   // Expense breakdown
   const getUitgavenBreakdown = useMemo((): UitgavenBreakdown[] => {
@@ -302,7 +337,7 @@ export function useFinancialMetrics() {
 
   // BTW summary
   const getBTWSummary = useMemo((): BTWSummary => {
-    const mrrTotaal = getMaandMRR.reduce((a, b) => a + b, 0);
+    const mrrTotaal = getMaandMRR.reduce((a, b) => a + b, 0) + getMaandAppsMRR.reduce((a, b) => a + b, 0);
     const eenmaligTotaal = getMaandEenmalig.reduce((a, b) => a + b, 0);
     const omzetExclBTW = mrrTotaal + eenmaligTotaal;
     const btwRate = btwPercentage / 100;
@@ -319,7 +354,7 @@ export function useFinancialMetrics() {
       eenmaligInclBTW: eenmaligTotaal * (1 + btwRate),
       btwPercentage,
     };
-  }, [getMaandMRR, getMaandEenmalig, btwPercentage]);
+  }, [getMaandMRR, getMaandAppsMRR, getMaandEenmalig, btwPercentage]);
 
   // Customer monthly income calculation
   const getKlantMaandInkomsten = (klantId: string): number[] => {
@@ -343,7 +378,9 @@ export function useFinancialMetrics() {
     btwPercentage,
     getCurrentMonthIndex,
     getKlantenKPIs,
+    getAppsKPIs,
     getMaandMRR,
+    getMaandAppsMRR,
     getMaandEenmalig,
     getMaandEenmaligeKosten,
     getSalesCommissiePerMaand,

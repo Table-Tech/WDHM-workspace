@@ -5,6 +5,7 @@ import { Plus, Trash2, ZoomIn, ZoomOut, ChevronDown, ChevronUp } from 'lucide-re
 import { useCompanySettings } from '@/hooks/useCompanySettings';
 import { useCoFounders } from '@/hooks/useCoFounders';
 import { useCustomers } from '@/hooks/useCustomers';
+import { useApps } from '@/hooks/useApps';
 import { useMonthlyExpenses } from '@/hooks/useMonthlyExpenses';
 import { useExpenseCategories } from '@/hooks/useExpenseCategories';
 import { useOneTimeExpenses } from '@/hooks/useOneTimeExpenses';
@@ -24,11 +25,13 @@ export function MaandoverzichtTab() {
   const { settings, isLoading: settingsLoading } = useCompanySettings();
   const { coFounders } = useCoFounders();
   const { customers, isLoading: customersLoading } = useCustomers();
+  const { apps } = useApps();
   const { uitgaven, updateExpense } = useMonthlyExpenses();
   const { categoryNames, addCategoryAsync, deleteCategory } = useExpenseCategories();
   const { oneTimeExpenses } = useOneTimeExpenses();
   const {
     getMaandMRR,
+    getMaandAppsMRR,
     getMaandEenmalig,
     getMaandEenmaligeKosten,
     getSalesCommissiePerMaand,
@@ -41,19 +44,22 @@ export function MaandoverzichtTab() {
   const [nieuweCat, setNieuweCat] = useState('');
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>('small');
   const [showMRRDetail, setShowMRRDetail] = useState(false);
+  const [showAppsDetail, setShowAppsDetail] = useState(false);
 
   const isHydrated = !settingsLoading && !customersLoading;
   const zoom = ZOOM_STYLES[zoomLevel];
   const mrrBreakdown = getMRRBreakdown;
+  const activeApps = apps.filter(a => a.status === 'Actief');
 
   const maandMRR = getMaandMRR;
+  const maandAppsMRR = getMaandAppsMRR;
   const maandEenmalig = getMaandEenmalig;
   const maandEenmaligeKosten = getMaandEenmaligeKosten;
   const totaalEenmaligeKosten = oneTimeExpenses
     .filter(k => k.status !== 'Geannuleerd')
     .reduce((total, k) => total + k.bedrag_excl_btw, 0);
   const overigeInkomsten = Array(12).fill(0);
-  const totaalInkomsten = maandMRR.map((m, i) => m + maandEenmalig[i] + overigeInkomsten[i]);
+  const totaalInkomsten = maandMRR.map((m, i) => m + maandAppsMRR[i] + maandEenmalig[i] + overigeInkomsten[i]);
   const salesCommissieAf = getSalesCommissiePerMaand;
   const totaalUitgaven = getTotaalUitgavenPerMaand;
   const winstVoorVerdeling = getWinstVoorVerdeling;
@@ -167,6 +173,43 @@ export function MaandoverzichtTab() {
                     </td>
                   ))}
                   <td className={`${zoom.cell} text-right text-teal-400/80 bg-zinc-800/30`}>{formatEuro(klant.totaal)}</td>
+                </tr>
+              ))}
+
+              {/* Apps MRR Row - Clickable to expand */}
+              <tr
+                className="border-b border-zinc-800/50 hover:bg-zinc-800/30 cursor-pointer"
+                onClick={() => setShowAppsDetail(!showAppsDetail)}
+              >
+                <td className={`${zoom.cell} text-zinc-300 sticky left-0 bg-zinc-900/95 z-10 flex items-center gap-2`}>
+                  {showAppsDetail ? <ChevronUp className="w-3 h-3 text-zinc-500" /> : <ChevronDown className="w-3 h-3 text-zinc-500" />}
+                  <span>MRR — Eigen Apps</span>
+                  <span className="text-zinc-600 text-[10px]">({activeApps.length} apps)</span>
+                </td>
+                {maandAppsMRR.map((bedrag, i) => (
+                  <td key={i} className={`${zoom.cell} text-right text-blue-400 font-medium`}>{formatEuro(bedrag)}</td>
+                ))}
+                <td className={`${zoom.cell} text-right text-white font-bold bg-zinc-800/50`}>{formatEuro(sum(maandAppsMRR))}</td>
+              </tr>
+
+              {/* Apps Detail per app */}
+              {showAppsDetail && activeApps.map((app) => (
+                <tr key={app.id} className="border-b border-zinc-800/30 bg-blue-900/10">
+                  <td className={`${zoom.cell} pl-8 text-zinc-400 sticky left-0 bg-zinc-900/95 z-10`}>
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                      <span>{app.naam || '—'}</span>
+                      {app.platform.length > 0 && (
+                        <span className="text-zinc-600 text-[9px]">({app.platform.join('/')})</span>
+                      )}
+                    </div>
+                  </td>
+                  {app.maand_inkomsten.map((bedrag, i) => (
+                    <td key={i} className={`${zoom.cell} text-right ${bedrag > 0 ? 'text-blue-400/70' : 'text-zinc-700'}`}>
+                      {bedrag > 0 ? formatEuro(bedrag) : '—'}
+                    </td>
+                  ))}
+                  <td className={`${zoom.cell} text-right text-blue-400/80 bg-zinc-800/30`}>{formatEuro(sum(app.maand_inkomsten))}</td>
                 </tr>
               ))}
 

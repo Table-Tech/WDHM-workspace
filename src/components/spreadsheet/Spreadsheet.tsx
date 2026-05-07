@@ -8,16 +8,18 @@ import {
   Receipt,
   LayoutDashboard,
   ArrowLeft,
+  Smartphone,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { InstellingenTab } from './InstellingenTab';
 import { KlantenMRRTab } from './KlantenMRRTab';
+import { AppsTab } from './AppsTab';
 import { MaandoverzichtTab } from './MaandoverzichtTab';
 import { EenmaligeInkomstenTab } from './EenmaligeInkomstenTab';
 import { DashboardTab } from './DashboardTab';
 
-type TabId = 'instellingen' | 'klanten' | 'maandoverzicht' | 'eenmalig' | 'dashboard';
+type TabId = 'instellingen' | 'klanten' | 'apps' | 'maandoverzicht' | 'eenmalig' | 'dashboard';
 
 interface Tab {
   id: TabId;
@@ -28,6 +30,7 @@ interface Tab {
 const TABS: Tab[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'klanten', label: 'Klanten', icon: Users },
+  { id: 'apps', label: 'Apps', icon: Smartphone },
   { id: 'maandoverzicht', label: 'Maandoverzicht', icon: Calendar },
   { id: 'eenmalig', label: 'Eenmalig', icon: Receipt },
   { id: 'instellingen', label: 'Instellingen', icon: Settings },
@@ -42,6 +45,8 @@ function SpreadsheetContent() {
         return <InstellingenTab />;
       case 'klanten':
         return <KlantenMRRTab />;
+      case 'apps':
+        return <AppsTab />;
       case 'maandoverzicht':
         return <MaandoverzichtTab />;
       case 'eenmalig':
