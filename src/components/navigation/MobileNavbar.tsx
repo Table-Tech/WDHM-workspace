@@ -14,6 +14,7 @@ import {
   Crown,
   Heart,
   Image as ImageIcon,
+  BookOpen,
   X,
 } from 'lucide-react';
 
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
 ];
 
 const MORE_ITEMS = [
+  { href: '/docs', label: 'Docs', icon: BookOpen, color: 'text-purple-400' },
   { href: '/map', label: 'Kaart', icon: MapPin, color: 'text-green-400' },
   { href: '/games', label: 'Games', icon: Gamepad2, color: 'text-pink-400' },
   { href: '/hall-of-fame', label: 'Hall of Fame', icon: Crown, color: 'text-yellow-400' },
