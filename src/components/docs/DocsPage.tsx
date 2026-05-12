@@ -8,6 +8,7 @@ import { DocsSidebar } from './DocsSidebar';
 import { DocsViewer } from './DocsViewer';
 import { DocsEditor } from './DocsEditor';
 import { DocsTemplatesModal } from './DocsTemplatesModal';
+import { MoveDocModal } from './MoveDocModal';
 import { useDocs } from '@/hooks/useDocs';
 import { hasValidCredentials } from '@/lib/supabase';
 import type { DocItem, DocTreeNode, DocTemplate } from '@/types/docs';
@@ -127,6 +128,7 @@ export function DocsPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const [sidebarOpenMobile, setSidebarOpenMobile] = useState(false);
+  const [moveTargetId, setMoveTargetId] = useState<string | null>(null);
 
   const tree = useMemo(() => buildTree(docs), [docs]);
   const filteredTree = useMemo(
@@ -214,26 +216,18 @@ export function DocsPage() {
     }
   };
 
-  const createDocument = async (template?: DocTemplate) => {
-    let parentId: string | null = null;
-    if (activeDoc) {
-      parentId = activeDoc.parent_id;
-    } else if (tree.length > 0) {
-      const firstFolder = tree.find((n) => n.type === 'folder');
-      parentId = firstFolder?.id ?? null;
-    }
-
+  const createDocument = async (template: DocTemplate, parentId: string | null) => {
     try {
       const created = await addDocAsync({
-        title: template ? template.name : 'Nieuwe pagina',
+        title: template.name,
         type: 'document',
         parent_id: parentId,
-        content: template?.content ?? '# Nieuwe pagina\n\nSchrijf hier je content...\n',
+        content: template.content ?? '# Nieuwe pagina\n\nSchrijf hier je content...\n',
         author: 'Damian',
-        tags: template?.tags ?? [],
+        tags: template.tags ?? [],
       });
       if (parentId) {
-        updateExpanded((prev) => new Set([...prev, parentId!]));
+        updateExpanded((prev) => new Set([...prev, parentId]));
       }
       setActiveId(created.id);
       setIsEditing(true);
@@ -247,6 +241,52 @@ export function DocsPage() {
   const handleCreatePage = () => {
     setTemplatesOpen(true);
   };
+
+  const handleMove = (id: string) => {
+    setMoveTargetId(id);
+  };
+
+  const moveTargetDoc = moveTargetId ? docs.find((d) => d.id === moveTargetId) ?? null : null;
+
+  const moveValidFolders = useMemo(() => {
+    if (!moveTargetDoc) return [];
+    // Exclude the item itself and all its descendants (a folder can't move into its own subtree).
+    const blocked = new Set<string>([moveTargetDoc.id]);
+    let added = true;
+    while (added) {
+      added = false;
+      for (const d of docs) {
+        if (d.parent_id && blocked.has(d.parent_id) && !blocked.has(d.id)) {
+          blocked.add(d.id);
+          added = true;
+        }
+      }
+    }
+    return docs.filter((d) => d.type === 'folder' && !blocked.has(d.id));
+  }, [docs, moveTargetDoc]);
+
+  const handleMoveConfirm = async (newParentId: string | null) => {
+    if (!moveTargetDoc) return;
+    try {
+      await updateDocAsync({ id: moveTargetDoc.id, parent_id: newParentId });
+      if (newParentId) {
+        updateExpanded((prev) => new Set([...prev, newParentId]));
+      }
+      setMoveTargetId(null);
+    } catch (err) {
+      console.error('Move failed:', err);
+      alert('Verplaatsen mislukt. Probeer opnieuw.');
+    }
+  };
+
+  const defaultCreateParentId: string | null = activeDoc
+    ? activeDoc.parent_id
+    : tree.find((n) => n.type === 'folder')?.id ?? null;
+
+  const allFolders = useMemo(
+    () => docs.filter((d) => d.type === 'folder'),
+    [docs],
+  );
 
   const handleCreateFolder = async () => {
     const name = window.prompt('Naam van de folder:');
@@ -359,6 +399,7 @@ export function DocsPage() {
                 onToggleExpand={handleToggleExpand}
                 onSelect={handleSelect}
                 onRename={handleRename}
+                onMove={handleMove}
                 onDelete={handleDelete}
                 onCreatePage={handleCreatePage}
                 onCreateFolder={handleCreateFolder}
@@ -410,11 +451,23 @@ export function DocsPage() {
         </main>
       </div>
 
-      <DocsTemplatesModal
-        isOpen={templatesOpen}
-        onClose={() => setTemplatesOpen(false)}
-        onSelect={(tpl) => createDocument(tpl)}
-      />
+      {templatesOpen && (
+        <DocsTemplatesModal
+          onClose={() => setTemplatesOpen(false)}
+          folders={allFolders}
+          defaultParentId={defaultCreateParentId}
+          onSelect={({ template, parentId }) => createDocument(template, parentId)}
+        />
+      )}
+
+      {moveTargetDoc && (
+        <MoveDocModal
+          onClose={() => setMoveTargetId(null)}
+          item={moveTargetDoc}
+          folders={moveValidFolders}
+          onConfirm={handleMoveConfirm}
+        />
+      )}
     </>
   );
 }

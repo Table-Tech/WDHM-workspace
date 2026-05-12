@@ -1,8 +1,9 @@
 'use client';
 
-import { X, FileText, Rocket, Users, Calendar, Bug, FileSignature, type LucideIcon } from 'lucide-react';
+import { useState } from 'react';
+import { X, FileText, Rocket, Users, Calendar, Bug, FileSignature, Folder, type LucideIcon } from 'lucide-react';
 import { DOC_TEMPLATES } from '@/lib/docsMockData';
-import type { DocTemplate } from '@/types/docs';
+import type { DocTemplate, DocItem } from '@/types/docs';
 
 const ICON_MAP: Record<string, LucideIcon> = {
   FileText,
@@ -14,13 +15,19 @@ const ICON_MAP: Record<string, LucideIcon> = {
 };
 
 interface DocsTemplatesModalProps {
-  isOpen: boolean;
   onClose: () => void;
-  onSelect: (template: DocTemplate) => void;
+  onSelect: (data: { template: DocTemplate; parentId: string | null }) => void;
+  folders: DocItem[];
+  defaultParentId: string | null;
 }
 
-export function DocsTemplatesModal({ isOpen, onClose, onSelect }: DocsTemplatesModalProps) {
-  if (!isOpen) return null;
+export function DocsTemplatesModal({
+  onClose,
+  onSelect,
+  folders,
+  defaultParentId,
+}: DocsTemplatesModalProps) {
+  const [parentId, setParentId] = useState<string | null>(defaultParentId);
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-fade-in">
@@ -44,14 +51,33 @@ export function DocsTemplatesModal({ isOpen, onClose, onSelect }: DocsTemplatesM
           </button>
         </header>
 
-        <div className="p-4 max-h-[70vh] overflow-y-auto">
+        <div className="px-6 py-3 border-b border-white/10 bg-black/20">
+          <label className="flex items-center gap-2 text-xs font-medium text-zinc-300 mb-1.5">
+            <Folder className="w-3.5 h-3.5 text-purple-400" />
+            Plaatsen in
+          </label>
+          <select
+            value={parentId ?? ''}
+            onChange={(e) => setParentId(e.target.value || null)}
+            className="w-full h-10 px-3 rounded-xl bg-zinc-900 border border-zinc-700 text-sm text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-colors"
+          >
+            <option value="">— Root (geen folder) —</option>
+            {folders.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.title}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="p-4 max-h-[60vh] overflow-y-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {DOC_TEMPLATES.map((tpl) => {
               const Icon = ICON_MAP[tpl.icon] ?? FileText;
               return (
                 <button
                   key={tpl.id}
-                  onClick={() => onSelect(tpl)}
+                  onClick={() => onSelect({ template: tpl, parentId })}
                   className="group text-left p-4 rounded-xl bg-zinc-900/50 hover:bg-zinc-900 border border-white/10 hover:border-purple-500/50 transition-all"
                 >
                   <div className="flex items-start gap-3">

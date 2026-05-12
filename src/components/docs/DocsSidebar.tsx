@@ -14,6 +14,7 @@ interface DocsSidebarProps {
   onToggleExpand: (id: string) => void;
   onSelect: (id: string) => void;
   onRename: (id: string) => void;
+  onMove: (id: string) => void;
   onDelete: (id: string) => void;
   onCreatePage: () => void;
   onCreateFolder: () => void;
@@ -28,6 +29,7 @@ export function DocsSidebar({
   onToggleExpand,
   onSelect,
   onRename,
+  onMove,
   onDelete,
   onCreatePage,
   onCreateFolder,
@@ -56,6 +58,7 @@ export function DocsSidebar({
               onToggle={onToggleExpand}
               onSelect={onSelect}
               onRename={onRename}
+              onMove={onMove}
               onDelete={onDelete}
             />
           ))

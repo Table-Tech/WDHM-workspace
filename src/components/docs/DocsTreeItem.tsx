@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronRight, Folder, FolderOpen, FileText, MoreVertical, Trash2, Pencil } from 'lucide-react';
+import { ChevronRight, Folder, FolderOpen, FileText, MoreVertical, Trash2, Pencil, FolderInput } from 'lucide-react';
 import { useState } from 'react';
 import type { DocTreeNode } from '@/types/docs';
 
@@ -12,6 +12,7 @@ interface DocsTreeItemProps {
   onToggle: (id: string) => void;
   onSelect: (id: string) => void;
   onRename: (id: string) => void;
+  onMove: (id: string) => void;
   onDelete: (id: string) => void;
 }
 
@@ -23,6 +24,7 @@ export function DocsTreeItem({
   onToggle,
   onSelect,
   onRename,
+  onMove,
   onDelete,
 }: DocsTreeItemProps) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -117,6 +119,16 @@ export function DocsTreeItem({
               <button
                 onClick={() => {
                   setMenuOpen(false);
+                  onMove(node.id);
+                }}
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-zinc-200 hover:bg-zinc-800"
+              >
+                <FolderInput className="w-3.5 h-3.5" />
+                Verplaatsen…
+              </button>
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
                   onDelete(node.id);
                 }}
                 className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-red-400 hover:bg-zinc-800"
@@ -141,6 +153,7 @@ export function DocsTreeItem({
               onToggle={onToggle}
               onSelect={onSelect}
               onRename={onRename}
+              onMove={onMove}
               onDelete={onDelete}
             />
           ))}

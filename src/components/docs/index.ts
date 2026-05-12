@@ -5,4 +5,5 @@ export { DocsViewer } from './DocsViewer';
 export { DocsEditor } from './DocsEditor';
 export { DocsSearch } from './DocsSearch';
 export { DocsTemplatesModal } from './DocsTemplatesModal';
+export { MoveDocModal } from './MoveDocModal';
 export { MarkdownRenderer } from './MarkdownRenderer';
