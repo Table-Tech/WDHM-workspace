@@ -46,7 +46,7 @@ export function DocsViewer({ doc, onEdit, onDelete }: DocsViewerProps) {
               )}
               <span className="flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-purple-400" />
-                Laatst gewijzigd: {formatDate(doc.updatedAt)}
+                Laatst gewijzigd: {formatDate(doc.updated_at)}
               </span>
             </div>
             {doc.tags && doc.tags.length > 0 && (

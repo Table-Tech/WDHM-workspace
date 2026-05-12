@@ -3,12 +3,13 @@
 import { useMemo, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, BookOpen, FileText, Menu, X } from 'lucide-react';
+import { ArrowLeft, BookOpen, FileText, Menu, X, Zap, Loader2 } from 'lucide-react';
 import { DocsSidebar } from './DocsSidebar';
 import { DocsViewer } from './DocsViewer';
 import { DocsEditor } from './DocsEditor';
 import { DocsTemplatesModal } from './DocsTemplatesModal';
-import { DEFAULT_DOCS } from '@/lib/docsMockData';
+import { useDocs } from '@/hooks/useDocs';
+import { hasValidCredentials } from '@/lib/supabase';
 import type { DocItem, DocTreeNode, DocTemplate } from '@/types/docs';
 
 function buildTree(items: DocItem[]): DocTreeNode[] {
@@ -17,8 +18,8 @@ function buildTree(items: DocItem[]): DocTreeNode[] {
 
   const roots: DocTreeNode[] = [];
   map.forEach((node) => {
-    if (node.parentId && map.has(node.parentId)) {
-      map.get(node.parentId)!.children.push(node);
+    if (node.parent_id && map.has(node.parent_id)) {
+      map.get(node.parent_id)!.children.push(node);
     } else {
       roots.push(node);
     }
@@ -55,9 +56,9 @@ function filterTree(tree: DocTreeNode[], query: string, allItems: DocItem[]): Do
   allItems.forEach((it) => map.set(it.id, it));
   matchingIds.forEach((id) => {
     let cur = map.get(id);
-    while (cur && cur.parentId) {
-      expanded.add(cur.parentId);
-      cur = map.get(cur.parentId);
+    while (cur && cur.parent_id) {
+      expanded.add(cur.parent_id);
+      cur = map.get(cur.parent_id);
     }
   });
 
@@ -69,102 +70,63 @@ function filterTree(tree: DocTreeNode[], query: string, allItems: DocItem[]): Do
   return prune(tree);
 }
 
-const STORAGE_KEY = 'techtable-docs-v1';
 const EXPANDED_KEY = 'techtable-docs-expanded-v1';
 
 const noopSubscribe = () => () => {};
 
-const DEFAULT_EXPANDED = new Set<string>(
-  DEFAULT_DOCS.filter((d) => d.type === 'folder').map((d) => d.id),
-);
+let cachedExpanded: string[] | null = null;
 
-let cachedDocs: DocItem[] | null = null;
-let cachedExpanded: Set<string> | null = null;
-
-function readDocsFromStorage(): DocItem[] {
-  if (cachedDocs) return cachedDocs;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      cachedDocs = DEFAULT_DOCS;
-      return cachedDocs;
-    }
-    const parsed = JSON.parse(raw) as DocItem[];
-    cachedDocs = Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_DOCS;
-    return cachedDocs;
-  } catch {
-    cachedDocs = DEFAULT_DOCS;
-    return cachedDocs;
-  }
-}
-
-function readExpandedFromStorage(): Set<string> {
+function readExpandedFromStorage(): string[] {
   if (cachedExpanded) return cachedExpanded;
   try {
     const raw = localStorage.getItem(EXPANDED_KEY);
-    if (raw) {
-      cachedExpanded = new Set(JSON.parse(raw));
-      return cachedExpanded;
-    }
+    cachedExpanded = raw ? JSON.parse(raw) : [];
   } catch {
-    // ignore
+    cachedExpanded = [];
   }
-  cachedExpanded = DEFAULT_EXPANDED;
-  return cachedExpanded;
+  return cachedExpanded ?? [];
 }
 
-function readDocsServer(): DocItem[] {
-  return DEFAULT_DOCS;
+function readExpandedServer(): string[] {
+  return [];
 }
 
-function readExpandedServer(): Set<string> {
-  return DEFAULT_EXPANDED;
-}
-
-function persist(key: string, value: unknown) {
+function persistExpanded(set: Set<string>) {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(key, JSON.stringify(value));
+    localStorage.setItem(EXPANDED_KEY, JSON.stringify(Array.from(set)));
   } catch {
     // ignore
   }
 }
 
 export function DocsPage() {
-  const initialDocs = useSyncExternalStore(
-    noopSubscribe,
-    readDocsFromStorage,
-    readDocsServer,
-  );
-  const initialExpanded = useSyncExternalStore(
+  const {
+    docs,
+    isLoading,
+    isError,
+    addDocAsync,
+    updateDocAsync,
+    deleteDocAsync,
+  } = useDocs();
+
+  const storedExpanded = useSyncExternalStore(
     noopSubscribe,
     readExpandedFromStorage,
     readExpandedServer,
   );
 
-  const [docs, setDocsState] = useState<DocItem[]>(initialDocs);
+  // null = user hasn't touched the tree yet → auto-expand all folders.
+  // Set = explicit user preference (may have been hydrated from localStorage).
+  const [expandedOverride, setExpandedOverride] = useState<Set<string> | null>(() =>
+    storedExpanded.length > 0 ? new Set(storedExpanded) : null,
+  );
+
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [expanded, setExpandedState] = useState<Set<string>>(initialExpanded);
   const [searchQuery, setSearchQuery] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const [sidebarOpenMobile, setSidebarOpenMobile] = useState(false);
-
-  const setDocs = (updater: DocItem[] | ((prev: DocItem[]) => DocItem[])) => {
-    setDocsState((prev) => {
-      const next = typeof updater === 'function' ? updater(prev) : updater;
-      persist(STORAGE_KEY, next);
-      return next;
-    });
-  };
-
-  const setExpanded = (updater: Set<string> | ((prev: Set<string>) => Set<string>)) => {
-    setExpandedState((prev) => {
-      const next = typeof updater === 'function' ? updater(prev) : updater;
-      persist(EXPANDED_KEY, Array.from(next));
-      return next;
-    });
-  };
 
   const tree = useMemo(() => buildTree(docs), [docs]);
   const filteredTree = useMemo(
@@ -172,10 +134,24 @@ export function DocsPage() {
     [tree, searchQuery, docs],
   );
 
+  const expanded = useMemo(() => {
+    if (expandedOverride !== null) return expandedOverride;
+    return new Set(docs.filter((d) => d.type === 'folder').map((d) => d.id));
+  }, [expandedOverride, docs]);
+
   const activeDoc = activeId ? docs.find((d) => d.id === activeId) ?? null : null;
 
+  const updateExpanded = (updater: (prev: Set<string>) => Set<string>) => {
+    setExpandedOverride((prev) => {
+      const base = prev ?? new Set(docs.filter((d) => d.type === 'folder').map((d) => d.id));
+      const next = updater(base);
+      persistExpanded(next);
+      return next;
+    });
+  };
+
   const handleToggleExpand = (id: string) => {
-    setExpanded((prev) => {
+    updateExpanded((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -192,105 +168,137 @@ export function DocsPage() {
     }
   };
 
-  const handleRename = (id: string) => {
+  const handleRename = async (id: string) => {
     const item = docs.find((d) => d.id === id);
     if (!item) return;
     const newName = window.prompt('Nieuwe naam:', item.title);
     if (!newName || !newName.trim()) return;
-    setDocs((prev) =>
-      prev.map((d) =>
-        d.id === id ? { ...d, title: newName.trim(), updatedAt: new Date().toISOString() } : d,
-      ),
-    );
-  };
-
-  const handleDelete = (id: string) => {
-    const item = docs.find((d) => d.id === id);
-    if (!item) return;
-    const childIds = new Set<string>();
-    const collect = (parentId: string) => {
-      docs.forEach((d) => {
-        if (d.parentId === parentId) {
-          childIds.add(d.id);
-          collect(d.id);
-        }
-      });
-    };
-    collect(id);
-
-    const target = item.type === 'folder' ? 'folder en alle inhoud' : 'document';
-    if (!confirm(`Weet je zeker dat je deze ${target} wilt verwijderen?`)) return;
-
-    setDocs((prev) => prev.filter((d) => d.id !== id && !childIds.has(d.id)));
-    if (activeId && (activeId === id || childIds.has(activeId))) {
-      setActiveId(null);
-      setIsEditing(false);
+    try {
+      await updateDocAsync({ id, title: newName.trim() });
+    } catch (err) {
+      console.error('Rename failed:', err);
+      alert('Hernoemen mislukt. Probeer opnieuw.');
     }
   };
 
-  const handleSaveEdit = (data: { title: string; content: string; tags: string[] }) => {
-    if (!activeDoc) return;
-    const now = new Date().toISOString();
-    setDocs((prev) =>
-      prev.map((d) =>
-        d.id === activeDoc.id
-          ? { ...d, title: data.title, content: data.content, tags: data.tags, updatedAt: now }
-          : d,
-      ),
-    );
-    setIsEditing(false);
+  const handleDelete = async (id: string) => {
+    const item = docs.find((d) => d.id === id);
+    if (!item) return;
+    const target = item.type === 'folder' ? 'folder en alle inhoud' : 'document';
+    if (!confirm(`Weet je zeker dat je deze ${target} wilt verwijderen?`)) return;
+    try {
+      await deleteDocAsync(id);
+      if (activeId === id) {
+        setActiveId(null);
+        setIsEditing(false);
+      }
+    } catch (err) {
+      console.error('Delete failed:', err);
+      alert('Verwijderen mislukt. Probeer opnieuw.');
+    }
   };
 
-  const createDocument = (template?: DocTemplate) => {
-    const now = new Date().toISOString();
-    const id = `d-${Date.now()}`;
+  const handleSaveEdit = async (data: { title: string; content: string; tags: string[] }) => {
+    if (!activeDoc) return;
+    try {
+      await updateDocAsync({
+        id: activeDoc.id,
+        title: data.title,
+        content: data.content,
+        tags: data.tags,
+      });
+      setIsEditing(false);
+    } catch (err) {
+      console.error('Save failed:', err);
+      alert('Opslaan mislukt. Probeer opnieuw.');
+    }
+  };
+
+  const createDocument = async (template?: DocTemplate) => {
     let parentId: string | null = null;
     if (activeDoc) {
-      parentId = activeDoc.parentId;
+      parentId = activeDoc.parent_id;
     } else if (tree.length > 0) {
       const firstFolder = tree.find((n) => n.type === 'folder');
       parentId = firstFolder?.id ?? null;
     }
-    const newDoc: DocItem = {
-      id,
-      title: template ? template.name : 'Nieuwe pagina',
-      type: 'document',
-      parentId,
-      content: template?.content ?? '# Nieuwe pagina\n\nSchrijf hier je content...\n',
-      author: 'Damian',
-      tags: template?.tags ?? [],
-      createdAt: now,
-      updatedAt: now,
-    };
-    setDocs((prev) => [...prev, newDoc]);
-    if (parentId) {
-      setExpanded((prev) => new Set([...prev, parentId!]));
+
+    try {
+      const created = await addDocAsync({
+        title: template ? template.name : 'Nieuwe pagina',
+        type: 'document',
+        parent_id: parentId,
+        content: template?.content ?? '# Nieuwe pagina\n\nSchrijf hier je content...\n',
+        author: 'Damian',
+        tags: template?.tags ?? [],
+      });
+      if (parentId) {
+        updateExpanded((prev) => new Set([...prev, parentId!]));
+      }
+      setActiveId(created.id);
+      setIsEditing(true);
+      setTemplatesOpen(false);
+    } catch (err) {
+      console.error('Create failed:', err);
+      alert('Aanmaken mislukt. Probeer opnieuw.');
     }
-    setActiveId(id);
-    setIsEditing(true);
-    setTemplatesOpen(false);
   };
 
   const handleCreatePage = () => {
     setTemplatesOpen(true);
   };
 
-  const handleCreateFolder = () => {
+  const handleCreateFolder = async () => {
     const name = window.prompt('Naam van de folder:');
     if (!name || !name.trim()) return;
-    const now = new Date().toISOString();
-    const id = `f-${Date.now()}`;
-    const newFolder: DocItem = {
-      id,
-      title: name.trim(),
-      type: 'folder',
-      parentId: null,
-      createdAt: now,
-      updatedAt: now,
-    };
-    setDocs((prev) => [...prev, newFolder]);
-    setExpanded((prev) => new Set([...prev, id]));
+    try {
+      const created = await addDocAsync({
+        title: name.trim(),
+        type: 'folder',
+        parent_id: null,
+      });
+      updateExpanded((prev) => new Set([...prev, created.id]));
+    } catch (err) {
+      console.error('Create folder failed:', err);
+      alert('Folder aanmaken mislukt. Probeer opnieuw.');
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-10 h-10 text-purple-400 animate-spin mx-auto" />
+          <p className="text-muted-foreground">Docs laden...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || !hasValidCredentials) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-md px-4">
+          <div className="p-4 rounded-full bg-red-500/10 w-fit mx-auto">
+            <Zap className="w-8 h-8 text-red-400" />
+          </div>
+          <h2 className="text-xl font-semibold text-white">Verbinding mislukt</h2>
+          <p className="text-muted-foreground">
+            {hasValidCredentials
+              ? 'Kan de docs niet ophalen uit de database. Controleer of de migratie is uitgevoerd.'
+              : 'Supabase is niet geconfigureerd. Stel NEXT_PUBLIC_SUPABASE_URL en NEXT_PUBLIC_SUPABASE_ANON_KEY in.'}
+          </p>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-white text-sm font-medium transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Terug naar takenbord
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

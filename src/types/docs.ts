@@ -4,12 +4,12 @@ export interface DocItem {
   id: string;
   title: string;
   type: DocType;
-  parentId: string | null;
-  content?: string;
-  author?: string;
-  tags?: string[];
-  createdAt: string;
-  updatedAt: string;
+  parent_id: string | null;
+  content: string;
+  author: string;
+  tags: string[];
+  created_at: string;
+  updated_at: string;
 }
 
 export interface DocTreeNode extends DocItem {
@@ -23,4 +23,22 @@ export interface DocTemplate {
   icon: string;
   content: string;
   tags: string[];
+}
+
+export interface DocInsert {
+  title: string;
+  type: DocType;
+  parent_id: string | null;
+  content?: string;
+  author?: string;
+  tags?: string[];
+}
+
+export interface DocUpdate {
+  id: string;
+  title?: string;
+  parent_id?: string | null;
+  content?: string;
+  author?: string;
+  tags?: string[];
 }
