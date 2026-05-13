@@ -311,10 +311,10 @@ export function TaskBoard() {
       <div className="min-h-screen">
         {/* Header */}
         <header className="sticky top-0 z-40 bg-black/90 backdrop-blur-xl border-b border-white/10 shadow-lg">
-          <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-between">
+          <div className="max-w-[1800px] mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
+            <div className="flex items-center justify-between gap-2">
               {/* Logo */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg">
                   <Image
                     src="/logo.jpeg"
@@ -324,14 +324,14 @@ export function TaskBoard() {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div>
-                  <h1 className="text-xl font-bold text-white">TechTable</h1>
-                  <p className="text-xs text-muted-foreground">Takenbord</p>
+                <div className="min-w-0">
+                  <h1 className="text-lg sm:text-xl font-bold text-white truncate">TechTable</h1>
+                  <p className="hidden sm:block text-xs text-muted-foreground">Takenbord</p>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-1.5 flex-wrap justify-end">
+              <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap justify-end shrink-0">
                 {/* Quick Links Dropdown */}
                 <div className="relative">
                   <Button
@@ -491,9 +491,9 @@ export function TaskBoard() {
                 <Link href="/docs">
                   <Button
                     variant="ghost"
-                    className="h-10 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-600 transition-all"
+                    className="h-10 w-10 sm:w-auto px-0 sm:px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-600 transition-all"
                   >
-                    <BookOpen className="w-5 h-5 mr-2 text-purple-400" />
+                    <BookOpen className="w-5 h-5 sm:mr-2 text-purple-400" />
                     <span className="hidden sm:inline">Docs</span>
                   </Button>
                 </Link>
@@ -502,9 +502,9 @@ export function TaskBoard() {
                 <Link href="/financieel">
                   <Button
                     variant="ghost"
-                    className="h-10 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-600 transition-all"
+                    className="h-10 w-10 sm:w-auto px-0 sm:px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-600 transition-all"
                   >
-                    <Table2 className="w-5 h-5 mr-2 text-green-400" />
+                    <Table2 className="w-5 h-5 sm:mr-2 text-green-400" />
                     <span className="hidden sm:inline">Financieel</span>
                   </Button>
                 </Link>
@@ -513,9 +513,9 @@ export function TaskBoard() {
                 <Link href="/te-laat">
                   <Button
                     variant="ghost"
-                    className="h-10 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-600 transition-all"
+                    className="h-10 w-10 sm:w-auto px-0 sm:px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-600 transition-all"
                   >
-                    <Clock className="w-5 h-5 mr-2" style={{ color: themeStyles.primaryBgLight }} />
+                    <Clock className="w-5 h-5 sm:mr-2" style={{ color: themeStyles.primaryBgLight }} />
                     <span className="hidden sm:inline">Te Laat</span>
                   </Button>
                 </Link>
@@ -534,7 +534,7 @@ export function TaskBoard() {
         </header>
 
         {/* Board */}
-        <main className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <main className="max-w-[1800px] mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
           {columns.length === 0 ? (
             // Empty state
             <div className="flex flex-col items-center justify-center py-20 text-center">

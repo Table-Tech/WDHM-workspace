@@ -16,8 +16,8 @@ import { MAAND_LABELS } from '@/types/financial';
 type ZoomLevel = 'small' | 'medium' | 'large';
 
 const ZOOM_STYLES: Record<ZoomLevel, { text: string; cell: string; header: string }> = {
-  small: { text: 'text-[11px]', cell: 'px-1.5 py-1', header: 'px-1.5 py-1.5' },
-  medium: { text: 'text-xs', cell: 'px-2 py-1.5', header: 'px-2 py-2' },
+  small: { text: 'text-xs', cell: 'px-1.5 py-1', header: 'px-1.5 py-1.5' },
+  medium: { text: 'text-[13px]', cell: 'px-2 py-1.5', header: 'px-2 py-2' },
   large: { text: 'text-sm', cell: 'px-3 py-2', header: 'px-3 py-2.5' },
 };
 

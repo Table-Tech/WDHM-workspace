@@ -29,14 +29,14 @@ export function DocsViewer({ doc, onEdit, onDelete }: DocsViewerProps) {
 
   return (
     <article className="h-full flex flex-col bg-zinc-950/60 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden">
-      <header className="sticky top-0 z-10 px-6 py-4 border-b border-white/10 bg-black/40 backdrop-blur">
-        <div className="flex items-start justify-between gap-4">
+      <header className="sticky top-0 z-10 px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10 bg-black/40 backdrop-blur">
+        <div className="flex items-start justify-between gap-2 sm:gap-4">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 text-xs text-zinc-500 mb-1">
               <FileText className="w-3.5 h-3.5" />
               <span>Document</span>
             </div>
-            <h1 className="text-2xl font-bold text-white truncate">{doc.title}</h1>
+            <h1 className="text-lg sm:text-2xl font-bold text-white truncate">{doc.title}</h1>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-zinc-400">
               {doc.author && (
                 <span className="flex items-center gap-1.5">
@@ -104,7 +104,7 @@ export function DocsViewer({ doc, onEdit, onDelete }: DocsViewerProps) {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-6 py-6 min-h-0">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6 min-h-0">
         <div className="max-w-3xl mx-auto">
           {doc.content && doc.content.trim().length > 0 ? (
             <MarkdownRenderer content={doc.content} />

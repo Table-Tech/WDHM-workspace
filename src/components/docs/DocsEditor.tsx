@@ -36,14 +36,14 @@ export function DocsEditor({ doc, onSave, onCancel }: DocsEditorProps) {
 
   return (
     <section className="h-full flex flex-col bg-zinc-950/60 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden">
-      <header className="px-6 py-4 border-b border-white/10 bg-black/40 backdrop-blur space-y-3">
-        <div className="flex items-start justify-between gap-4">
+      <header className="px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10 bg-black/40 backdrop-blur space-y-3">
+        <div className="flex items-start justify-between gap-2 sm:gap-4">
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Titel..."
-            className="flex-1 min-w-0 bg-transparent text-2xl font-bold text-white placeholder:text-zinc-600 focus:outline-none"
+            className="flex-1 min-w-0 bg-transparent text-lg sm:text-2xl font-bold text-white placeholder:text-zinc-600 focus:outline-none"
           />
           <div className="flex items-center gap-1.5 shrink-0">
             <button
@@ -123,7 +123,7 @@ export function DocsEditor({ doc, onSave, onCancel }: DocsEditorProps) {
 
       <div className="flex-1 overflow-y-auto min-h-0">
         {previewMode ? (
-          <div className="px-6 py-6 max-w-3xl mx-auto">
+          <div className="px-4 sm:px-6 py-4 sm:py-6 max-w-3xl mx-auto">
             <MarkdownRenderer content={content} />
           </div>
         ) : (
@@ -131,7 +131,7 @@ export function DocsEditor({ doc, onSave, onCancel }: DocsEditorProps) {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="# Schrijf hier je content...&#10;&#10;Markdown wordt ondersteund: **bold**, *italic*, `code`, lists, # headings, [links](url), tabellen, en checkboxes ([ ] of [x])."
-            className="w-full h-full min-h-100 px-6 py-6 bg-transparent text-zinc-200 placeholder:text-zinc-600 font-mono text-sm leading-relaxed focus:outline-none resize-none"
+            className="w-full h-full min-h-100 px-4 sm:px-6 py-4 sm:py-6 bg-transparent text-zinc-200 placeholder:text-zinc-600 font-mono text-sm leading-relaxed focus:outline-none resize-none"
           />
         )}
       </div>

@@ -344,17 +344,17 @@ export function DocsPage() {
     <>
       <div className="min-h-screen flex flex-col">
         <header className="sticky top-0 z-40 bg-black/90 backdrop-blur-xl border-b border-white/10 shadow-lg">
-          <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+          <div className="max-w-[1800px] mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 <Link
                   href="/"
-                  className="p-2 hover:bg-white/5 rounded-xl transition-colors"
+                  className="p-2 hover:bg-white/5 rounded-xl transition-colors shrink-0"
                   aria-label="Terug naar takenbord"
                 >
                   <ArrowLeft className="w-5 h-5 text-zinc-400" />
                 </Link>
-                <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-lg shrink-0">
                   <Image
                     src="/logo.jpeg"
                     alt="TechTable Logo"
@@ -363,12 +363,12 @@ export function DocsPage() {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-purple-400" />
-                    <h1 className="text-xl font-bold text-white">Knowledge Hub</h1>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <BookOpen className="w-4 h-4 text-purple-400 shrink-0" />
+                    <h1 className="text-base sm:text-xl font-bold text-white truncate">Knowledge Hub</h1>
                   </div>
-                  <p className="text-xs text-muted-foreground">Interne documentatie & handleidingen</p>
+                  <p className="hidden sm:block text-xs text-muted-foreground">Interne documentatie & handleidingen</p>
                 </div>
               </div>
 
@@ -383,7 +383,7 @@ export function DocsPage() {
           </div>
         </header>
 
-        <main className="flex-1 max-w-[1800px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <main className="flex-1 max-w-[1800px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
           <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4 h-[calc(100vh-9rem)]">
             <div
               className={`${

@@ -85,13 +85,14 @@ function SpreadsheetContent() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
+                    aria-label={tab.label}
+                    className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
                       isActive
                         ? 'bg-zinc-800 text-white'
                         : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
                     }`}
                   >
-                    <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    <Icon className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                     <span className="hidden sm:inline">{tab.label}</span>
                   </button>
                 );

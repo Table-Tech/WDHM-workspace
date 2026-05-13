@@ -126,7 +126,7 @@ export function TaskColumn({
 
   return (
     <div
-      className={`flex flex-col min-w-[280px] max-w-[320px] bg-zinc-900 rounded-2xl border transition-all ${
+      className={`flex flex-col w-[85vw] sm:w-auto min-w-[260px] sm:min-w-[280px] max-w-[320px] bg-zinc-900 rounded-2xl border transition-all ${
         isDraggingColumn ? 'scale-[0.98] ring-2 ring-blue-500/50' : ''
       }`}
       style={isColumnDragOver ? {
@@ -182,7 +182,7 @@ export function TaskColumn({
             variant="ghost"
             size="sm"
             onClick={() => setShowMenu(!showMenu)}
-            className="h-7 w-7 p-0 hover:bg-zinc-800"
+            className="h-9 w-9 sm:h-7 sm:w-7 p-0 hover:bg-zinc-800"
           >
             <MoreVertical className="w-4 h-4 text-zinc-400" />
           </Button>
